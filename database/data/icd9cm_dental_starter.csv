@@ -1,0 +1,35 @@
+code,name,name_id
+23.01,Extraction of deciduous tooth,Pencabutan gigi sulung
+23.09,Extraction of other tooth,Pencabutan gigi lainnya (gigi tetap)
+23.11,Removal of residual root,Pengambilan sisa akar
+23.19,Other surgical extraction of tooth,Pencabutan gigi dengan pembedahan (odontektomi)
+23.2,Restoration of tooth by filling,Restorasi gigi dengan tambalan
+23.3,Restoration of tooth by inlay,Restorasi gigi dengan inlay
+23.41,Application of crown,Pemasangan mahkota (crown)
+23.42,Insertion of fixed bridge,Pemasangan gigi tiruan jembatan cekat
+23.43,Insertion of removable bridge,Pemasangan gigi tiruan jembatan lepasan
+23.49,Other dental restoration,Restorasi gigi lainnya
+23.5,Implantation of tooth,Implantasi gigi
+23.6,Prosthetic dental implant,Implan gigi prostetik
+23.70,"Root canal, not otherwise specified","Perawatan saluran akar, tidak spesifik"
+23.71,Root canal therapy with irrigation,Perawatan saluran akar dengan irigasi
+23.72,Root canal therapy with apicoectomy,Perawatan saluran akar dengan apikoektomi
+23.73,Apicoectomy,Apikoektomi
+24.0,Incision of gum or alveolar bone,Insisi gusi atau tulang alveolar
+24.11,Biopsy of gum,Biopsi gusi
+24.2,Gingivoplasty,Gingivoplasti
+24.31,Excision of lesion or tissue of gum,Eksisi lesi atau jaringan gusi
+24.4,Excision of dental lesion of jaw,Eksisi lesi dental rahang
+24.5,Alveoloplasty,Alveoloplasti
+24.6,Exposure of tooth,Eksposur gigi
+24.7,Application of orthodontic appliance,Pemasangan alat ortodonti
+24.8,Other orthodontic operation,Tindakan ortodonti lainnya
+24.99,Other dental operations,Tindakan gigi lainnya
+87.11,Full-mouth x-ray of teeth,Rontgen gigi seluruh rongga mulut
+87.12,Other dental x-ray,Rontgen gigi lainnya (periapikal/panoramik)
+89.31,Dental examination,Pemeriksaan gigi
+93.55,Dental wiring,Pemasangan kawat gigi (wiring)
+96.54,"Dental scaling, polishing, and debridement","Scaling, pemolesan, dan debridemen gigi"
+97.33,Removal of dental wiring,Pelepasan kawat gigi (wiring)
+97.35,Removal of dental prosthesis,Pelepasan protesa gigi
+99.97,Fitting of denture,Pemasangan gigi tiruan

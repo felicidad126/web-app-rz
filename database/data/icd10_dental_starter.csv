@@ -1,0 +1,43 @@
+code,name,name_id
+K00.0,Anodontia,Anodonsia
+K00.1,Supernumerary teeth,Gigi berlebih (supernumerary)
+K00.6,Disturbances in tooth eruption,Gangguan erupsi gigi
+K01.0,Embedded teeth,Gigi terbenam (embedded)
+K01.1,Impacted teeth,Gigi impaksi
+K02.0,Caries limited to enamel,Karies terbatas pada email
+K02.1,Caries of dentine,Karies dentin
+K02.2,Caries of cementum,Karies sementum
+K02.3,Arrested dental caries,Karies terhenti
+K02.9,"Dental caries, unspecified","Karies gigi, tidak spesifik"
+K03.0,Excessive attrition of teeth,Atrisi gigi berlebihan
+K03.1,Abrasion of teeth,Abrasi gigi
+K03.2,Erosion of teeth,Erosi gigi
+K03.6,Deposits [accretions] on teeth,Deposit pada gigi (kalkulus/stain)
+K04.0,Pulpitis,Pulpitis
+K04.1,Necrosis of pulp,Nekrosis pulpa
+K04.4,Acute apical periodontitis of pulpal origin,Periodontitis apikalis akut asal pulpa
+K04.5,Chronic apical periodontitis,Periodontitis apikalis kronis
+K04.6,Periapical abscess with sinus,Abses periapikal dengan sinus
+K04.7,Periapical abscess without sinus,Abses periapikal tanpa sinus
+K04.8,Radicular cyst,Kista radikuler
+K05.0,Acute gingivitis,Gingivitis akut
+K05.1,Chronic gingivitis,Gingivitis kronis
+K05.2,Acute periodontitis,Periodontitis akut
+K05.3,Chronic periodontitis,Periodontitis kronis
+K05.4,Periodontosis,Periodontosis
+K06.0,Gingival recession,Resesi gingiva
+K06.1,Gingival enlargement,Pembesaran gingiva
+K07.2,Anomalies of dental arch relationship,Anomali hubungan lengkung gigi
+K07.3,Anomalies of tooth position,Anomali posisi gigi
+K07.4,"Malocclusion, unspecified","Maloklusi, tidak spesifik"
+K07.6,Temporomandibular joint disorders,Gangguan sendi temporomandibular
+K08.1,"Loss of teeth due to accident, extraction or local periodontal disease","Kehilangan gigi akibat kecelakaan, pencabutan, atau penyakit periodontal lokal"
+K08.3,Retained dental root,Sisa akar gigi
+K10.3,Alveolitis of jaws,Alveolitis rahang (dry socket)
+K12.0,Recurrent oral aphthae,Stomatitis aftosa rekuren
+K12.1,Other forms of stomatitis,Stomatitis bentuk lain
+K13.0,Diseases of lips,Penyakit bibir
+S02.5,Fracture of tooth,Fraktur gigi
+Z01.2,Dental examination,Pemeriksaan gigi
+Z46.3,Fitting and adjustment of dental prosthetic device,Pemasangan dan penyesuaian protesa gigi
+Z46.4,Fitting and adjustment of orthodontic device,Pemasangan dan penyesuaian alat ortodonti

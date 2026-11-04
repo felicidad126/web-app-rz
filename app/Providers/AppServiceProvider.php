@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Providers;
+
+use App\Models\User;
+use App\Policies\ActivityPolicy;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
+use Spatie\Activitylog\Models\Activity;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        //
+    }
+
+    public function boot(): void
+    {
+        Model::shouldBeStrict(! $this->app->isProduction());
+
+        Password::defaults(fn () => Password::min(10)->letters()->numbers());
+
+        // Model vendor: policy hasil Shield (app/Policies) tidak ditemukan otomatis oleh Laravel.
+        if (class_exists(ActivityPolicy::class)) {
+            Gate::policy(Activity::class, ActivityPolicy::class);
+        }
+
+        Event::listen(Login::class, function (Login $event): void {
+            if ($event->user instanceof User) {
+                $event->user->forceFill(['last_login_at' => now()])->saveQuietly();
+            }
+        });
+    }
+}

@@ -110,7 +110,7 @@ flowchart TD
 
 | Lapisan | Teknologi | Catatan |
 |---|---|---|
-| Runtime | **PHP 8.4** | `spatie/laravel-activitylog` v5 membutuhkan PHP 8.4 |
+| Runtime | **PHP 8.4** (kode kompatibel 8.3+) | Fase 1 memakai `spatie/laravel-activitylog` v4 agar tetap jalan di 8.3. Naik ke v5 setelah minimum PHP 8.4. |
 | Framework | **Laravel 13** | Security fix sampai 17 Mar 2028 |
 | Admin panel | **FilamentPHP v5** | Fitur setara v4, ditambah Livewire 4. MFA (TOTP/email) bawaan. |
 | Frontend | Livewire 4 + Alpine.js + Tailwind CSS v4 | Tanpa SPA terpisah |
@@ -125,7 +125,7 @@ flowchart TD
 |---|---|
 | `bezhansalleh/filament-shield` 4.x | UI role & permission untuk Filament 4/5 |
 | `spatie/laravel-permission` 8.x | Role & permission |
-| `spatie/laravel-activitylog` 5.x | Audit trail rekam medis & transaksi |
+| `spatie/laravel-activitylog` 4.x (→ 5.x saat PHP 8.4) | Audit trail rekam medis & transaksi |
 | `spatie/laravel-backup` 10.x | Backup terenkripsi terjadwal |
 | `barryvdh/laravel-dompdf` 3.x | PDF: nota, slip, consent, kartu RM |
 | `maatwebsite/excel` 4.x | Ekspor laporan |
@@ -430,8 +430,8 @@ erDiagram
     ITEMS ||--o{ ITEM_BATCHES : has
     BRANCHES ||--o{ ITEM_BATCHES : stores
     ITEM_BATCHES ||--o{ STOCK_MUTATIONS : tracks
-    ACTIONS ||--o{ ACTION_MATERIALS : "BOM"
-    ITEMS ||--o{ ACTION_MATERIALS : "dipakai di"
+    TREATMENTS ||--o{ TREATMENT_MATERIALS : "BOM"
+    ITEMS ||--o{ TREATMENT_MATERIALS : "dipakai di"
     SUPPLIERS ||--o{ GOODS_RECEIPTS : delivers
     GOODS_RECEIPTS ||--o{ STOCK_MUTATIONS : creates
     STOCK_OPNAMES ||--o{ STOCK_MUTATIONS : adjusts
@@ -459,9 +459,9 @@ erDiagram
 | `patients` | rm_number (unique), name, nik (enc), nik_hash (unique), satusehat_ihs_id, birth_date, gender, phone, address, allergies, systemic_diseases, emergency_contact, default_payer_id, registered_branch_id, consent_data_at, soft deletes |
 | `payers` / `patient_payers` | type (umum/bpjs/asuransi/corporate), name / patient_id, payer_id, member_number, valid_until |
 | `icd10_codes`, `icd9cm_codes` | code, name |
-| `actions` | code, name, category, icd9cm_code, base_price, duration_minutes, is_active |
-| `action_branch_prices` | action_id, branch_id, price |
-| `action_materials` | action_id, item_id, qty, unit_id |
+| `treatments` | code, name, category, icd9cm_code, base_price, duration_minutes, is_active |
+| `treatment_branch_prices` | treatment_id, branch_id, price |
+| `treatment_materials` | treatment_id, item_id, qty, unit_id |
 | `odontogram_conditions` | code, name, category, applies_to (tooth/surface), color, symbol, is_active |
 | `items` | sku, name, type, kfa_code, base_unit_id, min_stock, track_expiry, sell_price, is_active |
 | `units` / `item_units` | name / item_id, unit_id, factor_to_base |
@@ -470,17 +470,17 @@ erDiagram
 **Klinis**
 | Tabel | Kolom kunci |
 |---|---|
-| `appointments` | patient_id, branch_id, practitioner_id, chair_id, start_at, end_at, status, planned_action_ids, notes |
+| `appointments` | patient_id, branch_id, practitioner_id, chair_id, start_at, end_at, status, planned_treatment_ids, notes |
 | `visits` | visit_number, patient_id, branch_id, practitioner_id, chair_id, appointment_id?, payer_id, queue_number, status, arrived_at, started_at, finished_at |
 | `medical_records` | visit_id, subjective, objective, vitals (json), assessment, plan, signed_by, signed_at |
 | `medical_record_addenda` | medical_record_id, content, created_by |
 | `diagnoses` | medical_record_id, icd10_code, type (primary/secondary), tooth_number? |
-| `visit_procedures` | visit_id, action_id, icd9cm_code, tooth_number?, surfaces?, operator_id, assistant_id?, qty, price_snapshot, treatment_plan_item_id? |
+| `visit_procedures` | visit_id, treatment_id, icd9cm_code, tooth_number?, surfaces?, operator_id, assistant_id?, qty, price_snapshot, treatment_plan_item_id? |
 | `odontogram_entries` | patient_id, visit_id, tooth_number, surface?, condition_code, entry_type (existing/planned/done), notes |
 | `prescriptions` / `prescription_items` | visit_id, practitioner_id, dispensed_at / item_id, kfa_code, qty, unit_id, signa |
 | `attachments` | patient_id, visit_id?, type, disk_path, taken_at, notes |
 | `consent_templates` / `informed_consents` | name, body / visit_id, template_id, content_snapshot, signer_name, signer_relation, signature_path, pdf_path, signed_at |
-| `treatment_plans` / `treatment_plan_items` | patient_id, practitioner_id, status, presented_at, accepted_at / plan_id, action_id, tooth_number, surfaces, price_estimate, sequence, status |
+| `treatment_plans` / `treatment_plan_items` | patient_id, practitioner_id, status, presented_at, accepted_at / plan_id, treatment_id, tooth_number, surfaces, price_estimate, sequence, status |
 | `recalls` | patient_id, due_date, reason, status, last_contacted_at |
 
 **Billing**
@@ -491,8 +491,8 @@ erDiagram
 | `payments` | invoice_id, paid_at, method, amount, reference_no, received_by, cash_session_id |
 | `refunds` | payment_id, amount, reason, requested_by, approved_by |
 | `deposit_ledger` | patient_id, type (topup/usage/refund), amount, balance_after, reference |
-| `packages` / `package_items` | name, price, validity_days / package_id, action_id, quota |
-| `patient_packages` / `package_usages` | patient_id, package_id, price_snapshot, start_date, status / patient_package_id, visit_id, action_id |
+| `packages` / `package_items` | name, price, validity_days / package_id, treatment_id, quota |
+| `patient_packages` / `package_usages` | patient_id, package_id, price_snapshot, start_date, status / patient_package_id, visit_id, treatment_id |
 | `installments` | patient_package_id or invoice_id, due_date, amount, paid_amount, status |
 | `cash_sessions` | branch_id, user_id, opened_at, opening_cash, closed_at, counted_cash, expected_cash, difference |
 
@@ -508,7 +508,7 @@ erDiagram
 **Komisi, gaji, integrasi, metrik**
 | Tabel | Kolom kunci |
 |---|---|
-| `commission_rules` | practitioner_id?, action_id?, role (operator/assistant), type (percent/fixed), value, base, priority |
+| `commission_rules` | practitioner_id?, treatment_id?, role (operator/assistant), type (percent/fixed), value, base, priority |
 | `commissions` | invoice_item_id, practitioner_id, role, base_amount, amount, status (pending/earned/paid/reversed), earned_at, payout_id |
 | `commission_payouts` | practitioner_id, period, total, status, paid_at, slip_path |
 | `salary_components` / `payslips` / `payslip_lines` | name, kind (earning/deduction) / user_id, period, total / payslip_id, component_id, amount |
@@ -538,17 +538,21 @@ erDiagram
 - [ ] Putuskan: engine DB final, aturan pengakuan komisi untuk paket/cicilan.
 - **DoD:** dokumen keputusan disetujui klinik, data master mentah (Excel) diterima.
 
-### Fase 1: Fondasi & Master Data (Minggu 2–3)
-- [ ] Setup Laravel 13 + Filament v5 + MySQL + Redis + queue + scheduler. CI (Pest, Larastan, Pint).
-- [ ] Panel Filament + role & permission (Shield) + **MFA wajib** + session timeout.
-- [ ] Cabang, kursi, user–cabang, profil nakes (STR/SIP + alert kedaluwarsa).
-- [ ] Audit log (activitylog) + soft delete + `number_sequences`.
-- [ ] CRUD pasien (nomor RM unik lintas cabang, NIK terenkripsi + blind index, consent data).
-- [ ] CRUD tindakan (ICD-9-CM, tarif per cabang, durasi), obat & bahan (KFA, konversi satuan), penjamin.
-- [ ] Seed ICD-10, ICD-9-CM, kondisi odontogram. Import master dari Excel klinik.
-- [ ] Manifest PWA + service worker minimal + ikon.
-- [ ] Backup harian terenkripsi ke object storage + uji restore pertama.
+### Fase 1: Fondasi & Master Data (Minggu 2–3) — ✅ kode selesai
+> Detail hasil, verifikasi, dan penyimpangan: [03-fase-1-implementasi.md](./03-fase-1-implementasi.md).
+
+- [x] Setup Laravel 13 + Filament v5 + MySQL + Redis + queue + scheduler. CI (Pest, Larastan, Pint).
+- [x] Panel Filament + role & permission (Shield) + **MFA wajib** + session timeout.
+- [x] Cabang, kursi, user–cabang, profil nakes (SIP + alert kedaluwarsa; STR berlaku seumur hidup sejak UU 17/2023).
+- [x] Audit log (activitylog) + soft delete + `number_sequences`.
+- [x] CRUD pasien (nomor RM unik lintas cabang, NIK terenkripsi + blind index, consent data).
+- [x] CRUD tindakan (ICD-9-CM, tarif per cabang, durasi), obat & bahan (KFA, konversi satuan), penjamin.
+- [x] Seed ICD-10, ICD-9-CM (daftar awal kode gigi), kondisi odontogram (draft). Import master via CSV.
+- [x] Manifest PWA + service worker minimal + ikon.
+- [x] Backup harian terenkripsi + uji restore pertama (lokal). Disk S3 siap, tinggal diisi kredensial.
 - **DoD:** staf bisa login dengan MFA di PC & tablet (PWA ter-install), master data klinik sudah terisi, dan backup sudah terbukti bisa di-restore.
+  - Sudah: login + MFA (diuji), backup + restore (diuji lokal).
+  - Menunggu lingkungan nyata: install PWA di tablet (butuh staging HTTPS), import master data asli klinik, backup ke bucket S3.
 
 ### Fase 2: Jadwal, Kunjungan & Rekam Medis (Minggu 4–6)
 - [ ] Jadwal praktik dokter + pengecualian.
