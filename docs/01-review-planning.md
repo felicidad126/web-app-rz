@@ -7,7 +7,7 @@
 
 ## 0. Ringkasan Eksekutif
 
-Arah plan sudah tepat: Filament sangat cocok untuk solo dev, pendekatan PWA lebih murah daripada aplikasi native, dan roadmap bertahap itu benar. Tapi ada **6 hal yang sebaiknya diubah sebelum mulai coding**:
+Arah plan sudah tepat: Filament sangat cocok untuk solo dev, pendekatan PWA lebih murah daripada aplikasi native, dan roadmap bertahap itu benar. Tapi ada **5 hal yang sebaiknya diubah sebelum mulai coding**:
 
 | # | Masalah di plan | Rekomendasi |
 |---|---|---|
@@ -15,8 +15,7 @@ Arah plan sudah tepat: Filament sangat cocok untuk solo dev, pendekatan PWA lebi
 | 2 | **SATUSEHAT ditaruh di Fase 6, "jika diwajibkan"** | Sudah **wajib** untuk semua fasyankes, termasuk praktik mandiri dokter gigi (Permenkes 24/2022). Struktur data harus siap SATUSEHAT sejak Fase 1. |
 | 3 | **Odontogram per nomor gigi saja** | Standar rekam medik gigi Indonesia mewajibkan pencatatan **per permukaan (M-O-D-V-L)** dan riwayat per kunjungan. |
 | 4 | **Skema DB terlalu sederhana untuk transaksi nyata** | Pisahkan *Appointment* dan *Visit*, buat tabel *Payments* terpisah dari *Invoice*, buat tabel *Batch* terpisah dari *Item*, tambahkan `branch_id`, dan simpan snapshot tarif serta % fee. |
-| 5 | **WhatsApp via Fonnte/WAHA** | Keduanya API tidak resmi yang melanggar ToS WhatsApp, jadi nomor klinik bisa diblokir. Siapkan jalur ke WhatsApp Business Platform resmi. |
-| 6 | **Timeline 6 minggu** | Tidak realistis untuk sistem yang aman dipakai produksi. Estimasi realistis **12–16 minggu** untuk MVP termasuk SATUSEHAT dan UAT. |
+| 5 | **Timeline 6 minggu** | Tidak realistis untuk sistem yang aman dipakai produksi. Estimasi realistis **12–16 minggu** untuk MVP termasuk SATUSEHAT dan UAT. |
 
 Untuk **dashboard**, saya membandingkan sekitar 10 vendor lokal (Klinik Pintar, Assist.id Denta, kumoDent, DIGMAN, Dentalink.id, Dental Plus, Dentiva, ICONIX, dll.) dengan 11 software dental global (Dentrix, Open Dental, Curve, Dentally, CareStack, Denticon, Dental Intelligence, Practice by Numbers, Jarvis, tab32, Dentalink). Hasilnya:
 - Dashboard vendor lokal **masih berupa laporan omzet**: omzet harian/bulanan, kunjungan, fee dokter, tindakan terlaris.
@@ -64,7 +63,7 @@ Kebijakan resmi Laravel memberi 18 bulan bug fix dan 2 tahun security fix untuk 
 | `barryvdh/laravel-dompdf` | 3.1.2 | Laravel 9–13 | OK |
 | `ivanwilliammd/satusehat-integration` | 4.15.4 | Laravel 8–13 | Perlu dievaluasi untuk bridging SATUSEHAT |
 
-**Rekomendasi stack final:** PHP 8.4 · Laravel 13 · Filament v5 · Livewire 4 · Tailwind 4 · **pilih salah satu** dari MySQL 8 atau PostgreSQL sejak awal (jangan mencoba mendukung keduanya) · Redis untuk queue dan cache · Laravel Horizon atau `queue:work` via Supervisor untuk job SATUSEHAT dan WhatsApp.
+**Rekomendasi stack final:** PHP 8.4 · Laravel 13 · Filament v5 · Livewire 4 · Tailwind 4 · **pilih salah satu** dari MySQL 8 atau PostgreSQL sejak awal (jangan mencoba mendukung keduanya) · Redis untuk queue dan cache · Laravel Horizon atau `queue:work` via Supervisor untuk job SATUSEHAT.
 
 > Catatan: plugin Filament pihak ketiga sering terlambat mendukung versi mayor baru. Cek `composer.json` setiap plugin sebelum dipakai.
 
@@ -101,7 +100,7 @@ Rujukan: [Postman resmi Modul Rawat Jalan Kemenkes](https://link.kemkes.go.id/Po
   - Pembatasan akses per field: kasir tidak perlu melihat catatan klinis.
   - Audit log untuk **akses** rekam medis, bukan hanya perubahan datanya.
   - Backup **terenkripsi**. `spatie/laravel-backup` mendukung arsip ber-password. Hindari Google Drive pribadi untuk data medis. Lebih baik object storage dengan region Indonesia (misalnya AWS Jakarta `ap-southeast-3` atau penyedia lokal).
-  - Persetujuan pasien (consent) untuk pengiriman WhatsApp dan pemrosesan data.
+  - Persetujuan pasien (consent) untuk pemrosesan data.
   - Session timeout yang singkat dan auto-logout di perangkat bersama (tablet ruang praktik).
 
 ### 2.4 Odontogram
@@ -200,13 +199,7 @@ erDiagram
 - **Printer thermal 58/80mm:** dari PC kasir, `window.print()` dengan CSS `@page { size: 80mm auto }` dan driver printer biasanya cukup. Dari **tablet/HP Android**, browser tidak bisa mengirim ESC/POS langsung. Web Bluetooth hanya ada di Chrome/Edge, hanya untuk printer BLE, dan tidak tersedia di iOS ([pub.dev thermal_printer docs](https://pub.dev/packages/thermal_printer_flutter)). Solusinya memakai aplikasi bridge (misalnya RawBT di Android). **Lakukan uji coba dengan model printer milik klien di awal Fase 2.**
 - **Tabel di HP:** gunakan layout responsif tabel Filament (`Split`/`Stack`, `visibleFrom('md')`) sejak awal, jangan dioptimasi belakangan.
 
-### 2.8 WhatsApp
-
-- Fonnte dan WAHA bekerja dengan mengotomasi WhatsApp Web. Cara ini **melanggar ToS WhatsApp**, dan risiko blokir naik untuk pesan keluar massal seperti reminder ([bot.space](https://www.bot.space/blog/whatsapp-api-vs-unofficial-tools-a-complete-risk-reward-analysis-for-2025)). Jika nomor utama klinik diblokir, itu masalah besar.
-- Jalur resmi: **WhatsApp Business Platform (Cloud API)**, langsung ke Meta atau lewat BSP. Tarif pesan *utility* (reminder, nota) di Indonesia sekitar **Rp356/pesan** sebelum PPN menurut daftar harga BSP, dan Meta beberapa kali mengubah skema harga di 2026 ([Wati](https://www.wati.io/id/blog/gcr-seo-harga-whatsapp-business-api-2026-cara-kerja-kategori-dan-simulasi-biaya-lengkap/), [YCloud](https://www.ycloud.com/id/blog/whatsapp-api-message-pricing-update-effective-october-1-2026)).
-- **Rekomendasi:** buat interface `MessagingChannel` sejak awal. Untuk pilot boleh memakai Fonnte dengan **nomor terpisah, bukan nomor utama klinik**. Untuk produksi, pindah ke Cloud API tanpa mengubah kode bisnis.
-
-### 2.9 Rumus Tagihan
+### 2.8 Rumus Tagihan
 
 `Total = (Tindakan + Obat/Bahan + Biaya Tambahan) − Diskon` perlu diperluas dengan:
 - Diskon di **level item** dan di level invoice (keduanya umum dipakai).
@@ -215,7 +208,7 @@ erDiagram
 - Pembulatan (misalnya ke Rp100 atau Rp1.000) sebagai setting.
 - Kolom pajak per item (default 0, karena jasa medis bukan objek PPN) untuk penjualan produk retail jika klinik berstatus PKP.
 
-### 2.10 Timeline & Urutan Fase
+### 2.9 Timeline & Urutan Fase
 
 Estimasi 6 minggu baru realistis untuk prototipe, belum untuk sistem yang menyimpan rekam medis dan uang secara aman. Usulan urutan baru:
 
@@ -226,9 +219,10 @@ Estimasi 6 minggu baru realistis untuk prototipe, belum untuk sistem yang menyim
 | **2. Alur Kunjungan & Kasir** | 3 minggu | Appointment + antrean + visit, rekam medis + odontogram (input tabel), treatment plan, invoice + payments (split/DP), struk PDF + thermal |
 | **3. Stok** | 2 minggu | Batch/FEFO, konversi satuan, pemotongan stok otomatis per tindakan (BOM bahan per tindakan), alert stok menipis & expired, stok opname |
 | **4. Komisi, Laporan & Dashboard** | 2 minggu | Aturan komisi, rekap & slip, laporan omzet/kas, dashboard per role ([Bagian 4](#4-rekomendasi-dashboard-per-role)) |
-| **5. Integrasi** | 2 minggu | SATUSEHAT (sandbox → produksi), WhatsApp reminder & nota |
+| **5. Integrasi SATUSEHAT** | 2 minggu | Bridging SATUSEHAT (sandbox → produksi), antrean kirim + retry, monitoring status kirim |
 | **6. Polish & UAT** | 1–2 minggu | Odontogram visual SVG, optimasi mobile, uji di Android/iOS, pelatihan staf, migrasi data lama |
 | **Backlog** | — | Penggajian + PPh 21 otomatis, bridging BPJS P-Care (jika klinik mitra BPJS), booking online/portal pasien, payment gateway QRIS dinamis |
+| **Di luar scope** | — | Integrasi WhatsApp (reminder/nota). Sudah diputuskan tidak masuk scope aplikasi, jadi fitur WhatsApp di Fase 6 planning awal dihapus. |
 
 **Total: sekitar 13–14 minggu** untuk satu developer full-time.
 
@@ -335,7 +329,7 @@ Disesuaikan untuk klinik kecil di Indonesia: mayoritas pasien bayar sendiri, piu
 4. **Utilisasi kursi per dokter/cabang** (% menit terisi).
 5. **No-show/batal** beserta nilai rupiah yang hilang.
 6. **Top tindakan** berdasarkan omzet dan **margin** (tarif − HPP bahan − biaya lab − fee dokter).
-7. **Ringkasan harian otomatis** via WhatsApp/email setiap malam, seperti fitur ICONIX dan kumoDent.
+7. **Ringkasan harian otomatis** via email setiap malam, seperti fitur ICONIX dan kumoDent.
 
 ### Dokter
 8. **Pasien saya hari ini** (gaya *Who's On Deck*): flag pasien baru, treatment plan tertunda, alergi/penyakit sistemik, recall.
@@ -345,7 +339,7 @@ Disesuaikan untuk klinik kecil di Indonesia: mayoritas pasien bayar sendiri, piu
 ### Resepsionis / Kasir
 11. **Papan antrean hari ini**: terjadwal → konfirmasi → datang → di kursi → selesai → bayar, plus no-show dan **rata-rata waktu tunggu**.
 12. **Kas hari ini per metode bayar** (tunai/QRIS/transfer/debit) untuk tutup kasir, plus saldo tagihan pasien yang datang hari ini.
-13. **Daftar telepon/WA**: recall jatuh tempo, treatment plan disetujui tetapi belum dijadwalkan, cicilan behel jatuh tempo, dan slot kosong besok.
+13. **Daftar pasien yang perlu dihubungi**: recall jatuh tempo, treatment plan disetujui tetapi belum dijadwalkan, cicilan behel jatuh tempo, dan slot kosong besok.
 
 ### Admin / Perawat
 14. **Stok menipis & mendekati expired (H-30)**, ditambah pemakaian bahan per tindakan.
