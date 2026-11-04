@@ -25,11 +25,11 @@
 
 ### Hasil verifikasi
 
-- **Test otomatis:** 50 test, 126 assertion, lulus di SQLite dan MySQL 8.0 lokal. Mencakup:
+- **Test otomatis:** 52 test, 132 assertion, lulus di SQLite dan MySQL 8.0 lokal. Mencakup:
   - nomor RM
   - enkripsi & pencarian NIK
   - NIK tidak bocor ke audit log
-  - validasi form pasien
+  - validasi form pasien (termasuk persetujuan data tidak tercentang otomatis)
   - matriks akses per peran
   - MFA wajib
   - pengguna nonaktif

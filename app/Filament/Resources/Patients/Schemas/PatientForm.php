@@ -123,7 +123,8 @@ class PatientForm
                             ->maxLength(255),
                         Checkbox::make('consent_data_at')
                             ->label('Pasien menyetujui pemrosesan data pribadi (UU PDP)')
-                            ->formatStateUsing(fn ($state): bool => filled($state))
+                            // State dari DB berupa tanggal persetujuan; di form baru berupa false. Jangan pakai filled(): filled(false) === true.
+                            ->formatStateUsing(fn ($state): bool => $state !== null && $state !== false && $state !== '')
                             ->dehydrateStateUsing(fn ($state, ?Patient $record) => $state ? ($record->consent_data_at ?? now()) : null)
                             ->accepted(fn (string $operation): bool => $operation === 'create')
                             ->validationMessages(['accepted' => 'Persetujuan pasien wajib dicatat saat registrasi.']),

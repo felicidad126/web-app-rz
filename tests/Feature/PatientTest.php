@@ -75,6 +75,22 @@ it('bisa mendaftarkan pasien baru lewat form', function () {
         ->and($patient->created_by)->toBe(auth()->id());
 });
 
+it('tidak mencentang persetujuan data secara otomatis di form pasien baru', function () {
+    $state = Livewire::test(CreatePatient::class)->instance()->form->getRawState();
+
+    expect($state['consent_data_at'])->toBeFalse();
+});
+
+it('menampilkan persetujuan yang sudah ada saat edit dan tidak mengubah tanggalnya', function () {
+    $patient = Patient::factory()->create(['consent_data_at' => '2026-01-15 09:00:00']);
+
+    $component = Livewire::test(EditPatient::class, ['record' => $patient->getRouteKey()]);
+    expect($component->instance()->form->getRawState()['consent_data_at'])->toBeTrue();
+
+    $component->fillForm(['phone' => '081111111111'])->call('save')->assertHasNoFormErrors();
+    expect($patient->fresh()->consent_data_at->toDateTimeString())->toBe('2026-01-15 09:00:00');
+});
+
 it('menolak NIK ganda, NIK tidak valid, dan registrasi tanpa persetujuan data', function () {
     Patient::factory()->create(['nik' => '3171012345678901']);
 
