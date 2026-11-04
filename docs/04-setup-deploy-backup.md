@@ -193,6 +193,7 @@ server {
 | `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://...` | Wajib di produksi |
 | `APP_KEY` | Kunci enkripsi (NIK, secret MFA, session). **Simpan cadangannya di password manager owner.** Kalau hilang, NIK dan MFA tidak bisa didekripsi. |
 | `BLIND_INDEX_KEY` | Kunci HMAC untuk pencarian NIK. Generate sekali dengan `php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"`. **Jangan pernah diganti setelah ada data.** Simpan cadangannya bersama `APP_KEY`. |
+| `TRUSTED_PROXIES` | Isi hanya jika aplikasi di balik reverse proxy, Cloudflare, atau load balancer (IP dipisah koma, atau `*`), supaya URL aset dan cookie memakai HTTPS. Kosongkan untuk Nginx + PHP-FPM langsung. |
 | `SESSION_LIFETIME=30`, `SESSION_ENCRYPT=true` | Idle timeout 30 menit |
 | `QUEUE_CONNECTION=redis`, `CACHE_STORE=redis` | Cache juga dipakai Filament untuk anti-replay kode MFA |
 | `MAIL_*` | Untuk MFA via email, reset password, dan notifikasi backup gagal |
