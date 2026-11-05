@@ -37,4 +37,18 @@ enum TreatmentCategory: string implements HasLabel
             self::Other => 'Lainnya',
         };
     }
+
+    /** @return array{0: string, 1: string} Warna kartu di papan jadwal: latar, aksen. */
+    public function tint(): array
+    {
+        return match ($this) {
+            self::Consultation, self::Radiology, self::Other => ['#f4f4f5', '#a1a1aa'],
+            self::Preventive, self::Periodontic => ['#ecfdf3', '#47cd89'],
+            self::Restorative, self::Pediatric => ['#eff8ff', '#53b1fd'],
+            self::Endodontic => ['#eef4ff', '#8098f9'],
+            self::Surgery => ['#fdf2fa', '#ee46bc'],
+            self::Prosthodontic, self::Aesthetic => ['#f4f3ff', '#9b8afb'],
+            self::Orthodontic => ['#fffaeb', '#fdb022'],
+        };
+    }
 }

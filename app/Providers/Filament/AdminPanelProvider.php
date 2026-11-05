@@ -34,6 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('')
             ->brandName('Dental PMS')
+            ->darkMode(false)
             ->login()
             ->passwordReset()
             ->profile(isSimple: false)
@@ -44,7 +45,9 @@ class AdminPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
             ->colors([
-                'primary' => Color::Teal,
+                // Teal gelap sesuai Fondasi UI mockup (#0D6E63).
+                'primary' => Color::hex('#0d6e63'),
+                'violet' => Color::Violet,
             ])
             ->navigationGroups(NavGroup::ordered())
             ->sidebarCollapsibleOnDesktop()

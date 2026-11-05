@@ -5,7 +5,11 @@ namespace App\Filament\Support;
 /** Nama grup navigasi panel (urutan diatur di AdminPanelProvider). */
 final class NavGroup
 {
+    public const DAILY = 'Harian';
+
     public const PATIENTS = 'Pasien';
+
+    public const CLINICAL = 'Klinis';
 
     public const CLINICAL_MASTER = 'Master Klinis';
 
@@ -18,6 +22,6 @@ final class NavGroup
     /** @return list<string> */
     public static function ordered(): array
     {
-        return [self::PATIENTS, self::CLINICAL_MASTER, self::INVENTORY, self::ORGANIZATION, self::SETTINGS];
+        return [self::DAILY, self::PATIENTS, self::CLINICAL, self::CLINICAL_MASTER, self::INVENTORY, self::ORGANIZATION, self::SETTINGS];
     }
 }

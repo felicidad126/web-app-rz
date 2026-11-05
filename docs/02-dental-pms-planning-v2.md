@@ -554,15 +554,17 @@ erDiagram
   - Sudah: login + MFA (diuji), backup + restore (diuji lokal).
   - Menunggu lingkungan nyata: install PWA di tablet (butuh staging HTTPS), import master data asli klinik, backup ke bucket S3.
 
-### Fase 2: Jadwal, Kunjungan & Rekam Medis (Minggu 4–6)
-- [ ] Jadwal praktik dokter + pengecualian.
-- [ ] Kalender janji temu (cek bentrok) + walk-in + papan antrean.
-- [ ] Form SOAP + diagnosa ICD-10 + tindakan ICD-9-CM (snapshot tarif).
-- [ ] Odontogram **input tabel** per gigi/permukaan + riwayat + cetak.
-- [ ] Resep (KFA), lampiran rontgen/foto (storage privat).
-- [ ] Informed consent digital (template, signature pad, PDF).
-- [ ] Rencana perawatan + recall.
-- [ ] Tanda tangan & penguncian rekam medis, addendum, audit log akses.
+### Fase 2: Jadwal, Kunjungan & Rekam Medis (Minggu 4–6) — ✅ kode selesai
+> Detail hasil, verifikasi, dan penyimpangan: [05-fase-2-implementasi.md](./05-fase-2-implementasi.md).
+
+- [x] Jadwal praktik dokter + pengecualian.
+- [x] Kalender janji temu (cek bentrok) + walk-in + papan antrean.
+- [x] Form SOAP + diagnosa ICD-10 + tindakan ICD-9-CM (snapshot tarif).
+- [x] Odontogram **input tabel** per gigi/permukaan + riwayat + cetak.
+- [x] Resep (KFA), lampiran rontgen/foto (storage privat).
+- [x] Informed consent digital (template, signature pad, PDF).
+- [x] Rencana perawatan + recall.
+- [x] Tanda tangan & penguncian rekam medis, addendum, audit log akses.
 - **DoD:** satu kunjungan lengkap (appointment → check-in → periksa → tanda tangan) bisa dijalankan dari tablet dokter.
 
 ### Fase 3: Kasir & Billing (Minggu 7–8)

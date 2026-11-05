@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $base_price
  * @property int $duration_minutes
  */
-#[Fillable(['code', 'name', 'category', 'icd9cm_code', 'base_price', 'duration_minutes', 'description', 'is_active'])]
+#[Fillable(['code', 'name', 'category', 'icd9cm_code', 'base_price', 'duration_minutes', 'recall_months', 'description', 'is_active'])]
 class Treatment extends Model
 {
     use HasFactory;
@@ -58,6 +58,7 @@ class Treatment extends Model
             'category' => TreatmentCategory::class,
             'base_price' => 'integer',
             'duration_minutes' => 'integer',
+            'recall_months' => 'integer',
             'is_active' => 'boolean',
         ];
     }

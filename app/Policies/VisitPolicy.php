@@ -1,0 +1,55 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Policies;
+
+use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\Visit;
+use Illuminate\Auth\Access\HandlesAuthorization;
+
+class VisitPolicy
+{
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('ViewAny:Visit');
+    }
+
+    public function view(AuthUser $authUser, Visit $visit): bool
+    {
+        return $authUser->can('View:Visit');
+    }
+
+    public function create(AuthUser $authUser): bool
+    {
+        return $authUser->can('Create:Visit');
+    }
+
+    public function update(AuthUser $authUser, Visit $visit): bool
+    {
+        return $authUser->can('Update:Visit');
+    }
+
+    public function delete(AuthUser $authUser, Visit $visit): bool
+    {
+        return $authUser->can('Delete:Visit');
+    }
+
+    public function deleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('DeleteAny:Visit');
+    }
+
+    public function restore(AuthUser $authUser, Visit $visit): bool
+    {
+        return $authUser->can('Restore:Visit');
+    }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('RestoreAny:Visit');
+    }
+
+}

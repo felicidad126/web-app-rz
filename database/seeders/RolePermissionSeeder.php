@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Peran & hak akses sesuai matriks akses Planning v2 (Bagian 4.3), lingkup Fase 1.
+ * Peran & hak akses sesuai matriks akses Planning v2 (Bagian 4.3), lingkup Fase 1–2.
  *
  * Format permission mengikuti Filament Shield: "{Aksi}:{Model}", mis. "ViewAny:Patient".
  * Seeder ini idempoten: aman dijalankan ulang setelah menambah resource.
@@ -34,35 +34,44 @@ class RolePermissionSeeder extends Seeder
      */
     public static function matrix(): array
     {
+        // Rekam medis tidak punya resource sendiri; izinnya dicek langsung (View/Update/Sign:MedicalRecord).
+        $readRecord = ['View:MedicalRecord'];
+        $writeRecord = ['View:MedicalRecord', 'Update:MedicalRecord'];
+        $signRecord = [...$writeRecord, 'Sign:MedicalRecord'];
+
         $owner = [
-            ...self::grant([...self::ORGANIZATION, ...self::MASTER, 'Patient', 'Role'], self::CRUD),
-            ...self::grant(['Activity'], self::R),
+            ...self::grant([...self::ORGANIZATION, ...self::MASTER, 'ConsentTemplate', 'Patient', 'Role'], self::CRUD),
+            ...self::grant(['Activity', 'Appointment', 'Visit', 'TreatmentPlan', 'Recall'], self::R),
+            ...$readRecord,
             'View:SipExpiryWidget',
         ];
 
         $admin = [
-            ...self::grant([...self::ORGANIZATION, ...self::MASTER, 'Patient'], self::CRUD),
+            ...self::grant([...self::ORGANIZATION, ...self::MASTER, 'ConsentTemplate', 'Patient', 'Appointment', 'Visit', 'Recall'], self::CRUD),
             ...self::grant(['Role', 'Activity'], self::R),
             'View:SipExpiryWidget',
         ];
 
         $clinical = [
-            ...self::grant([...self::MASTER, 'Payer'], self::R),
+            ...self::grant([...self::MASTER, 'Payer', 'ConsentTemplate'], self::R),
             ...self::grant(['Patient'], self::RU),
+            ...self::grant(['TreatmentPlan', 'Recall'], self::CRU),
         ];
 
         return [
             'owner' => $owner,
             'admin' => $admin,
-            'dokter' => $clinical,
-            'perawat' => $clinical,
+            // Dokter: jadwal miliknya (dibatasi di query), bisa memanggil pasien ke kursi, menandatangani rekam medis.
+            'dokter' => [...$clinical, ...self::grant(['Appointment'], self::R), ...self::grant(['Visit'], self::RU), ...$signRecord],
+            // Perawat: mengisi draf rekam medis, tidak menandatangani.
+            'perawat' => [...$clinical, ...self::grant(['Appointment', 'Visit'], self::RU), ...$writeRecord],
             // Resepsionis mendaftarkan & mengubah data pasien, tetapi tidak menghapus (retensi rekam medis).
             'resepsionis' => [
                 ...self::grant(['Treatment', 'Payer'], self::R),
-                ...self::grant(['Patient'], self::CRU),
+                ...self::grant(['Patient', 'Appointment', 'Visit', 'Recall'], self::CRU),
             ],
             'kasir' => [
-                ...self::grant(['Treatment', 'Item', 'Payer', 'Patient'], self::R),
+                ...self::grant(['Treatment', 'Item', 'Payer', 'Patient', 'Appointment', 'Visit'], self::R),
             ],
         ];
     }

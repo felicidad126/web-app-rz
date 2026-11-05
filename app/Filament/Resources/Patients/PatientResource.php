@@ -5,8 +5,13 @@ namespace App\Filament\Resources\Patients;
 use App\Filament\Resources\Patients\Pages\CreatePatient;
 use App\Filament\Resources\Patients\Pages\EditPatient;
 use App\Filament\Resources\Patients\Pages\ListPatients;
+use App\Filament\Resources\Patients\Pages\PatientOdontogram;
 use App\Filament\Resources\Patients\Pages\ViewPatient;
+use App\Filament\Resources\Patients\RelationManagers\AttachmentsRelationManager;
 use App\Filament\Resources\Patients\RelationManagers\PatientPayersRelationManager;
+use App\Filament\Resources\Patients\RelationManagers\RecallsRelationManager;
+use App\Filament\Resources\Patients\RelationManagers\TreatmentPlansRelationManager;
+use App\Filament\Resources\Patients\RelationManagers\VisitsRelationManager;
 use App\Filament\Resources\Patients\Schemas\PatientForm;
 use App\Filament\Resources\Patients\Schemas\PatientInfolist;
 use App\Filament\Resources\Patients\Tables\PatientsTable;
@@ -59,6 +64,10 @@ class PatientResource extends Resource
     {
         return [
             PatientPayersRelationManager::class,
+            VisitsRelationManager::class,
+            TreatmentPlansRelationManager::class,
+            RecallsRelationManager::class,
+            AttachmentsRelationManager::class,
         ];
     }
 
@@ -69,6 +78,7 @@ class PatientResource extends Resource
             'create' => CreatePatient::route('/create'),
             'view' => ViewPatient::route('/{record}'),
             'edit' => EditPatient::route('/{record}/edit'),
+            'odontogram' => PatientOdontogram::route('/{record}/odontogram'),
         ];
     }
 

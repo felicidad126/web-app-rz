@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Practitioners;
 use App\Filament\Resources\Practitioners\Pages\CreatePractitioner;
 use App\Filament\Resources\Practitioners\Pages\EditPractitioner;
 use App\Filament\Resources\Practitioners\Pages\ListPractitioners;
+use App\Filament\Resources\Practitioners\RelationManagers\ScheduleExceptionsRelationManager;
+use App\Filament\Resources\Practitioners\RelationManagers\SchedulesRelationManager;
 use App\Filament\Resources\Practitioners\Schemas\PractitionerForm;
 use App\Filament\Resources\Practitioners\Tables\PractitionersTable;
 use App\Filament\Support\NavGroup;
@@ -54,6 +56,14 @@ class PractitionerResource extends Resource
     public static function table(Table $table): Table
     {
         return PractitionersTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            SchedulesRelationManager::class,
+            ScheduleExceptionsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

@@ -3,7 +3,7 @@
 Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL, Redis.
 
 - **Acuan desain:** `docs/02-dental-pms-planning-v2.md` (scope, skema DB, roadmap).
-- **Status terakhir:** `docs/03-fase-1-implementasi.md`.
+- **Status terakhir:** `docs/05-fase-2-implementasi.md` (Fase 1: `docs/03-fase-1-implementasi.md`).
 
 ## Perintah
 
@@ -24,6 +24,8 @@ Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL
   - validasi pakai `NikField` / `UniqueNik`
   - jangan pernah dicatat di log atau audit
 - **Audit:** model domain memakai `LogsAudit`. Halaman yang menampilkan data klinis mencatat akses (`activity('access')->event('viewed')`).
+- **Rekam medis terkunci** setelah ditandatangani: data klinis milik kunjungan memakai trait `LockedWithMedicalRecord`; koreksi lewat addendum. Izin klinis: `View/Update/Sign:MedicalRecord`.
+- **File klinis** (lampiran, tanda tangan, PDF) di disk `local` (privat), dibuka lewat route `clinic.*` yang mengecek izin dan mencatat akses. Jangan simpan di disk `public`.
 - **Uang** disimpan sebagai `bigint` rupiah. Simpan snapshot harga dan % fee di baris transaksi.
 - **Nomor urut** (RM, invoice, kunjungan) wajib lewat `App\Services\NumberSequence`.
 - **Lazy loading dilarang** di `local` & `testing` (`Model::shouldBeStrict`). Eager-load relasi di tabel dan relation manager.

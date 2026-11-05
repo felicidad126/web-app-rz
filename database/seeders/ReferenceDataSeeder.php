@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\OdontogramCategory;
 use App\Enums\OdontogramScope;
 use App\Enums\PayerType;
+use App\Models\ConsentTemplate;
 use App\Models\Icd10Code;
 use App\Models\Icd9cmCode;
 use App\Models\OdontogramCondition;
@@ -21,6 +22,7 @@ class ReferenceDataSeeder extends Seeder
         $this->seedCodes(Icd9cmCode::class, database_path('data/icd9cm_dental_starter.csv'));
         $this->seedOdontogramConditions();
         $this->seedUnits();
+        $this->seedConsentTemplates();
 
         Payer::withTrashed()->firstOrCreate(
             ['code' => 'UMUM'],
@@ -29,6 +31,32 @@ class ReferenceDataSeeder extends Seeder
     }
 
     /** @param class-string<Icd10Code|Icd9cmCode> $model */
+    /** Template persetujuan umum. Klinik WAJIB meninjau isinya sebelum dipakai. */
+    private function seedConsentTemplates(): void
+    {
+        ConsentTemplate::firstOrCreate(['name' => 'Persetujuan tindakan kedokteran gigi (umum)'], [
+            'is_active' => true,
+            'body' => <<<'TXT'
+Saya yang bertanda tangan di bawah ini menyatakan bahwa dokter {{dokter}} telah menjelaskan kepada saya
+mengenai tindakan yang akan dilakukan pada pasien {{nama_pasien}} (No. RM {{no_rm}}, lahir {{tanggal_lahir}}):
+
+Tindakan: {{tindakan}}
+
+Penjelasan yang saya terima meliputi:
+1. Diagnosis dan kondisi gigi/mulut pasien.
+2. Tujuan dan tata cara tindakan.
+3. Risiko dan kemungkinan komplikasi, termasuk nyeri, bengkak, perdarahan, atau reaksi terhadap obat/bius lokal.
+4. Pilihan perawatan lain beserta risikonya, termasuk risiko bila tidak dilakukan tindakan.
+5. Perkiraan hasil (prognosis) dan perkiraan biaya.
+
+Saya telah diberi kesempatan bertanya dan semua pertanyaan saya sudah dijawab dengan jelas.
+Dengan ini saya MENYETUJUI dilakukannya tindakan tersebut.
+
+{{cabang}}, {{tanggal}}
+TXT,
+        ]);
+    }
+
     private function seedCodes(string $model, string $path): void
     {
         $handle = fopen($path, 'r');

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -43,6 +44,35 @@ class Practitioner extends Model
      * @param  Builder<self>  $query
      * @return Builder<self>
      */
+    /** @return HasMany<PractitionerSchedule, $this> */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(PractitionerSchedule::class);
+    }
+
+    /** @return HasMany<ScheduleException, $this> */
+    public function scheduleExceptions(): HasMany
+    {
+        return $this->hasMany(ScheduleException::class);
+    }
+
+    /** @return HasMany<Appointment, $this> */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    /** @return HasMany<Visit, $this> */
+    public function visits(): HasMany
+    {
+        return $this->hasMany(Visit::class);
+    }
+
+    public function displayName(): string
+    {
+        return $this->user->name ?? ('Nakes #'.$this->id);
+    }
+
     public function scopeSipExpiringWithin(Builder $query, int $days): Builder
     {
         return self::applySipExpiringWithin($query, $days);

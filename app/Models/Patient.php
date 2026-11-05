@@ -79,6 +79,48 @@ class Patient extends Model
         return $this->hasMany(PatientPayer::class);
     }
 
+    /** @return HasMany<Visit, $this> */
+    public function visits(): HasMany
+    {
+        return $this->hasMany(Visit::class);
+    }
+
+    /** @return HasMany<Appointment, $this> */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    /** @return HasMany<OdontogramEntry, $this> */
+    public function odontogramEntries(): HasMany
+    {
+        return $this->hasMany(OdontogramEntry::class);
+    }
+
+    /** @return HasMany<Attachment, $this> */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class);
+    }
+
+    /** @return HasMany<TreatmentPlan, $this> */
+    public function treatmentPlans(): HasMany
+    {
+        return $this->hasMany(TreatmentPlan::class);
+    }
+
+    /** @return HasMany<Recall, $this> */
+    public function recalls(): HasMany
+    {
+        return $this->hasMany(Recall::class);
+    }
+
+    /** @return HasMany<InformedConsent, $this> */
+    public function informedConsents(): HasMany
+    {
+        return $this->hasMany(InformedConsent::class);
+    }
+
     protected function age(): Attribute
     {
         return Attribute::get(fn (): int => (int) $this->birth_date->age);

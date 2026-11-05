@@ -2,21 +2,20 @@
 
 namespace Database\Seeders;
 
+use App\Enums\AppointmentStatus;
 use App\Enums\ItemType;
 use App\Enums\PayerType;
 use App\Enums\PractitionerType;
+use App\Enums\RecallStatus;
 use App\Enums\TreatmentCategory;
+use App\Enums\TreatmentPlanStatus;
+use App\Models\Appointment;
 use App\Models\Branch;
 use App\Models\Item;
 use App\Models\Patient;
 use App\Models\Payer;
 use App\Models\Practitioner;
-use App\Models\Treatment;
-use App\Models\Unit;
-use App\Models\User;
-use Illuminate\Database\Seeder;
-use RuntimeException;
-
+use App\Models\Recall;
 /**
  * Data demo untuk lingkungan lokal/staging. JANGAN dijalankan di produksi.
  *
@@ -25,6 +24,14 @@ use RuntimeException;
  * Semua akun demo memakai password dari config('clinic.demo_password') (default "password")
  * dan wajib mengatur MFA saat login pertama.
  */
+use App\Models\Treatment;
+use App\Models\TreatmentPlan;
+use App\Models\Unit;
+use App\Models\User;
+use App\Services\Clinic\VisitFlow;
+use Illuminate\Database\Seeder;
+use RuntimeException;
+
 class DemoSeeder extends Seeder
 {
     public function run(): void
@@ -126,6 +133,105 @@ class DemoSeeder extends Seeder
 
         if (Patient::count() < 25) {
             $this->seedPatients(25, $kemang->id, Payer::where('code', 'UMUM')->value('id'));
+        }
+
+        Treatment::where('code', 'SCL')->update(['recall_months' => 6]);
+        Treatment::where('code', 'KBH')->update(['recall_months' => 1]);
+
+        $this->seedSchedules($kemang, $depok);
+
+        // Jalankan ulang seeder ini di hari lain untuk mendapat janji temu demo hari itu.
+        if (Appointment::whereDate('start_at', today())->doesntExist()) {
+            $this->seedDay($kemang);
+        }
+    }
+
+    private function seedSchedules(Branch $kemang, Branch $depok): void
+    {
+        $budi = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter@demo.test'))->first();
+        $maya = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter2@demo.test'))->first();
+        [$kmg1, $kmg2] = [$kemang->chairs()->where('name', 'Unit 1')->value('id'), $kemang->chairs()->where('name', 'Unit 2')->value('id')];
+        $dpk1 = $depok->chairs()->where('name', 'Unit 1')->value('id');
+
+        foreach (range(1, 6) as $day) {
+            $budi->schedules()->firstOrCreate(['branch_id' => $kemang->id, 'day_of_week' => $day], ['chair_id' => $kmg1, 'start_time' => '08:00', 'end_time' => '16:00']);
+        }
+
+        foreach ([1, 3, 4, 6] as $day) {
+            $maya->schedules()->firstOrCreate(['branch_id' => $kemang->id, 'day_of_week' => $day], ['chair_id' => $kmg2, 'start_time' => '08:00', 'end_time' => '17:00']);
+        }
+
+        foreach ([2, 5] as $day) {
+            $maya->schedules()->firstOrCreate(['branch_id' => $depok->id, 'day_of_week' => $day], ['chair_id' => $dpk1, 'start_time' => '09:00', 'end_time' => '17:00']);
+        }
+    }
+
+    /** Satu hari praktik di Kemang: janji temu per kursi, satu pasien di ruang tunggu, rencana & recall. */
+    private function seedDay(Branch $kemang): void
+    {
+        $budi = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter@demo.test'))->first();
+        $maya = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter2@demo.test'))->first();
+        $chairs = $kemang->chairs()->orderBy('name')->pluck('id')->all();
+        $patients = Patient::orderBy('id')->limit(12)->get();
+
+        $day = [
+            // [pasien, dokter, kursi, jam, menit, kategori, rencana, status]
+            [0, $budi, 0, '08:30', 30, TreatmentCategory::Preventive, 'Scaling RA & RB', AppointmentStatus::Confirmed],
+            [1, $budi, 0, '09:00', 45, TreatmentCategory::Restorative, 'Tambal komposit 36 O, 37 MO', AppointmentStatus::Confirmed],
+            [2, $budi, 0, '10:00', 45, TreatmentCategory::Consultation, 'Konsultasi gigi berlubang', AppointmentStatus::Booked],
+            [3, $budi, 0, '13:00', 90, TreatmentCategory::Surgery, 'Odontektomi 38', AppointmentStatus::Confirmed],
+            [4, $budi, 0, '15:00', 30, TreatmentCategory::Surgery, 'Cabut gigi susu 85', AppointmentStatus::Booked],
+            [5, $maya, 1, '08:30', 30, TreatmentCategory::Orthodontic, 'Kontrol behel', AppointmentStatus::Confirmed],
+            [6, $maya, 1, '09:30', 30, TreatmentCategory::Orthodontic, 'Kontrol behel', AppointmentStatus::Confirmed],
+            [7, $maya, 1, '11:00', 30, TreatmentCategory::Consultation, 'Konsultasi ortodonti', AppointmentStatus::Booked],
+            [8, $maya, 1, '13:30', 90, TreatmentCategory::Orthodontic, 'Pasang behel metal RA + RB', AppointmentStatus::Confirmed],
+        ];
+
+        foreach ($day as [$p, $doctor, $chair, $time, $minutes, $category, $reason, $status]) {
+            $start = today()->setTimeFromTimeString($time);
+            Appointment::create([
+                'branch_id' => $kemang->id,
+                'patient_id' => $patients[$p]->id,
+                'practitioner_id' => $doctor->id,
+                'chair_id' => $chairs[$chair] ?? null,
+                'start_at' => $start,
+                'end_at' => $start->copy()->addMinutes($minutes),
+                'category' => $category,
+                'reason' => $reason,
+                'status' => $status,
+                'confirmed_at' => $status === AppointmentStatus::Confirmed ? now() : null,
+            ]);
+        }
+
+        // Pasien jam 09.00 sudah datang dan menunggu.
+        $arrived = Appointment::whereDate('start_at', today())->where('patient_id', $patients[1]->id)->first();
+        VisitFlow::checkIn($arrived);
+
+        if (TreatmentPlan::where('patient_id', $patients[1]->id)->doesntExist()) {
+            $plan = TreatmentPlan::create([
+                'patient_id' => $patients[1]->id,
+                'practitioner_id' => $budi->id,
+                'branch_id' => $kemang->id,
+                'title' => 'Rencana perawatan menyeluruh',
+                'status' => TreatmentPlanStatus::Accepted,
+                'presented_at' => now()->subWeek(),
+                'decided_at' => now()->subWeek(),
+            ]);
+            $tko = Treatment::where('code', 'TKO')->first();
+            $cbd = Treatment::where('code', 'CBD')->first();
+            $plan->items()->create(['treatment_id' => $tko->id, 'tooth_number' => '36', 'surfaces' => 'O', 'phase' => 1, 'sequence' => 1, 'price_estimate' => 400_000]);
+            $plan->items()->create(['treatment_id' => $tko->id, 'tooth_number' => '37', 'surfaces' => 'MO', 'phase' => 1, 'sequence' => 2, 'price_estimate' => 400_000]);
+            $plan->items()->create(['treatment_id' => $cbd->id, 'tooth_number' => '18', 'phase' => 2, 'sequence' => 3, 'price_estimate' => 300_000]);
+        }
+
+        $scaling = Treatment::where('code', 'SCL')->first();
+        foreach ($patients->slice(9, 3)->values() as $i => $patient) {
+            Recall::firstOrCreate(['patient_id' => $patient->id, 'treatment_id' => $scaling->id], [
+                'branch_id' => $kemang->id,
+                'reason' => 'Kontrol: scaling 6 bulan',
+                'due_date' => today()->addDays([-20, 3, 12][$i]),
+                'status' => RecallStatus::Pending,
+            ]);
         }
     }
 

@@ -38,6 +38,14 @@ final class NumberSequence
         });
     }
 
+    /** Nomor kunjungan, mis. KJ-2611-0047 (urut per bulan). */
+    public static function nextVisitNumber(\DateTimeInterface $date): string
+    {
+        $period = $date->format('ym');
+
+        return 'KJ-'.$period.'-'.str_pad((string) self::next('visit', $period), 4, '0', STR_PAD_LEFT);
+    }
+
     public static function nextRmNumber(): string
     {
         $number = self::next('rm');
