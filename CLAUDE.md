@@ -25,6 +25,6 @@ Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL
 - **Audit:** model domain memakai `LogsAudit`. Halaman yang menampilkan data klinis mencatat akses (`activity('access')->event('viewed')`).
 - **Uang** disimpan sebagai `bigint` rupiah. Simpan snapshot harga dan % fee di baris transaksi.
 - **Nomor urut** (RM, invoice, kunjungan) wajib lewat `App\Services\NumberSequence`.
-- **Lazy loading dilarang** di luar produksi (`Model::shouldBeStrict`). Eager-load relasi di tabel dan relation manager.
+- **Lazy loading dilarang** di `local` & `testing` (`Model::shouldBeStrict`). Eager-load relasi di tabel dan relation manager.
 - `app/Policies/*` dibuat oleh Shield. Jangan diedit manual; atur hak akses di seeder.
 - **Service worker** (`public/sw.js`) hanya boleh meng-cache aset statis.

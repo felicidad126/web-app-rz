@@ -22,7 +22,8 @@ use RuntimeException;
  *
  *   php artisan db:seed --class=DemoSeeder
  *
- * Semua akun demo memakai password "password" dan wajib mengatur MFA saat login pertama.
+ * Semua akun demo memakai password dari config('clinic.demo_password') (default "password")
+ * dan wajib mengatur MFA saat login pertama.
  */
 class DemoSeeder extends Seeder
 {
@@ -54,7 +55,7 @@ class DemoSeeder extends Seeder
         ];
 
         foreach ($accounts as [$email, $name, $role, $branches]) {
-            $user = User::firstOrCreate(['email' => $email], ['name' => $name, 'password' => 'password', 'is_active' => true]);
+            $user = User::firstOrCreate(['email' => $email], ['name' => $name, 'password' => config('clinic.demo_password'), 'is_active' => true]);
             $user->syncRoles([$role]);
             $user->branches()->syncWithoutDetaching(collect($branches)->pluck('id'));
         }

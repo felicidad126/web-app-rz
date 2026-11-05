@@ -1,2 +1,3 @@
+# Aplikasi internal klinik: jangan diindeks mesin pencari.
 User-agent: *
-Disallow:
+Disallow: /

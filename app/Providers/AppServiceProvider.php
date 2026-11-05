@@ -21,7 +21,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Model::shouldBeStrict(! $this->app->isProduction());
+        // Lazy loading & atribut hilang jadi exception hanya saat development/test (menangkap N+1).
+        // Staging berperilaku seperti produksi.
+        Model::shouldBeStrict($this->app->environment('local', 'testing'));
 
         Password::defaults(fn () => Password::min(10)->letters()->numbers());
 

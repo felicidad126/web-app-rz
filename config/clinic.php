@@ -38,4 +38,16 @@ return [
 
     'sip_expiry_warning_days' => 60,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Password akun demo (DemoSeeder)
+    |--------------------------------------------------------------------------
+    |
+    | Default "password" hanya untuk laptop developer. Di staging yang bisa
+    | diakses dari internet WAJIB diisi acak (deploy/provision.sh mengisinya).
+    |
+    */
+
+    'demo_password' => env('DEMO_PASSWORD') ?: 'password',
+
 ];

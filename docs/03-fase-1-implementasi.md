@@ -98,7 +98,7 @@ public/
 - **Tidak ada hapus permanen.** Policy Shield tidak punya `forceDelete`, dan tombolnya tidak ditampilkan.
 - **NIK** hanya lewat `HasEncryptedNik`. Kolom `nik` terenkripsi, `nik_hash` untuk pencarian. NIK dikecualikan dari audit log dan ditandai *sensitive* di importer.
 - **Uang** disimpan sebagai `bigint` rupiah.
-- **Lazy loading dimatikan** di luar produksi (`Model::shouldBeStrict`), supaya N+1 query ketahuan sejak development.
+- **Lazy loading dimatikan** di lingkungan `local` & `testing` (`Model::shouldBeStrict`), supaya N+1 query ketahuan sejak development. Staging berperilaku seperti produksi.
 - **Label UI Bahasa Indonesia.** Filament memakai locale `id`.
 
 ---
