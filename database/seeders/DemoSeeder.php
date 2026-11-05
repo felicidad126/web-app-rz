@@ -9,13 +9,13 @@ use App\Enums\PractitionerType;
 use App\Enums\RecallStatus;
 use App\Enums\TreatmentCategory;
 use App\Enums\TreatmentPlanStatus;
+use App\Enums\VisitStatus;
 use App\Models\Appointment;
 use App\Models\Branch;
 use App\Models\Item;
+use App\Models\Package;
 use App\Models\Patient;
-use App\Models\Payer;
-use App\Models\Practitioner;
-use App\Models\Recall;
+use App\Models\PatientPackage;
 /**
  * Data demo untuk lingkungan lokal/staging. JANGAN dijalankan di produksi.
  *
@@ -24,12 +24,21 @@ use App\Models\Recall;
  * Semua akun demo memakai password dari config('clinic.demo_password') (default "password")
  * dan wajib mengatur MFA saat login pertama.
  */
+use App\Models\Payer;
+use App\Models\Practitioner;
+use App\Models\Recall;
 use App\Models\Treatment;
 use App\Models\TreatmentPlan;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Visit;
+use App\Services\Billing\CashSessions;
+use App\Services\Billing\InvoiceBuilder;
+use App\Services\Billing\PackageSales;
+use App\Services\Billing\PaymentRecorder;
 use App\Services\Clinic\VisitFlow;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 use RuntimeException;
 
 class DemoSeeder extends Seeder
@@ -143,6 +152,85 @@ class DemoSeeder extends Seeder
         // Jalankan ulang seeder ini di hari lain untuk mendapat janji temu demo hari itu.
         if (Appointment::whereDate('start_at', today())->doesntExist()) {
             $this->seedDay($kemang);
+        }
+
+        $this->seedBilling($kemang);
+    }
+
+    /**
+     * Fase 3: paket behel dengan cicilan berjalan, dan satu tagihan lama yang belum lunas
+     * (muncul sebagai "saldo terutang" di kasir). Transaksi lama dibuat dengan waktu mundur.
+     */
+    private function seedBilling(Branch $kemang): void
+    {
+        $control = Treatment::where('code', 'KBH')->firstOrFail();
+        $package = Package::firstOrCreate(['code' => 'ORT-MTL'], [
+            'name' => 'Behel metal RA + RB',
+            'price' => 8_000_000,
+            'validity_days' => 730,
+            'description' => 'Termasuk pasang behel dan 12 kali kontrol. Tidak termasuk retainer setelah lepas behel.',
+        ]);
+        $package->items()->firstOrCreate(['treatment_id' => $control->id], ['quota' => 12]);
+
+        $kasir = User::where('email', 'kasir@demo.test')->firstOrFail();
+
+        // Riwayat transaksi dibuat dengan sesi kasir mundur; jangan ganggu sesi kasir yang sedang dipakai.
+        if (CashSessions::current($kasir, $kemang->id) !== null) {
+            return;
+        }
+        $maya = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter2@demo.test'))->firstOrFail();
+        $budi = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter@demo.test'))->firstOrFail();
+        $patients = Patient::orderBy('id')->limit(12)->get();
+        $pay = function (Carbon $at, callable $makeInvoices, string $method, int $amount) use ($kasir, $kemang): void {
+            Carbon::setTestNow($at);
+            $session = CashSessions::open($kasir, $kemang->id, 500_000);
+            $invoices = $makeInvoices();
+            PaymentRecorder::receive($invoices[0]->patient, array_map(fn ($i) => $i->id, $invoices), [['method' => $method, 'amount' => $amount]], $session, $kasir);
+            $cash = CashSessions::expectedCash($session);
+            $reported = array_map(fn (int $v) => $v, array_diff_key(CashSessions::systemTotals($session), ['cash' => 0]));
+            CashSessions::close($session, $kasir, ['denominations' => ['coins' => $cash], 'reported' => $reported, 'next_opening_cash' => 500_000]);
+            Carbon::setTestNow();
+        };
+
+        // Paket behel pasien ortho (kontrol jam 08.30): DP + 6 cicilan, sudah dibayar sampai bulan lalu.
+        $orthoPatient = $patients[5];
+
+        if (PatientPackage::where('patient_id', $orthoPatient->id)->doesntExist()) {
+            $start = today()->subMonths(5)->startOfMonth()->addDays(9);
+            Carbon::setTestNow($start->copy()->setTime(10, 0));
+            $sold = PackageSales::sell($orthoPatient, $package, [
+                'branch_id' => $kemang->id, 'practitioner_id' => $maya->id, 'down_payment' => 2_000_000,
+                'installment_count' => 6, 'start_date' => $start, 'due_day' => 5,
+            ]);
+            Carbon::setTestNow();
+
+            foreach ($sold->installments()->get() as $installment) {
+                if ($installment->due_date->gte(today()->startOfMonth())) {
+                    break;
+                }
+
+                $paidAt = $installment->due_date->copy()->addDays([0, -2, 2, -1, 1][$installment->sequence % 5])->setTime(11, 0);
+                $pay($paidAt, fn () => [InvoiceBuilder::forInstallment($installment, $kasir)], ['transfer', 'qris', 'cash'][$installment->sequence % 3], $installment->amount);
+            }
+        }
+
+        // Tagihan bulan lalu pasien jam 09.00 yang baru dibayar sebagian (saldo terutang Rp450.000).
+        $patient = $patients[1];
+
+        if (Visit::where('patient_id', $patient->id)->whereDate('visit_date', '<', today())->doesntExist()) {
+            $at = today()->subMonth()->setTime(10, 0);
+            Carbon::setTestNow($at);
+            $visit = Visit::create([
+                'branch_id' => $kemang->id, 'patient_id' => $patient->id, 'practitioner_id' => $budi->id,
+                'visit_date' => $at, 'status' => VisitStatus::Done, 'started_at' => $at, 'finished_at' => $at->copy()->addHour(),
+            ]);
+
+            foreach (['KONS', 'PSA', 'TGI'] as $code) {
+                $visit->procedures()->create(['treatment_id' => Treatment::where('code', $code)->value('id'), 'operator_id' => $budi->id, 'tooth_number' => $code === 'KONS' ? null : '46']);
+            }
+
+            Carbon::setTestNow();
+            $pay($at->copy()->addHours(2), fn () => [InvoiceBuilder::issue(InvoiceBuilder::forVisit($visit), $kasir)], 'cash', 500_000);
         }
     }
 

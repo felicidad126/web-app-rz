@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BillingPrintController;
 use App\Http\Controllers\ClinicalFileController;
 use App\Http\Controllers\OdontogramPrintController;
 use Illuminate\Support\Facades\Route;
@@ -12,4 +13,11 @@ Route::middleware(['auth'])->prefix('berkas')->name('clinic.')->group(function (
     Route::get('lampiran/{attachment}', [ClinicalFileController::class, 'attachment'])->name('attachments.show');
     Route::get('persetujuan/{consent}', [ClinicalFileController::class, 'consentPdf'])->name('consents.pdf');
     Route::get('odontogram/{patient}', OdontogramPrintController::class)->name('odontogram.pdf');
+});
+
+// Struk thermal & nota PDF.
+Route::middleware(['auth'])->prefix('cetak')->name('billing.')->group(function (): void {
+    Route::get('struk/{transaction}', [BillingPrintController::class, 'receipt'])->name('receipt');
+    Route::get('tagihan/{invoice}/struk', [BillingPrintController::class, 'invoiceReceipt'])->name('invoice-receipt');
+    Route::get('tagihan/{invoice}/nota.pdf', [BillingPrintController::class, 'invoicePdf'])->name('invoice-pdf');
 });

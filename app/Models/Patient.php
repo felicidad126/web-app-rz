@@ -115,6 +115,37 @@ class Patient extends Model
         return $this->hasMany(Recall::class);
     }
 
+    /** @return HasMany<Invoice, $this> */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /** @return HasMany<PatientPackage, $this> */
+    public function patientPackages(): HasMany
+    {
+        return $this->hasMany(PatientPackage::class);
+    }
+
+    /** @return HasMany<DepositTransaction, $this> */
+    public function depositTransactions(): HasMany
+    {
+        return $this->hasMany(DepositTransaction::class);
+    }
+
+    /** Saldo deposit terkini (saldo berjalan baris terakhir). */
+    public function depositBalance(): int
+    {
+        return (int) $this->depositTransactions()->latest('id')->value('balance_after');
+    }
+
+    /** Total sisa tagihan yang belum dibayar. */
+    public function outstandingBalance(): int
+    {
+        return (int) $this->invoices()->outstanding()->get(['patient_portion', 'paid_total'])
+            ->sum(fn (Invoice $invoice): int => max(0, $invoice->patient_portion - $invoice->paid_total));
+    }
+
     /** @return HasMany<InformedConsent, $this> */
     public function informedConsents(): HasMany
     {

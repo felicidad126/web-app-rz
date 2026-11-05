@@ -45,6 +45,22 @@ dataset('akses', [
     ['kasir', '/patients/create', 403],
     ['kasir', '/treatments/create', 403],
     ['kasir', '/users', 403],
+    // Fase 3: kasir & billing.
+    ['kasir', '/kasir', 200],
+    ['kasir', '/tagihan', 200],
+    ['kasir', '/sesi-kasir', 200],
+    ['kasir', '/paket-cicilan/create', 200],
+    ['kasir', '/paket', 200],
+    ['kasir', '/persetujuan', 403],
+    ['owner', '/persetujuan', 200],
+    ['owner', '/tagihan', 200],
+    ['admin', '/paket', 200],
+    ['admin', '/persetujuan', 403],
+    ['resepsionis', '/tagihan', 200],
+    ['resepsionis', '/paket-cicilan/create', 403],
+    ['dokter', '/kasir', 403],
+    ['dokter', '/tagihan', 403],
+    ['perawat', '/sesi-kasir', 403],
 ]);
 
 it('membatasi halaman sesuai matriks akses', function (string $role, string $url, int $status) {

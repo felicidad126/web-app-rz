@@ -3,7 +3,7 @@
 Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL, Redis.
 
 - **Acuan desain:** `docs/02-dental-pms-planning-v2.md` (scope, skema DB, roadmap).
-- **Status terakhir:** `docs/05-fase-2-implementasi.md` (Fase 1: `docs/03-fase-1-implementasi.md`).
+- **Status terakhir:** `docs/06-fase-3-implementasi.md` (Fase 1: `docs/03-fase-1-implementasi.md`, Fase 2: `docs/05-fase-2-implementasi.md`).
 
 ## Perintah
 
@@ -27,6 +27,7 @@ Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL
 - **Rekam medis terkunci** setelah ditandatangani: data klinis milik kunjungan memakai trait `LockedWithMedicalRecord`; koreksi lewat addendum. Izin klinis: `View/Update/Sign:MedicalRecord`.
 - **File klinis** (lampiran, tanda tangan, PDF) di disk `local` (privat), dibuka lewat route `clinic.*` yang mengecek izin dan mencatat akses. Jangan simpan di disk `public`.
 - **Uang** disimpan sebagai `bigint` rupiah. Simpan snapshot harga dan % fee di baris transaksi.
+- **Billing:** rumus tagihan hanya di `App\Services\Billing\InvoiceCalculator`. Tagihan terbit, baris tagihan, dan ledger deposit terkunci di level model; koreksi lewat void/refund (`BillingApprovals`, izin `Approve:Billing`, penyetuju ≠ pengaju). Uang masuk/keluar selalu tercatat ke sesi kasir yang terbuka (`CashSessions`).
 - **Nomor urut** (RM, invoice, kunjungan) wajib lewat `App\Services\NumberSequence`.
 - **Lazy loading dilarang** di `local` & `testing` (`Model::shouldBeStrict`). Eager-load relasi di tabel dan relation manager.
 - `app/Policies/*` dibuat oleh Shield. Jangan diedit manual; atur hak akses di seeder.

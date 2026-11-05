@@ -60,6 +60,7 @@ class VisitsTable
                 ActionGroup::make([
                     VisitActions::start(),
                     VisitActions::examine(),
+                    VisitActions::checkout(),
                     VisitActions::cancel(),
                 ]),
             ]);

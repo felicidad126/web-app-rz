@@ -39,7 +39,7 @@ final class MedicalRecordSigning
             $problems[] = 'Belum ada diagnosis ICD-10.';
         }
 
-        if (in_array($visit->status, [VisitStatus::Cancelled, VisitStatus::Billed], true)) {
+        if ($visit->status === VisitStatus::Cancelled) {
             $problems[] = 'Kunjungan sudah '.$visit->status->getLabel().'.';
         }
 
@@ -59,7 +59,8 @@ final class MedicalRecordSigning
             $record->forceFill(['signed_by' => $user->id, 'signed_at' => now()])->save();
 
             $visit->update([
-                'status' => VisitStatus::Done,
+                // Kunjungan yang sudah ditagih (dokter menandatangani belakangan) tetap "sudah ditagih".
+                'status' => $visit->status === VisitStatus::Billed ? VisitStatus::Billed : VisitStatus::Done,
                 'started_at' => $visit->started_at ?? now(),
                 'finished_at' => now(),
             ]);

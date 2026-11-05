@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\InvoiceStatus;
 use App\Enums\VisitStatus;
 use App\Models\Concerns\LogsAudit;
 use App\Models\Concerns\RecordsAuthor;
@@ -144,6 +145,18 @@ class Visit extends Model
     public function addenda(): HasManyThrough
     {
         return $this->hasManyThrough(MedicalRecordAddendum::class, MedicalRecord::class);
+    }
+
+    /** @return HasMany<Invoice, $this> */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /** Tagihan kunjungan yang berlaku (bukan void). */
+    public function activeInvoice(): ?Invoice
+    {
+        return $this->invoices()->where('status', '!=', InvoiceStatus::Void)->latest('id')->first();
     }
 
     /** Rekam medis kunjungan, dibuat otomatis saat pertama dibuka. */

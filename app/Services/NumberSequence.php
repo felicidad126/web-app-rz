@@ -46,6 +46,22 @@ final class NumberSequence
         return 'KJ-'.$period.'-'.str_pad((string) self::next('visit', $period), 4, '0', STR_PAD_LEFT);
     }
 
+    /** Nomor tagihan per cabang per bulan, mis. KMG-2611-0021. */
+    public static function nextInvoiceNumber(string $branchCode, \DateTimeInterface $date): string
+    {
+        $scope = strtoupper($branchCode).'-'.$date->format('ym');
+
+        return $scope.'-'.str_pad((string) self::next('invoice', $scope), 4, '0', STR_PAD_LEFT);
+    }
+
+    /** Nomor paket pasien, mis. PKT-2604-0007. */
+    public static function nextPackageNumber(\DateTimeInterface $date): string
+    {
+        $period = $date->format('ym');
+
+        return 'PKT-'.$period.'-'.str_pad((string) self::next('package', $period), 4, '0', STR_PAD_LEFT);
+    }
+
     public static function nextRmNumber(): string
     {
         $number = self::next('rm');

@@ -567,13 +567,15 @@ erDiagram
 - [x] Tanda tangan & penguncian rekam medis, addendum, audit log akses.
 - **DoD:** satu kunjungan lengkap (appointment → check-in → periksa → tanda tangan) bisa dijalankan dari tablet dokter.
 
-### Fase 3: Kasir & Billing (Minggu 7–8)
-- [ ] Invoice otomatis dari kunjungan + item tambahan + diskon item/invoice + porsi penjamin.
-- [ ] Pembayaran multi-metode/split/DP, deposit pasien, void/refund dengan approval.
-- [ ] Paket & cicilan ortho (kuota, pemakaian per kunjungan, jadwal cicilan).
-- [ ] Tutup kasir harian.
-- [ ] Nota PDF + struk thermal 80/58mm (**uji dengan printer klien**).
-- [ ] Test otomatis untuk rumus tagihan, alokasi diskon, dan status invoice.
+### Fase 3: Kasir & Billing (Minggu 7–8) — ✅ kode selesai
+> Detail hasil, verifikasi, dan penyimpangan: [06-fase-3-implementasi.md](./06-fase-3-implementasi.md).
+
+- [x] Invoice otomatis dari kunjungan + item tambahan + diskon item/invoice + porsi penjamin.
+- [x] Pembayaran multi-metode/split/DP, deposit pasien, void/refund dengan approval.
+- [x] Paket & cicilan ortho (kuota, pemakaian per kunjungan, jadwal cicilan).
+- [x] Tutup kasir harian.
+- [x] Nota PDF + struk thermal 80/58mm (**uji dengan printer klien** masih menunggu staging).
+- [x] Test otomatis untuk rumus tagihan, alokasi diskon, dan status invoice.
 - **DoD:** 🚀 **Soft launch** di 1 cabang. Klinik menjalankan pendaftaran, rekam medis, dan kasir di aplikasi.
 
 ### Fase 4: Bridging SATUSEHAT (Minggu 9–10)

@@ -8,6 +8,7 @@ use App\Filament\Resources\Patients\Pages\ListPatients;
 use App\Filament\Resources\Patients\Pages\PatientOdontogram;
 use App\Filament\Resources\Patients\Pages\ViewPatient;
 use App\Filament\Resources\Patients\RelationManagers\AttachmentsRelationManager;
+use App\Filament\Resources\Patients\RelationManagers\DepositRelationManager;
 use App\Filament\Resources\Patients\RelationManagers\PatientPayersRelationManager;
 use App\Filament\Resources\Patients\RelationManagers\RecallsRelationManager;
 use App\Filament\Resources\Patients\RelationManagers\TreatmentPlansRelationManager;
@@ -68,6 +69,7 @@ class PatientResource extends Resource
             TreatmentPlansRelationManager::class,
             RecallsRelationManager::class,
             AttachmentsRelationManager::class,
+            DepositRelationManager::class,
         ];
     }
 

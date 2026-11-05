@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Visits;
 
 use App\Enums\VisitStatus;
+use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Models\Visit;
+use App\Services\Billing\InvoiceBuilder;
 use App\Services\Clinic\VisitFlow;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -55,5 +57,27 @@ final class VisitActions
             ->visible(fn (?Visit $record): bool => $record !== null
                 && $record->status !== VisitStatus::Cancelled
                 && (auth()->user()?->can('View:MedicalRecord') ?? false));
+    }
+
+    /** Buka kasir untuk kunjungan ini (tagihan dibuat bila belum ada). */
+    public static function checkout(): Action
+    {
+        return Action::make('checkout')
+            ->label('Kasir')
+            ->icon(Heroicon::OutlinedCalculator)
+            ->visible(fn (?Visit $record): bool => $record !== null
+                && in_array($record->status, [VisitStatus::InTreatment, VisitStatus::Done, VisitStatus::Billed], true)
+                && (auth()->user()?->can('Create:Invoice') ?? false))
+            ->action(function (Visit $record, Action $action): void {
+                try {
+                    $invoice = InvoiceBuilder::forVisit($record);
+                } catch (InvalidArgumentException $e) {
+                    Notification::make()->title('Tagihan belum bisa dibuat')->body($e->getMessage())->danger()->send();
+
+                    return;
+                }
+
+                $action->redirect(InvoiceResource::getUrl($invoice->isDraft() ? 'edit' : 'view', ['record' => $invoice]));
+            });
     }
 }

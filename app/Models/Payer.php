@@ -9,7 +9,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-/** Penjamin pembayaran: umum, BPJS, asuransi, corporate. */
+/**
+ * Penjamin pembayaran: umum, BPJS, asuransi, corporate.
+ *
+ * @property int $id
+ * @property string $code
+ * @property string $name
+ * @property PayerType $type
+ * @property bool $is_active
+ */
 #[Fillable(['code', 'name', 'type', 'phone', 'notes', 'is_active'])]
 class Payer extends Model
 {

@@ -40,6 +40,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Kasir & billing
+    |--------------------------------------------------------------------------
+    |
+    | rounding: pembulatan total tagihan ke kelipatan terdekat (0 = tanpa, 100, 1000).
+    | denominations: pecahan uang untuk hitung tunai saat tutup kasir.
+    |
+    */
+
+    'billing' => [
+        'rounding' => (int) env('CLINIC_BILLING_ROUNDING', 0),
+        'denominations' => [100_000, 50_000, 20_000, 10_000, 5_000, 2_000, 1_000],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Password akun demo (DemoSeeder)
     |--------------------------------------------------------------------------
     |
