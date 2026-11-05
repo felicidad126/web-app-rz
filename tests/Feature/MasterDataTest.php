@@ -3,6 +3,7 @@
 use App\Console\Commands\CheckSipExpiry;
 use App\Filament\Imports\PatientImporter;
 use App\Filament\Imports\TreatmentImporter;
+use App\Filament\Resources\Practitioners\PractitionerResource;
 use App\Models\Branch;
 use App\Models\Icd10Code;
 use App\Models\Item;
@@ -91,4 +92,12 @@ it('clinic:create-owner --check membedakan owner asli dan akun demo', function (
     $this->artisan('clinic:create-owner', ['--check' => true])->assertExitCode(0);
 
     expect(User::where('email', 'pemilik@klinik.test')->first()->hasRole('owner'))->toBeTrue();
+});
+
+it('memakai nama dokter sebagai judul halaman tenaga kesehatan', function () {
+    $practitioner = Practitioner::factory()->create();
+    $practitioner->user->update(['name' => 'Drg. Contoh Judul']);
+
+    expect(PractitionerResource::getRecordTitle($practitioner->fresh('user')))->toBe('Drg. Contoh Judul')
+        ->and(PractitionerResource::hasRecordTitle())->toBeTrue();
 });

@@ -37,7 +37,13 @@ class PractitionerResource extends Resource
     public static function getRecordTitle(?Model $record): string|Htmlable|null
     {
         /** @var Practitioner|null $record */
-        return $record?->user?->name;
+        return $record?->user->name ?? static::getModelLabel();
+    }
+
+    /** Judul diambil dari relasi user, bukan kolom, jadi aktifkan secara eksplisit. */
+    public static function hasRecordTitle(): bool
+    {
+        return true;
     }
 
     public static function form(Schema $schema): Schema
