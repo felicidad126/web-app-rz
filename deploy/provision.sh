@@ -399,8 +399,7 @@ ok "Cron scheduler terpasang"
 # 10. Akun owner
 # ---------------------------------------------------------------------------
 step "Akun Owner"
-owner_count=$(artisan tinker --execute 'echo App\Models\User::role("owner")->where("email", "not like", "%@demo.test")->count();' 2>/dev/null | tail -1)
-if [[ "${owner_count:-0}" =~ ^[1-9] ]]; then
+if artisan clinic:create-owner --check >/dev/null 2>&1; then
     ok "Akun owner sudah ada"
 elif [[ -n "${OWNER_EMAIL:-}" && -n "${OWNER_PASSWORD:-}" ]]; then
     artisan clinic:create-owner --name="${OWNER_NAME:-Owner}" --email="$OWNER_EMAIL" --password="$OWNER_PASSWORD"

@@ -9,17 +9,22 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Spatie\Permission\Models\Role;
 
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\text;
 
 /** Buat akun Owner pertama saat instalasi (MFA wajib diatur saat login pertama). */
-#[Signature('clinic:create-owner {--name=} {--email=} {--password=}')]
+#[Signature('clinic:create-owner {--name=} {--email=} {--password=} {--check : Hanya cek: exit 0 jika sudah ada owner (selain akun demo), 1 jika belum}')]
 #[Description('Buat akun Owner klinik')]
 class CreateOwner extends Command
 {
     public function handle(): int
     {
+        if ($this->option('check')) {
+            return $this->ownerExists() ? self::SUCCESS : self::FAILURE;
+        }
+
         $data = [
             'name' => $this->option('name') ?? text('Nama', required: true),
             'email' => $this->option('email') ?? text('Email', required: true),
@@ -48,5 +53,14 @@ class CreateOwner extends Command
         $this->info("Owner {$user->email} dibuat. Atur MFA saat login pertama.");
 
         return self::SUCCESS;
+    }
+
+    private function ownerExists(): bool
+    {
+        if (! Role::where('name', 'owner')->exists()) {
+            return false;
+        }
+
+        return User::role('owner')->where('email', 'not like', '%@demo.test')->exists();
     }
 }

@@ -80,3 +80,15 @@ it('mengenali variasi penulisan jenis kelamin', function () {
         ->and(TreatmentImporter::parseCategory('Ortodontik'))->toBe('orthodontic')
         ->and(TreatmentImporter::parseCategory(''))->toBe('other');
 });
+
+it('clinic:create-owner --check membedakan owner asli dan akun demo', function () {
+    $this->artisan('clinic:create-owner', ['--check' => true])->assertExitCode(1);
+
+    User::factory()->create(['email' => 'owner@demo.test'])->assignRole('owner');
+    $this->artisan('clinic:create-owner', ['--check' => true])->assertExitCode(1);
+
+    $this->artisan('clinic:create-owner', ['--name' => 'Pemilik', '--email' => 'pemilik@klinik.test', '--password' => 'Rahasia12345'])->assertSuccessful();
+    $this->artisan('clinic:create-owner', ['--check' => true])->assertExitCode(0);
+
+    expect(User::where('email', 'pemilik@klinik.test')->first()->hasRole('owner'))->toBeTrue();
+});
