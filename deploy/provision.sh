@@ -242,7 +242,7 @@ env_set CACHE_STORE redis
 env_set SESSION_DRIVER database
 
 # Kunci: hanya dibuat SEKALI. Mengganti kunci = data terenkripsi (NIK, MFA) tidak bisa dibaca.
-[[ -n "$(env_get APP_KEY)" ]] || artisan key:generate --force --no-interaction >/dev/null
+[[ -n "$(env_get APP_KEY)" ]] || env_set APP_KEY "base64:$(openssl rand -base64 32)"
 [[ -n "$(env_get BLIND_INDEX_KEY)" ]] || env_set BLIND_INDEX_KEY "$(openssl rand -base64 32)"
 [[ -n "$(env_get BACKUP_ARCHIVE_PASSWORD)" ]] || env_set BACKUP_ARCHIVE_PASSWORD "$(random_secret 40)"
 [[ -n "$(env_get BACKUP_DISK)" ]] || env_set BACKUP_DISK local
