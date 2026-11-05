@@ -96,10 +96,13 @@ sudo bash provision.sh
 ```
 
 Script akan menanyakan:
-1. **Domain.** Kosongkan jika belum ada; aplikasi lalu diakses via `http://IP` tanpa HTTPS.
-2. **Data demo** (y/n). Jika `y`, `APP_ENV=staging` dan akun demo dibuat dengan password acak.
-3. **Firewall UFW** (y/n). Port SSH yang sedang dipakai dideteksi otomatis dan tetap dibuka.
-4. **Akun owner** (nama, email, password).
+1. **Domain.** Isi jika sudah ada domain yang A record-nya mengarah ke server; HTTPS dari Let's Encrypt dipasang otomatis. Kosongkan jika belum ada.
+2. **HTTPS lewat Tailscale** (y/n). Hanya ditanyakan jika domain kosong dan Tailscale di server sudah siap (lihat §3.0.1).
+3. **Data demo** (y/n). Jika `y`, `APP_ENV=staging` dan akun demo dibuat dengan password acak.
+4. **Firewall UFW** (y/n). Port SSH yang sedang dipakai dideteksi otomatis dan tetap dibuka.
+5. **Akun owner** (nama, email, password).
+
+Tanpa domain dan tanpa Tailscale, aplikasi diakses via `http://IP` tanpa HTTPS. Fitur PWA (pasang aplikasi, offline) tidak aktif tanpa HTTPS.
 
 Hasilnya:
 - Aplikasi di `/var/www/dental-pms`.
@@ -110,6 +113,23 @@ Update kode dan setelah mengubah `.env`:
 ```bash
 sudo bash /var/www/dental-pms/deploy/update.sh
 ```
+
+#### 3.0.1 HTTPS lewat Tailscale (tanpa domain)
+
+Cocok untuk staging atau klinik yang belum punya domain. Aplikasi hanya bisa dibuka dari perangkat yang login ke tailnet yang sama, dan tidak terbuka ke internet.
+
+Siapkan sekali:
+1. Di admin console Tailscale, menu **DNS**: aktifkan **MagicDNS** dan **HTTPS Certificates**.
+2. Di server: Tailscale 1.52 atau lebih baru, sudah login (`sudo tailscale up`).
+
+Lalu jalankan `sudo bash provision.sh`, kosongkan domain, dan jawab `y` saat ditanya HTTPS lewat Tailscale. Mode non-interaktif: `TAILSCALE_HTTPS=y`.
+
+Yang dilakukan script:
+- `tailscale serve --bg http://127.0.0.1:80`: Tailscale menerima `https://<nama-vm>.<tailnet>.ts.net` (sertifikat diurus Tailscale) lalu meneruskan ke Nginx.
+- Nginx aplikasi hanya mendengarkan `127.0.0.1:80`. Akses `http://IP` dialihkan ke alamat `.ts.net`.
+- `.env`: `APP_URL=https://<nama>.ts.net`, `TRUSTED_PROXIES` ditambah `127.0.0.1,::1`, `SESSION_SECURE_COOKIE=true`.
+
+Jika Tailscale belum siap, script memberi peringatan dan melanjutkan dengan akses via IP. Jalankan ulang script setelah diperbaiki; kunci dan data tidak berubah.
 
 Langkah 3.1–3.5 di bawah adalah rincian manual dari apa yang dilakukan script.
 
@@ -232,7 +252,7 @@ server {
 | `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://...` | Wajib di produksi |
 | `APP_KEY` | Kunci enkripsi (NIK, secret MFA, session). **Simpan cadangannya di password manager owner.** Kalau hilang, NIK dan MFA tidak bisa didekripsi. |
 | `BLIND_INDEX_KEY` | Kunci HMAC untuk pencarian NIK. Generate sekali dengan `php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"`. **Jangan pernah diganti setelah ada data.** Simpan cadangannya bersama `APP_KEY`. |
-| `TRUSTED_PROXIES` | Isi hanya jika aplikasi di balik reverse proxy, Cloudflare, atau load balancer (IP dipisah koma, atau `*`), supaya URL aset dan cookie memakai HTTPS. Kosongkan untuk Nginx + PHP-FPM langsung. |
+| `TRUSTED_PROXIES` | Isi hanya jika aplikasi di balik reverse proxy, Cloudflare, atau load balancer (IP dipisah koma, atau `*`), supaya URL aset dan cookie memakai HTTPS. Kosongkan untuk Nginx + PHP-FPM langsung. Mode Tailscale: diisi otomatis `127.0.0.1,::1`. Jika `APP_URL` diawali `https://`, link dan redirect selalu dibuat https. |
 | `SESSION_LIFETIME=30`, `SESSION_ENCRYPT=true` | Idle timeout 30 menit |
 | `QUEUE_CONNECTION=redis`, `CACHE_STORE=redis` | Cache juga dipakai Filament untuk anti-replay kode MFA |
 | `MAIL_*` | Untuk MFA via email, reset password, dan notifikasi backup gagal |

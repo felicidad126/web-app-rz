@@ -12,6 +12,7 @@
 #
 # Variabel opsional (untuk mode non-interaktif):
 #   APP_DOMAIN=staging.klinik.com  LE_EMAIL=admin@klinik.com  DEMO_DATA=y|n
+#   TAILSCALE_HTTPS=y|n   (tanpa domain: HTTPS via https://<nama-vm>.<tailnet>.ts.net)
 #   REPO_URL=...  REPO_BRANCH=...  APP_DIR=/var/www/dental-pms  ENABLE_UFW=y|n
 #   OWNER_NAME=...  OWNER_EMAIL=...  OWNER_PASSWORD=...
 #
@@ -113,6 +114,32 @@ env_set() { # env_set KEY VALUE  (ganti jika ada, tambah jika belum)
 
 random_secret() { openssl rand -hex "$(( ${1:-32} / 2 ))"; }
 
+# Nama *.ts.net mesin ini yang boleh diberi sertifikat HTTPS oleh Tailscale.
+# Kosong jika Tailscale tidak terpasang, belum login, atau "HTTPS Certificates" belum aktif.
+ts_cert_domain() {
+    command -v tailscale >/dev/null 2>&1 || return 0
+    command -v python3 >/dev/null 2>&1 || return 0
+    tailscale status --json 2>/dev/null | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+except ValueError:
+    sys.exit(0)
+if d.get("BackendState") == "Running":
+    print((d.get("CertDomains") or [""])[0])
+' 2>/dev/null || true
+}
+
+add_trusted_proxies() { # tambah IP ke TRUSTED_PROXIES tanpa menghapus yang sudah ada
+    local current ip
+    current=$(env_get TRUSTED_PROXIES)
+    [[ "$current" == "*" ]] && return 0
+    for ip in "$@"; do
+        [[ ",${current}," == *",${ip},"* ]] || current="${current:+${current},}${ip}"
+    done
+    env_set TRUSTED_PROXIES "$current"
+}
+
 # ---------------------------------------------------------------------------
 # 0. Pemeriksaan awal & input
 # ---------------------------------------------------------------------------
@@ -131,13 +158,26 @@ echo "    Folder : $APP_DIR"
 echo
 
 if ! is_tty && [[ -z "${APP_DOMAIN+x}" ]]; then
-    warn "Tidak ada terminal interaktif: memakai nilai default (tanpa domain, data demo, UFW aktif)."
+    warn "Tidak ada terminal interaktif: memakai nilai default (tanpa domain, HTTPS Tailscale bila siap, data demo, UFW aktif)."
     warn "Disarankan: unduh script lalu jalankan 'sudo bash provision.sh' agar bisa menjawab pertanyaan."
 fi
-ask APP_DOMAIN "Domain untuk aplikasi (kosongkan jika belum ada, akses via IP tanpa HTTPS)" ""
+ask APP_DOMAIN "Domain untuk aplikasi (kosongkan jika belum ada: akses via Tailscale atau IP)" ""
 if [[ -n "$APP_DOMAIN" ]]; then
     ask LE_EMAIL "Email untuk sertifikat Let's Encrypt" ""
     [[ -n "$LE_EMAIL" ]] || die "Email Let's Encrypt wajib diisi jika memakai domain."
+fi
+TS_HOST=""
+if [[ -z "$APP_DOMAIN" ]]; then
+    ts_name=$(ts_cert_domain)
+    if [[ -n "$ts_name" ]]; then
+        ask TAILSCALE_HTTPS "Tailscale terdeteksi. Pakai HTTPS lewat Tailscale (https://${ts_name}, hanya dari perangkat di tailnet)? (y/n)" "y"
+        [[ "$TAILSCALE_HTTPS" =~ ^[Yy] ]] && TS_HOST="$ts_name"
+    elif command -v tailscale >/dev/null 2>&1; then
+        warn "Tailscale terpasang tapi belum siap untuk HTTPS: belum login, atau MagicDNS/HTTPS Certificates"
+        warn "belum aktif di admin console (DNS). Lanjut via IP; jalankan ulang script ini setelah diaktifkan."
+    elif [[ "${TAILSCALE_HTTPS:-}" =~ ^[Yy] ]]; then
+        warn "TAILSCALE_HTTPS=y tetapi perintah 'tailscale' tidak ditemukan. Lanjut via IP."
+    fi
 fi
 ask DEMO_DATA "Isi data demo (akun & pasien fiktif) untuk uji coba? (y/n)" "y"
 ask ENABLE_UFW "Aktifkan firewall UFW (SSH, HTTP, HTTPS)? (y/n)" "y"
@@ -235,11 +275,31 @@ SQL
 ok "Database '${DB_NAME}' dan user '${DB_USER}' siap"
 
 # ---------------------------------------------------------------------------
+# 4b. HTTPS lewat Tailscale (opsional, jika tanpa domain)
+# ---------------------------------------------------------------------------
+if [[ -n "$TS_HOST" ]]; then
+    step "Mengaktifkan HTTPS lewat Tailscale (${TS_HOST})"
+    ts_log=$(mktemp)
+    # Tailscale menerima https://<nama>.ts.net:443, sertifikatnya diurus Tailscale, lalu meneruskan ke Nginx.
+    if timeout 60 tailscale serve --bg http://127.0.0.1:80 </dev/null >"$ts_log" 2>&1; then
+        ok "https://${TS_HOST} -> Nginx 127.0.0.1:80"
+    else
+        warn "tailscale serve gagal:"
+        tail -n 5 "$ts_log" | sed 's/^/      /'
+        warn "Butuh Tailscale 1.52+ dan HTTPS Certificates aktif. Lanjut via IP; jalankan ulang script setelah diperbaiki."
+        TS_HOST=""
+    fi
+    rm -f "$ts_log"
+fi
+
+# ---------------------------------------------------------------------------
 # 5. Konfigurasi .env
 # ---------------------------------------------------------------------------
 step "Menulis konfigurasi .env"
 if [[ -n "$APP_DOMAIN" ]]; then
     APP_URL_VALUE="https://${APP_DOMAIN}"
+elif [[ -n "$TS_HOST" ]]; then
+    APP_URL_VALUE="https://${TS_HOST}"
 else
     server_ip=$(hostname -I 2>/dev/null | awk '{print $1}')
     APP_URL_VALUE="http://${server_ip:-127.0.0.1}"
@@ -258,6 +318,14 @@ env_set DB_PASSWORD "$DB_PASSWORD"
 env_set QUEUE_CONNECTION redis
 env_set CACHE_STORE redis
 env_set SESSION_DRIVER database
+if [[ -n "$TS_HOST" ]]; then
+    # Tailscale tersambung ke Nginx dari localhost dan mengirim X-Forwarded-Proto: https.
+    add_trusted_proxies 127.0.0.1 ::1
+    env_set SESSION_SECURE_COOKIE true
+elif [[ -z "$APP_DOMAIN" ]]; then
+    # Akses via http://IP: cookie secure membuat login gagal.
+    env_set SESSION_SECURE_COOKIE false
+fi
 
 # Kunci: hanya dibuat SEKALI. Mengganti kunci = data terenkripsi (NIK, MFA) tidak bisa dibaca.
 [[ -n "$(env_get APP_KEY)" ]] || env_set APP_KEY "base64:$(openssl rand -base64 32)"
@@ -298,16 +366,28 @@ ok "Cache konfigurasi, route, view, dan komponen Filament dibuat"
 # 7. Nginx
 # ---------------------------------------------------------------------------
 step "Mengatur Nginx"
-SERVER_NAME="${APP_DOMAIN:-_}"
-LISTEN_OPTS=""
-[[ -n "$APP_DOMAIN" ]] || LISTEN_OPTS=" default_server"
-LISTEN_IPV6=""
-# Hanya jika kernel mendukung IPv6; sebagian VPS mematikannya dan nginx akan gagal start.
-[[ -f /proc/net/if_inet6 ]] && LISTEN_IPV6="listen [::]:80${LISTEN_OPTS};"
+# IPv6 hanya jika kernel mendukung; sebagian VPS mematikannya dan nginx akan gagal start.
+HAS_IPV6=0
+[[ -f /proc/net/if_inet6 ]] && HAS_IPV6=1
+listen_lines() { # listen_lines "opsi"  -> baris listen IPv4 (+ IPv6)
+    printf 'listen 80%s;' "$1"
+    [[ "$HAS_IPV6" == 1 ]] && printf '\n    listen [::]:80%s;' "$1"
+    return 0
+}
+if [[ -n "$TS_HOST" ]]; then
+    # Aplikasi hanya untuk Tailscale (localhost); akses http://IP dialihkan ke alamat ts.net.
+    SERVER_NAME="$TS_HOST"
+    APP_LISTEN="listen 127.0.0.1:80;"
+elif [[ -n "$APP_DOMAIN" ]]; then
+    SERVER_NAME="$APP_DOMAIN"
+    APP_LISTEN=$(listen_lines "")
+else
+    SERVER_NAME="_"
+    APP_LISTEN=$(listen_lines " default_server")
+fi
 cat > /etc/nginx/sites-available/dental-pms <<NGINX
 server {
-    listen 80${LISTEN_OPTS};
-    ${LISTEN_IPV6}
+    ${APP_LISTEN}
     server_name ${SERVER_NAME};
     root ${APP_DIR}/public;
     index index.php;
@@ -347,6 +427,18 @@ server {
     }
 }
 NGINX
+if [[ -n "$TS_HOST" ]]; then
+    cat >> /etc/nginx/sites-available/dental-pms <<NGINX
+
+# Akses http://IP atau http://nama.ts.net dialihkan ke HTTPS Tailscale.
+server {
+    $(listen_lines " default_server")
+    server_name _;
+    server_tokens off;
+    return 301 https://${TS_HOST}\$request_uri;
+}
+NGINX
+fi
 ln -sf /etc/nginx/sites-available/dental-pms /etc/nginx/sites-enabled/dental-pms
 rm -f /etc/nginx/sites-enabled/default
 nginx -t -q
@@ -368,6 +460,7 @@ if [[ -n "$APP_DOMAIN" ]]; then
         warn "Sertifikat gagal. Pastikan A record ${APP_DOMAIN} sudah mengarah ke IP server ini dan port 80 terbuka,"
         warn "lalu jalankan: certbot --nginx -d ${APP_DOMAIN} --redirect   (kemudian jalankan ulang script ini)"
         env_set APP_URL "http://${APP_DOMAIN}"
+        env_set SESSION_SECURE_COOKIE false
         artisan config:cache >/dev/null
     fi
 fi
@@ -421,9 +514,18 @@ fi
 # 11. Verifikasi
 # ---------------------------------------------------------------------------
 step "Verifikasi"
-host_header="${APP_DOMAIN:-localhost}"
+host_header="${APP_DOMAIN:-${TS_HOST:-localhost}}"
 code=$(curl -s -o /dev/null -w '%{http_code}' -H "Host: ${host_header}" http://127.0.0.1/login)
-if [[ "$HTTPS_OK" == 1 ]]; then
+if [[ -n "$TS_HOST" ]]; then
+    [[ "$code" == "200" ]] && ok "Nginx lokal -> 200" || warn "Nginx lokal -> ${code} (lihat ${APP_DIR}/storage/logs/laravel.log)"
+    # Permintaan pertama bisa lambat: Tailscale sedang mengambil sertifikat.
+    code_ts=$(curl -s -o /dev/null -w '%{http_code}' --max-time 60 "https://${TS_HOST}/login" || true)
+    if [[ "$code_ts" == "200" ]]; then
+        ok "https://${TS_HOST}/login -> 200"
+    else
+        warn "https://${TS_HOST}/login -> ${code_ts:-000} dari server ini. Coba buka dari perangkat lain di tailnet."
+    fi
+elif [[ "$HTTPS_OK" == 1 ]]; then
     code_https=$(curl -s -o /dev/null -w '%{http_code}' "https://${APP_DOMAIN}/login" || echo "000")
     [[ "$code_https" == "200" ]] && ok "https://${APP_DOMAIN}/login -> 200" || warn "https://${APP_DOMAIN}/login -> ${code_https}"
 else
@@ -459,6 +561,7 @@ umask 077
 echo
 echo "${c_ok}Selesai.${c_off}"
 echo "    Buka        : $(env_get APP_URL)"
+[[ -n "$TS_HOST" ]] && echo "                  (hanya dari perangkat yang login Tailscale di tailnet yang sama)"
 echo "    Kredensial  : ${CREDENTIALS_FILE}  (sudo cat ${CREDENTIALS_FILE})"
 [[ "$APP_ENV_VALUE" == "staging" ]] && echo "    Akun demo   : owner@demo.test dkk. Password ada di file kredensial. MFA diatur saat login pertama."
 echo "    Update kode : sudo bash ${APP_DIR}/deploy/update.sh"
