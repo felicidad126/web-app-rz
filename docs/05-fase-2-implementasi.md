@@ -17,7 +17,7 @@
 | Resep (KFA) + lampiran (storage privat) | ✅ | Bagian **Resep** di pemeriksaan (obat, jumlah, satuan dari konversi, aturan pakai; kode KFA di-snapshot). Tab **Lampiran** (rontgen, foto, dokumen) disimpan di disk privat, dibuka lewat `/berkas/...` yang memeriksa hak akses dan mencatat akses. |
 | Informed consent (template, signature pad, PDF) | ✅ | **Master Klinis → Template persetujuan** (teks + placeholder `{{nama_pasien}}`, `{{tindakan}}`, dst.). Tab **Persetujuan tindakan**: isi terisi otomatis, tanda tangan dengan jari/stylus, PDF dibuat dan disimpan. Isi tidak bisa diubah setelah ditandatangani. |
 | Rencana perawatan + recall | ✅ | **Klinis → Rencana perawatan**: item per fase, gigi, permukaan, estimasi. Status draf → diajukan → disetujui/ditolak → sebagian selesai → selesai. Item disetujui bisa dipilih saat mencatat tindakan dan otomatis ditandai selesai. **Harian → Recall**: daftar kontrol jatuh tempo, aksi Dihubungi / Buat janji / Batal. Recall dibuat otomatis untuk tindakan yang punya "interval recall" (kolom baru di master tindakan). |
-| Tanda tangan & penguncian, addendum, audit akses | ✅ | Tombol **Tanda tangani & kunci** (hanya dokter, minta password). Setelah itu semua isian terkunci di level model, bukan hanya di layar. Koreksi lewat tab **Addendum** (tidak bisa diubah/dihapus). Membuka rekam medis, odontogram, lampiran, dan PDF tercatat di log `access`. |
+| Tanda tangan & penguncian, addendum, audit akses | ✅ | Tombol **Tanda tangani & kunci** (hanya dokter, minta password). Jendela tanda tangan menampilkan daftar periksa. Yang wajib hanya **keluhan (S)** dan **minimal satu diagnosis ICD-10**. Kolom password baru muncul setelah keduanya terisi. Setelah itu semua isian terkunci di level model, bukan hanya di layar. Koreksi lewat tab **Addendum** (tidak bisa diubah/dihapus). Membuka rekam medis, odontogram, lampiran, dan PDF tercatat di log `access`. |
 
 **DoD Fase 2** — janji temu → check-in → panggil ke kursi → periksa → tanda tangan — sudah berjalan end-to-end dan diuji otomatis (lihat §3). Uji langsung di tablet dokter menunggu staging.
 
@@ -38,7 +38,7 @@ Izin rekam medis memakai permission tanpa resource: `View:MedicalRecord`, `Updat
 
 ## 3. Verifikasi
 
-- **Test otomatis: 85 test, 266 assertion** (Fase 1: 59). Yang baru antara lain:
+- **Test otomatis: 86 test, 276 assertion** (Fase 1: 59). Yang baru antara lain:
   - cek bentrok & jadwal praktik/cuti
   - nomor antrean & nomor kunjungan
   - penguncian rekam medis (ubah/tambah/hapus setelah tanda tangan ditolak)
@@ -49,6 +49,7 @@ Izin rekam medis memakai permission tanpa resource: `View:MedicalRecord`, `Updat
   - matriks akses halaman baru
   - form pemeriksaan → tanda tangan → terkunci, lewat UI Filament
   - perawat tidak bisa tanda tangan
+  - daftar periksa tanda tangan (password hanya diminta jika keluhan & diagnosis lengkap)
   - nama di papan antrean disamarkan
 - **Analisis statis:** Larastan level 5 bersih. Pint bersih. `composer audit` bersih (Symfony filesystem & html-sanitizer dinaikkan ke 7.4.23).
 - **Uji browser (Chromium):** login + MFA sebagai resepsionis dan dokter. Halaman berikut dibuka tanpa error JavaScript/HTTP 500:

@@ -161,6 +161,26 @@ it('dokter mengisi pemeriksaan lalu menandatangani; setelah itu terkunci', funct
         ->assertForbidden();
 });
 
+it('menampilkan daftar periksa sebelum tanda tangan; password baru diminta setelah lengkap', function () {
+    $visit = Visit::factory()->inTreatment()->create(['branch_id' => $this->branch->id, 'practitioner_id' => $this->doctor->id]);
+    staff('dokter', $this->doctor->user);
+
+    Livewire::test(ExamineVisit::class, ['record' => $visit->getRouteKey()])
+        ->mountAction('sign')
+        ->assertMountedActionModalSee(['Belum bisa ditandatangani', 'Kembali mengisi', 'Diagnosis ICD-10', '0 tercatat'])
+        ->assertMountedActionModalDontSee('Password Anda');
+
+    Livewire::test(ExamineVisit::class, ['record' => $visit->getRouteKey()])
+        ->fillForm([
+            'medicalRecord.subjective' => 'Ngilu',
+            'medicalRecord.diagnoses' => [['icd10_code' => 'K02.1', 'type' => 'primary']],
+        ])
+        ->mountAction('sign')
+        ->assertMountedActionModalSee(['Tanda tangani rekam medis', 'Password Anda', '1 tercatat']);
+
+    expect($visit->fresh()->isLocked())->toBeFalse();
+});
+
 it('perawat bisa mengisi draf tetapi tidak bisa menandatangani', function () {
     $visit = Visit::factory()->inTreatment()->create(['branch_id' => $this->branch->id, 'practitioner_id' => $this->doctor->id]);
     staff('perawat');

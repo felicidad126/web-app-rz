@@ -19,6 +19,7 @@ use Filament\Resources\Pages\EditRecord;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Contracts\View\View;
 use InvalidArgumentException;
 
 /**
@@ -164,16 +165,22 @@ class ExamineVisit extends EditRecord
             ->color('primary')
             ->visible(fn (Visit $record): bool => ! $record->isLocked() && $record->status !== VisitStatus::Cancelled)
             ->authorize(fn (): bool => auth()->user()?->can('Sign:MedicalRecord') ?? false)
-            ->modalHeading('Tanda tangani rekam medis')
-            ->modalDescription('Setelah ditandatangani, rekam medis kunjungan ini terkunci. Koreksi berikutnya hanya lewat addendum.')
+            ->modalHeading(fn (): string => $this->readyToSign() ? 'Tanda tangani rekam medis' : 'Belum bisa ditandatangani')
+            ->modalDescription(fn (): string => $this->readyToSign()
+                ? 'Setelah ditandatangani, rekam medis kunjungan ini terkunci. Koreksi berikutnya hanya lewat addendum.'
+                : 'Lengkapi isian bertanda merah di form pemeriksaan, lalu klik "Tanda tangani & kunci" lagi.')
+            ->modalContent(fn (): View => view('filament.clinic.sign-checklist', ['items' => $this->signChecklist()]))
             ->modalSubmitActionLabel('Tanda tangani')
+            ->modalSubmitAction(fn (Action $action): Action|false => $this->readyToSign() ? $action : false)
+            ->modalCancelActionLabel(fn (): string => $this->readyToSign() ? 'Batal' : 'Kembali mengisi')
             ->schema([
                 TextInput::make('password')
                     ->label('Password Anda')
                     ->password()
                     ->revealable()
                     ->currentPassword()
-                    ->required(),
+                    ->required()
+                    ->visible(fn (): bool => $this->readyToSign()),
             ])
             ->action(function (Visit $record): void {
                 // Simpan isian terakhir dulu agar yang ditandatangani sama dengan yang terlihat.
@@ -193,5 +200,34 @@ class ExamineVisit extends EditRecord
                 Notification::make()->title('Rekam medis ditandatangani dan dikunci')->success()->send();
                 $this->redirect(VisitResource::getUrl('examine', ['record' => $record]));
             });
+    }
+
+    /**
+     * Daftar periksa dari isian form saat ini (termasuk yang belum disimpan).
+     * Aturan finalnya tetap di {@see MedicalRecordSigning::problems()} saat menandatangani.
+     *
+     * @return list<array{label: string, done: bool, required: bool, note?: string}>
+     */
+    public function signChecklist(): array
+    {
+        $count = function (string $path, string $key): int {
+            $rows = data_get($this->data, $path);
+
+            return collect(is_array($rows) ? $rows : [])->filter(fn (mixed $row): bool => is_array($row) && filled($row[$key] ?? null))->count();
+        };
+
+        $diagnoses = $count('medicalRecord.diagnoses', 'icd10_code');
+        $procedures = $count('procedures', 'treatment_id');
+
+        return [
+            ['label' => 'Keluhan & anamnesis (S)', 'done' => filled(data_get($this->data, 'medicalRecord.subjective')), 'required' => true],
+            ['label' => 'Diagnosis ICD-10', 'done' => $diagnoses > 0, 'required' => true, 'note' => $diagnoses.' tercatat'],
+            ['label' => 'Tindakan', 'done' => $procedures > 0, 'required' => false, 'note' => $procedures.' tercatat'],
+        ];
+    }
+
+    private function readyToSign(): bool
+    {
+        return collect($this->signChecklist())->every(fn (array $item): bool => $item['done'] || ! $item['required']);
     }
 }

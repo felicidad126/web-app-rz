@@ -55,6 +55,7 @@ class ExamForm
                                 Textarea::make('plan')->label('Rencana (P)')->rows(2),
                             ]),
                         Section::make('Diagnosis (ICD-10)')
+                            ->description('Wajib minimal satu sebelum rekam medis ditandatangani.')
                             ->schema([
                                 Repeater::make('diagnoses')
                                     ->hiddenLabel()
