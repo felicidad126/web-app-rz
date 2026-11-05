@@ -61,6 +61,9 @@ svc() { # svc restart|reload|enable nama
     [[ "$action" == "enable" ]] && action="start"
     if [[ -x "/etc/init.d/$name" ]]; then
         service "$name" "$action" >/dev/null 2>&1 || service "$name" restart >/dev/null 2>&1 || true
+    fi
+    if [[ "$name" == "redis-server" ]] && ! redis-cli ping >/dev/null 2>&1; then
+        redis-server /etc/redis/redis.conf --daemonize yes >/dev/null 2>&1 || true
     elif [[ "$name" == "mysql" ]] && ! mysqladmin ping --silent >/dev/null 2>&1; then
         # MySQL 8.4 di Ubuntu 26.04 hanya punya unit systemd.
         install -d -o mysql -g mysql /run/mysqld
@@ -75,6 +78,15 @@ wait_for_mysql() {
         sleep 1
     done
     die "MySQL tidak bisa dijalankan. Cek: journalctl -u mysql  atau  /var/log/mysql/error.log"
+}
+
+wait_for_redis() {
+    local _
+    for _ in $(seq 1 30); do
+        [[ "$(redis-cli ping 2>/dev/null)" == "PONG" ]] && return 0
+        sleep 1
+    done
+    die "Redis tidak bisa dijalankan. Cek: journalctl -u redis-server"
 }
 
 as_app() { runuser -u "$APP_USER" -- env HOME=/var/www COMPOSER_HOME=/var/www/.composer "$@"; }
@@ -195,6 +207,7 @@ fi
 # ---------------------------------------------------------------------------
 step "Menyiapkan database MySQL"
 wait_for_mysql
+wait_for_redis
 if [[ ! -f "$APP_DIR/.env" ]]; then
     as_app cp "$APP_DIR/.env.example" "$APP_DIR/.env"
 fi
@@ -283,10 +296,13 @@ step "Mengatur Nginx"
 SERVER_NAME="${APP_DOMAIN:-_}"
 LISTEN_OPTS=""
 [[ -n "$APP_DOMAIN" ]] || LISTEN_OPTS=" default_server"
+LISTEN_IPV6=""
+# Hanya jika kernel mendukung IPv6; sebagian VPS mematikannya dan nginx akan gagal start.
+[[ -f /proc/net/if_inet6 ]] && LISTEN_IPV6="listen [::]:80${LISTEN_OPTS};"
 cat > /etc/nginx/sites-available/dental-pms <<NGINX
 server {
     listen 80${LISTEN_OPTS};
-    listen [::]:80${LISTEN_OPTS};
+    ${LISTEN_IPV6}
     server_name ${SERVER_NAME};
     root ${APP_DIR}/public;
     index index.php;
