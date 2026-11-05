@@ -55,10 +55,26 @@ svc() { # svc restart|reload|enable nama
     local action="$1" name="$2"
     if has_systemd; then
         if [[ "$action" == "enable" ]]; then systemctl enable --now "$name" >/dev/null 2>&1; else systemctl "$action" "$name"; fi
-    else
-        [[ "$action" == "enable" ]] && action="start"
-        service "$name" "$action" >/dev/null 2>&1 || service "$name" restart >/dev/null 2>&1 || true
+        return
     fi
+    # Tanpa systemd (container/WSL): pakai init script jika ada.
+    [[ "$action" == "enable" ]] && action="start"
+    if [[ -x "/etc/init.d/$name" ]]; then
+        service "$name" "$action" >/dev/null 2>&1 || service "$name" restart >/dev/null 2>&1 || true
+    elif [[ "$name" == "mysql" ]] && ! mysqladmin ping --silent >/dev/null 2>&1; then
+        # MySQL 8.4 di Ubuntu 26.04 hanya punya unit systemd.
+        install -d -o mysql -g mysql /run/mysqld
+        runuser -u mysql -- /usr/sbin/mysqld --daemonize --pid-file=/run/mysqld/mysqld.pid >/dev/null 2>&1 || true
+    fi
+}
+
+wait_for_mysql() {
+    local _
+    for _ in $(seq 1 60); do
+        mysqladmin ping --silent >/dev/null 2>&1 && return 0
+        sleep 1
+    done
+    die "MySQL tidak bisa dijalankan. Cek: journalctl -u mysql  atau  /var/log/mysql/error.log"
 }
 
 as_app() { runuser -u "$APP_USER" -- env HOME=/var/www COMPOSER_HOME=/var/www/.composer "$@"; }
@@ -178,6 +194,7 @@ fi
 # 4. Database
 # ---------------------------------------------------------------------------
 step "Menyiapkan database MySQL"
+wait_for_mysql
 if [[ ! -f "$APP_DIR/.env" ]]; then
     as_app cp "$APP_DIR/.env.example" "$APP_DIR/.env"
 fi
