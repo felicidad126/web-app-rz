@@ -63,6 +63,8 @@ svc() { # svc restart|reload|enable nama
             service "$name" status >/dev/null 2>&1 || service "$name" start >/dev/null 2>&1 || true
         else
             service "$name" "$action" >/dev/null 2>&1 || true
+            sleep 1
+            service "$name" status >/dev/null 2>&1 || service "$name" start >/dev/null 2>&1 || true
         fi
     fi
     if [[ "$name" == "redis-server" ]] && ! redis-cli ping >/dev/null 2>&1; then
