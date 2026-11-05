@@ -125,7 +125,44 @@ class DemoSeeder extends Seeder
         }
 
         if (Patient::count() < 25) {
-            Patient::factory()->count(25)->create(['registered_branch_id' => $kemang->id, 'default_payer_id' => Payer::where('code', 'UMUM')->value('id')]);
+            $this->seedPatients(25, $kemang->id, Payer::where('code', 'UMUM')->value('id'));
+        }
+    }
+
+    /**
+     * Pasien fiktif tanpa Faker (Faker hanya ada di dependency development,
+     * sedangkan seeder ini juga dipakai di server staging).
+     */
+    private function seedPatients(int $count, int $branchId, ?int $payerId): void
+    {
+        mt_srand(2026);
+
+        $male = ['Budi', 'Agus', 'Rizky', 'Dimas', 'Fajar', 'Hendra', 'Joko', 'Yusuf', 'Arif', 'Bayu', 'Rafi', 'Satria'];
+        $female = ['Siti', 'Dewi', 'Rina', 'Ayu', 'Putri', 'Nur', 'Fitri', 'Intan', 'Lestari', 'Wulan', 'Citra', 'Anisa'];
+        $surnames = ['Santoso', 'Wijaya', 'Saputra', 'Lestari', 'Hidayat', 'Pratama', 'Nugroho', 'Kusuma', 'Siregar', 'Nasution', 'Halim', 'Permata'];
+        $cities = ['Jakarta', 'Depok', 'Bogor', 'Bekasi', 'Tangerang', 'Bandung', 'Surabaya', 'Medan'];
+        $streets = ['Jl. Kemang Raya', 'Jl. Margonda', 'Jl. Fatmawati', 'Jl. Pahlawan', 'Jl. Merdeka', 'Jl. Sudirman'];
+        $allergies = ['Penisilin', 'Amoksisilin', 'Lidokain', 'Lateks', 'Ibuprofen'];
+        $diseases = ['Hipertensi', 'Diabetes melitus tipe 2', 'Asma', 'Kelainan jantung'];
+
+        for ($i = 0; $i < $count; $i++) {
+            $isMale = mt_rand(0, 1) === 1;
+            $first = $isMale ? $male[array_rand($male)] : $female[array_rand($female)];
+
+            Patient::create([
+                'name' => $first.' '.$surnames[array_rand($surnames)],
+                'nik' => '3171'.str_pad((string) mt_rand(0, 999_999_999_999), 12, '0', STR_PAD_LEFT),
+                'birth_place' => $cities[array_rand($cities)],
+                'birth_date' => now()->subDays(mt_rand(3 * 365, 75 * 365))->toDateString(),
+                'gender' => $isMale ? 'male' : 'female',
+                'phone' => '08'.mt_rand(11, 99).str_pad((string) mt_rand(0, 99_999_999), 8, '0', STR_PAD_LEFT),
+                'address' => $streets[array_rand($streets)].' No. '.mt_rand(1, 250).', '.$cities[array_rand($cities)],
+                'allergies' => mt_rand(1, 100) <= 15 ? $allergies[array_rand($allergies)] : null,
+                'systemic_diseases' => mt_rand(1, 100) <= 20 ? $diseases[array_rand($diseases)] : null,
+                'registered_branch_id' => $branchId,
+                'default_payer_id' => $payerId,
+                'consent_data_at' => now(),
+            ]);
         }
     }
 }
