@@ -8,7 +8,7 @@ Panduan menjalankan Dental PMS di laptop developer, men-deploy ke VPS produksi, 
 
 | Komponen | Versi |
 |---|---|
-| PHP | 8.3+ (produksi: **8.4**) dengan ekstensi `intl`, `zip`, `pdo_mysql`, `redis`, `mbstring`, `gd` |
+| PHP | 8.3, 8.4, atau 8.5 (Ubuntu 26.04 memakai 8.5; semuanya diuji di CI) dengan ekstensi `intl`, `zip`, `pdo_mysql`, `redis`, `mbstring`, `gd` |
 | Composer | 2.x |
 | Database | **MySQL 8.4 LTS** (dev boleh 8.0). Klien `mysqldump` wajib ada untuk backup. |
 | Redis | 6+ (queue, cache) |
@@ -73,6 +73,45 @@ DB_CONNECTION=mysql DB_DATABASE=dental_pms_test DB_USERNAME=dental DB_PASSWORD=s
 ---
 
 ## 3. Deploy Produksi (VPS)
+
+### 3.0 Cara cepat: script instalasi (Ubuntu 26.04 / 24.04)
+
+`deploy/provision.sh` mengerjakan semua langkah 3.1–3.5 sekaligus:
+- memasang PHP-FPM, MySQL, Redis, Nginx, Supervisor, cron, dan Let's Encrypt
+- meng-clone aplikasi
+- membuat database & kunci enkripsi
+- membuat akun owner
+- menjalankan uji backup
+
+Script sudah diuji end-to-end di Ubuntu 26.04 (PHP 8.5, MySQL 8.4, Nginx 1.28) dan aman dijalankan ulang: kunci dan password yang sudah ada tidak diganti.
+
+Di VM, sebagai user dengan akses sudo:
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/felicidad126/web-app-rz/claude/stoic-sagan-qer84s/deploy/provision.sh
+```
+
+```bash
+sudo bash provision.sh
+```
+
+Script akan menanyakan:
+1. **Domain.** Kosongkan jika belum ada; aplikasi lalu diakses via `http://IP` tanpa HTTPS.
+2. **Data demo** (y/n). Jika `y`, `APP_ENV=staging` dan akun demo dibuat dengan password acak.
+3. **Firewall UFW** (y/n). Port SSH yang sedang dipakai dideteksi otomatis dan tetap dibuka.
+4. **Akun owner** (nama, email, password).
+
+Hasilnya:
+- Aplikasi di `/var/www/dental-pms`.
+- Kredensial penting (APP_KEY, BLIND_INDEX_KEY, password backup & database, password demo) di `/root/dental-pms-credentials.txt`. **Pindahkan ke password manager, lalu hapus file itu.**
+
+Update kode dan setelah mengubah `.env`:
+
+```bash
+sudo bash /var/www/dental-pms/deploy/update.sh
+```
+
+Langkah 3.1–3.5 di bawah adalah rincian manual dari apa yang dilakukan script.
 
 ### 3.1 Pertama kali
 
@@ -173,7 +212,7 @@ server {
     }
 
     location ~ \.php$ {
-        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.5-fpm.sock;  # sesuaikan versi PHP
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
     }

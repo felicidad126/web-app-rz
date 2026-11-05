@@ -8,6 +8,7 @@ Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL
 ## Perintah
 
 - Cek semua sebelum commit: `composer check` (Pint, Larastan level 5, Pest).
+- Deploy server: `deploy/provision.sh` (instalasi pertama, idempoten) dan `deploy/update.sh` (update). Jalankan `shellcheck -S warning deploy/*.sh` setelah mengubahnya.
 - Test di MySQL: `DB_CONNECTION=mysql DB_DATABASE=dental_pms_test DB_USERNAME=... DB_PASSWORD=... vendor/bin/pest`.
 - Setelah menambah resource Filament:
   1. `php artisan shield:generate --all --panel=admin --option=policies_and_permissions -n`

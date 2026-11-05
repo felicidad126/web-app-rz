@@ -18,6 +18,8 @@ php artisan migrate --seed && php artisan db:seed --class=DemoSeeder && php arti
 
 Login dengan `owner@demo.test` / `password`, lalu atur MFA. Detail lengkap ada di [docs/04-setup-deploy-backup.md](docs/04-setup-deploy-backup.md).
 
+**Server (Ubuntu 26.04/24.04):** `sudo bash deploy/provision.sh`. Lihat [docs/04 §3.0](docs/04-setup-deploy-backup.md#30-cara-cepat-script-instalasi-ubuntu-2604--2404).
+
 ## Dokumen
 
 | File | Isi |
@@ -34,4 +36,4 @@ Login dengan `owner@demo.test` / `password`, lalu atur MFA. Detail lengkap ada d
 composer check
 ```
 
-Menjalankan Pint, Larastan (level 5), dan Pest. CI menjalankan hal yang sama di PHP 8.3 & 8.4 dengan MySQL 8.4.
+Menjalankan Pint, Larastan (level 5), dan Pest. CI menjalankan hal yang sama di PHP 8.3, 8.4 & 8.5 dengan MySQL 8.4.
