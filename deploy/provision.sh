@@ -58,9 +58,12 @@ svc() { # svc restart|reload|enable nama
         return
     fi
     # Tanpa systemd (container/WSL): pakai init script jika ada.
-    [[ "$action" == "enable" ]] && action="start"
     if [[ -x "/etc/init.d/$name" ]]; then
-        service "$name" "$action" >/dev/null 2>&1 || service "$name" restart >/dev/null 2>&1 || true
+        if [[ "$action" == "enable" ]]; then
+            service "$name" status >/dev/null 2>&1 || service "$name" start >/dev/null 2>&1 || true
+        else
+            service "$name" "$action" >/dev/null 2>&1 || true
+        fi
     fi
     if [[ "$name" == "redis-server" ]] && ! redis-cli ping >/dev/null 2>&1; then
         redis-server /etc/redis/redis.conf --daemonize yes >/dev/null 2>&1 || true
@@ -383,6 +386,8 @@ stopwaitsecs=3600
 redirect_stderr=true
 stdout_logfile=${APP_DIR}/storage/logs/worker.log
 SUP
+svc enable supervisor
+for _ in $(seq 1 15); do supervisorctl status >/dev/null 2>&1 && break; sleep 1; done
 supervisorctl reread >/dev/null
 supervisorctl update >/dev/null
 supervisorctl restart dental-pms-worker >/dev/null 2>&1 || true
