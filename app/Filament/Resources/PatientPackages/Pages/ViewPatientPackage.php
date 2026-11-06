@@ -7,6 +7,7 @@ use App\Enums\PatientPackageStatus;
 use App\Enums\PaymentMethod;
 use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\PatientPackages\PatientPackageResource;
+use App\Filament\Support\MoneyInput;
 use App\Models\CashSession;
 use App\Models\Installment;
 use App\Models\PatientPackage;
@@ -55,7 +56,10 @@ class ViewPatientPackage extends ViewRecord
 
     public function getTitle(): string|Htmlable
     {
-        return 'Paket & cicilan';
+        /** @var PatientPackage $package */
+        $package = $this->getRecord();
+
+        return $package->name;
     }
 
     public function getSubheading(): ?string
@@ -63,7 +67,7 @@ class ViewPatientPackage extends ViewRecord
         /** @var PatientPackage $package */
         $package = $this->getRecord();
 
-        return $package->name.($package->practitioner ? ' · '.$package->practitioner->user->name : '').' · dimulai '.$package->start_date->format('d/m/Y').' · '.$package->package_number;
+        return ($package->practitioner ? $package->practitioner->user->name.' · ' : '').'dimulai '.$package->start_date->format('d/m/Y').' · '.$package->package_number;
     }
 
     protected function getHeaderActions(): array
@@ -73,7 +77,9 @@ class ViewPatientPackage extends ViewRecord
             Action::make('cancel')
                 ->label('Batalkan paket')
                 ->icon(Heroicon::OutlinedXMark)
-                ->color('danger')
+                // Merah hanya di tombol konfirmasi; di kepala halaman cukup abu-abu di samping tombol utama.
+                ->color('gray')
+                ->modalSubmitAction(fn (Action $action): Action => $action->color('danger'))
                 ->visible(fn (PatientPackage $record): bool => $record->status === PatientPackageStatus::Active)
                 ->authorize(fn (PatientPackage $record): bool => auth()->user()?->can('update', $record) ?? false)
                 ->modalDescription('Cicilan yang belum ditagih ikut batal. Tagihan cicilan yang sudah terbit di-void/refund lewat persetujuan owner.')
@@ -95,6 +101,8 @@ class ViewPatientPackage extends ViewRecord
                 default => 'Terima cicilan',
             })
             ->size(fn (array $arguments): string => isset($arguments['installment']) ? 'sm' : 'md')
+            // Tombol di baris jadwal abu-abu; tombol utama (teal) hanya di kepala halaman.
+            ->color(fn (array $arguments): string => isset($arguments['installment']) ? 'gray' : 'primary')
             ->icon(Heroicon::OutlinedBanknotes)
             ->visible(fn (array $arguments): bool => $this->installment($arguments) !== null)
             ->authorize(fn (): bool => auth()->user()?->can('Update:Invoice') ?? false)
@@ -105,10 +113,10 @@ class ViewPatientPackage extends ViewRecord
                 Section::make('Sesi kasir belum dibuka')
                     ->description('Isi kas awal di laci untuk membuka sesi kasir.')
                     ->visible(fn (): bool => $this->session() === null)
-                    ->schema([TextInput::make('opening_cash')->label('Kas awal')->prefix('Rp')->numeric()->minValue(0)->default(fn (): int => CashSessions::suggestedOpeningCash($this->branchId()))->required()]),
+                    ->schema([MoneyInput::make('opening_cash')->label('Kas awal')->minValue(0)->default(fn (): int => CashSessions::suggestedOpeningCash($this->branchId()))->required()]),
                 ToggleButtons::make('method')->label('Metode')->options(PaymentMethod::moneyInOptions())->default(PaymentMethod::Qris->value)->inline()->required()->live(),
                 TextInput::make('reference_no')->label('No. referensi')->maxLength(60)->visible(fn (Get $get): bool => $get('method') !== PaymentMethod::Cash->value),
-                TextInput::make('cash_tendered')->label('Uang tunai diterima')->prefix('Rp')->numeric()->visible(fn (Get $get): bool => $get('method') === PaymentMethod::Cash->value),
+                MoneyInput::make('cash_tendered')->label('Uang tunai diterima')->visible(fn (Get $get): bool => $get('method') === PaymentMethod::Cash->value),
             ])
             ->action(function (array $arguments, array $data, Action $action): void {
                 $installment = $this->installment($arguments);

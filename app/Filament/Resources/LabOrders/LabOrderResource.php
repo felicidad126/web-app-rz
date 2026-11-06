@@ -11,6 +11,7 @@ use App\Filament\Resources\LabOrders\Pages\CreateLabOrder;
 use App\Filament\Resources\LabOrders\Pages\EditLabOrder;
 use App\Filament\Resources\LabOrders\Pages\ListLabOrders;
 use App\Filament\Resources\LabOrders\Pages\ViewLabOrder;
+use App\Filament\Support\MoneyInput;
 use App\Filament\Support\NavGroup;
 use App\Models\LabOrder;
 use App\Models\Supplier;
@@ -33,6 +34,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontFamily;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -128,6 +130,7 @@ class LabOrderResource extends Resource
                         Select::make('practitioner_id')
                             ->label('Dokter')
                             ->options(fn (): array => PractitionerOptions::dentists())
+                            ->default(fn (): ?int => auth()->user()?->practitioner?->id)
                             ->searchable()
                             ->required(),
                         Select::make('branch_id')
@@ -168,11 +171,9 @@ class LabOrderResource extends Resource
                             ->label('Warna (shade)')
                             ->placeholder('Contoh: A2')
                             ->maxLength(30),
-                        TextInput::make('cost')
+                        MoneyInput::make('cost')
                             ->label('Biaya lab')
                             ->helperText('Ikut tercatat di tagihan untuk margin dan jasa dokter.')
-                            ->prefix('Rp')
-                            ->numeric()
                             ->minValue(0)
                             ->default(0)
                             ->required(),
@@ -201,21 +202,23 @@ class LabOrderResource extends Resource
                     ->searchable(),
                 TextColumn::make('work_type')->label('Pekerjaan · lab')
                     ->formatStateUsing(fn (LabOrder $record): string => $record->work_type->getLabel().($record->teeth ? ' '.$record->teeth : ''))
-                    ->description(fn (LabOrder $record): string => $record->supplier->name),
+                    ->description(fn (LabOrder $record): string => $record->supplier->name)
+                    ->visibleFrom('md'),
+                // Terlambat = perlu ditindaklanjuti (amber); merah hanya untuk peringatan medis.
                 TextColumn::make('due_at')->label('Jatuh tempo')->date('d/m/Y')->placeholder('—')
                     ->description(fn (LabOrder $record): ?string => self::dueNote($record))
-                    ->color(fn (LabOrder $record): ?string => $record->isLate() ? 'danger' : null),
+                    ->color(fn (LabOrder $record): ?string => $record->isLate() ? 'warning' : null),
                 TextColumn::make('next_appointment_at')->label('Janji pasang')->dateTime('d/m/Y H:i')
                     ->placeholder('Belum dijadwalkan')
                     ->description(fn (LabOrder $record): ?string => self::appointmentWarning($record))
-                    ->color(fn (LabOrder $record): ?string => self::appointmentWarning($record) ? 'danger' : null)
-                    ->visibleFrom('md'),
-                TextColumn::make('status')->label('Tahap')->badge()
+                    ->color(fn (LabOrder $record): ?string => self::appointmentWarning($record) ? 'warning' : null)
+                    ->visibleFrom('lg'),
+                TextColumn::make('status')->label('Tahap')->badge()->extraAttributes(['class' => 'klinik-status'])
                     ->description(fn (LabOrder $record): ?string => $record->status->step() > 0 ? 'Tahap '.$record->status->step().' dari 5' : null),
                 TextColumn::make('cost')->label('Biaya lab')->alignEnd()
                     ->formatStateUsing(fn ($state): string => Money::format((int) $state, false))
                     ->visibleFrom('lg'),
-                TextColumn::make('number')->label('No.')->searchable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('number')->label('No.')->fontFamily(FontFamily::Mono)->searchable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('supplier_id')->label('Lab')
@@ -224,8 +227,10 @@ class LabOrderResource extends Resource
                 SelectFilter::make('branch_id')->label('Cabang')->options(fn (): array => BranchContext::options())
                     ->visible(fn (): bool => count(BranchContext::options()) > 1),
             ])
+            ->emptyStateHeading('Tidak ada order lab')
             ->recordActions([
-                self::advanceAction(),
+                // Di tabel aksi per baris abu-abu; tombol teal hanya di halaman detail order.
+                self::advanceAction()->color('gray'),
                 ViewAction::make()->label('Detail'),
             ]);
     }

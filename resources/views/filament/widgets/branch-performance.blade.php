@@ -10,8 +10,11 @@
     $att = fn (?float $r): string => $colors[Kpi::attainmentColor($r)];
     $tip = fn (Kpi $k): string => $k->getLabel().': '.$k->definition();
     $m = fn (?int $v): string => $v === null ? '—' : Money::format($v, false);
+    // Nama cabang tetap terlihat saat tabel digeser di HP (lihat .klinik-branch-col di bawah).
+    $first = 'position: sticky; left: 0; z-index: 1; background: #fff; min-width: 10rem';
 @endphp
 <x-filament-widgets::widget>
+    <style>@media (max-width: 47.99rem) { .klinik-branch-col { white-space: nowrap; } }</style>
     <section style="{{ $card }}">
         <div style="display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; padding: 14px 16px">
             <div>
@@ -28,7 +31,7 @@
         <div style="overflow-x: auto">
             <table style="width: 100%; border-collapse: collapse; min-width: 900px">
                 <thead><tr>
-                    <th style="{{ $th }}">Cabang</th>
+                    <th class="klinik-branch-col" style="{{ $th }}; {{ $first }}">Cabang</th>
                     <th style="{{ $th }}; {{ $num }}" title="{{ $tip(Kpi::Production) }}">Produksi ⓘ</th>
                     <th style="{{ $th }}; {{ $num }}" title="{{ $tip(Kpi::ProductionVsTarget) }}">Target s.d. kemarin ⓘ</th>
                     <th style="{{ $th }}; {{ $num }}" title="{{ $tip(Kpi::ProductionVsTarget) }}">Capaian</th>
@@ -41,7 +44,7 @@
                 <tbody>
                     @foreach ($rows as $row)
                         <tr>
-                            <td style="{{ $td }}">{{ $row['name'] }}</td>
+                            <td class="klinik-branch-col" style="{{ $td }}; {{ $first }}">{{ $row['name'] }}</td>
                             <td style="{{ $td }}; {{ $num }}">{{ $m($row['production']) }}</td>
                             <td style="{{ $td }}; {{ $num }}">{{ $m($row['target']) }}</td>
                             <td style="{{ $td }}; {{ $num }}; font-weight: 600; color: {{ $att($row['attainment']) }}">{{ Metrics::percent($row['attainment']) }}</td>
@@ -55,7 +58,7 @@
                 </tbody>
                 @if (count($rows) > 1)
                     <tfoot><tr style="font-weight: 600">
-                        <td style="{{ $td }}">Semua cabang</td>
+                        <td class="klinik-branch-col" style="{{ $td }}; {{ $first }}">Semua cabang</td>
                         <td style="{{ $td }}; {{ $num }}">{{ $m($total['production']) }}</td>
                         <td style="{{ $td }}; {{ $num }}">{{ $m($total['target']) }}</td>
                         <td style="{{ $td }}; {{ $num }}; color: {{ $att($total['attainment']) }}">{{ Metrics::percent($total['attainment']) }}</td>

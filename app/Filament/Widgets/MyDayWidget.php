@@ -7,6 +7,7 @@ use App\Support\BranchContext;
 use App\Support\CommissionScope;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Widgets\Widget;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 /** Dashboard dokter: pasien saya hari ini dengan penanda (baru, alergi/penyakit sistemik, rencana tertunda, recall, saldo). */
 class MyDayWidget extends Widget
@@ -30,11 +31,15 @@ class MyDayWidget extends Widget
     protected function getViewData(): array
     {
         $pid = CommissionScope::ownPractitionerId(auth()->user());
+        $items = DayPlanner::appointments(today(), BranchContext::available()->pluck('id')->all(), $pid, auth()->user());
+
+        // Status titik + kata (Di kursi/Selesai) butuh kunjungannya.
+        (new EloquentCollection($items->pluck('appointment')->all()))->load('visit');
 
         return [
             'heading' => 'Pasien saya hari ini',
             'description' => today()->locale('id')->translatedFormat('l, j F Y'),
-            'items' => DayPlanner::appointments(today(), BranchContext::available()->pluck('id')->all(), $pid, auth()->user()),
+            'items' => $items,
             'showDoctor' => false,
             'empty' => 'Tidak ada janji hari ini.',
         ];

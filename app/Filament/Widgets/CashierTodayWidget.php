@@ -24,6 +24,9 @@ class CashierTodayWidget extends StatsOverviewWidget
 
     protected static ?int $sort = 1;
 
+    /** Dua kartu per baris di HP, tiga berjajar bila wadahnya cukup lebar. */
+    protected int|array|null $columns = ['default' => 2, '@xl' => 3, '!@lg' => 3];
+
     public static function canView(): bool
     {
         return static::shieldCanView() && BranchContext::id() !== null;

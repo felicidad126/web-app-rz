@@ -9,23 +9,28 @@
     $num = 'text-align: right; font-variant-numeric: tabular-nums';
     $installments = $package->installments->where('sequence', '>', 0);
     $paid = $package->paidAmount();
+    // Rupiah tanpa "Rp" (judul kartu sudah jelas); angka tidak dipotong ke baris baru.
     $stats = [
-        ['Harga paket', Money::format($package->price)],
-        ['DP', Money::format($package->down_payment)],
-        ['Cicilan', $installments->count() ? $installments->count().' × '.Money::format((int) $installments->first()->amount) : '—'],
-        ['Sudah dibayar', Money::format($paid)],
-        ['Sisa', Money::format($package->remainingAmount())],
+        ['Harga paket', Money::format($package->price, false)],
+        ['DP', Money::format($package->down_payment, false)],
+        ['Cicilan', $installments->count() ? $installments->count().' × '.Money::format((int) $installments->first()->amount, false) : '—'],
+        ['Sudah dibayar', Money::format($paid, false)],
+        ['Sisa', Money::format($package->remainingAmount(), false)],
     ];
+    $canReceive = auth()->user()?->can('Update:Invoice') ?? false;
+    $nextOpen = $package->status === \App\Enums\PatientPackageStatus::Active
+        ? $package->installments->whereIn('status', [InstallmentStatus::Pending, InstallmentStatus::Billed])->sortBy('sequence')->first()
+        : null;
 @endphp
 <div style="display: grid; gap: 16px; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); align-items: start" class="fi-package-grid">
     <style>@media (max-width: 1400px) { .fi-package-grid { grid-template-columns: 1fr !important; } }</style>
     <div style="display: grid; gap: 16px; min-width: 0">
         <section style="{{ $card }}">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr))">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr))">
                 @foreach ($stats as [$label, $value])
                     <div style="padding: 12px 16px; border-left: {{ $loop->first ? '0' : '1px solid #f4f4f5' }}">
                         <div style="color: #52525b; font-size: 12px">{{ $label }}</div>
-                        <div style="font-size: 15px; {{ $loop->last ? 'font-weight: 600' : '' }}">{{ $value }}</div>
+                        <div style="font-size: 15px; white-space: nowrap; font-variant-numeric: tabular-nums; {{ $loop->last ? 'font-weight: 600' : '' }}">{{ $value }}</div>
                     </div>
                 @endforeach
             </div>
@@ -40,8 +45,8 @@
         <section style="{{ $card }}">
             <div style="{{ $head }}"><span>Jadwal pembayaran</span><span style="font-weight: 400; color: #52525b; font-size: 13px">Jatuh tempo tiap tanggal {{ $package->due_day }}</span></div>
             <div style="overflow-x: auto">
-                <table style="width: 100%; border-collapse: collapse; min-width: 560px">
-                    <thead><tr><th style="{{ $th }}">Ke</th><th style="{{ $th }}">Jatuh tempo</th><th style="{{ $th }}; {{ $num }}">Jumlah</th><th style="{{ $th }}">Dibayar</th><th style="{{ $th }}">Status</th><th style="{{ $th }}"></th></tr></thead>
+                <table style="width: 100%; border-collapse: collapse">
+                    <thead><tr><th style="{{ $th }}">Ke</th><th style="{{ $th }}">Jatuh tempo</th><th style="{{ $th }}; {{ $num }}">Jumlah</th><th style="{{ $th }}" class="klinik-hide-sm">Dibayar</th><th style="{{ $th }}">Status</th><th style="{{ $th }}" class="klinik-hide-sm"></th></tr></thead>
                     <tbody>
                         @foreach ($package->installments as $installment)
                             @php
@@ -51,10 +56,11 @@
                             @endphp
                             <tr style="{{ $dueToday ? 'background: #fffaeb' : '' }}">
                                 <td style="{{ $td }}">{{ $installment->sequence === 0 ? 'DP' : $installment->sequence }}</td>
-                                <td style="{{ $td }}; font-family: ui-monospace, monospace; font-size: 13px">{{ $installment->due_date->format('d/m/Y') }}</td>
+                                <td style="{{ $td }}; white-space: nowrap; font-variant-numeric: tabular-nums">{{ $installment->due_date->format('d/m/Y') }}</td>
                                 <td style="{{ $td }}; {{ $num }}">{{ Money::format($installment->amount, false) }}</td>
-                                <td style="{{ $td }}; font-family: ui-monospace, monospace; font-size: 13px">{{ $installment->paid_at?->format('d/m/Y') ?? '–' }}</td>
-                                <td style="{{ $td }}; color: {{ $installment->status === InstallmentStatus::Paid ? '#0d6e63' : ($isOverdue || $dueToday ? '#b54708' : '#52525b') }}; font-weight: {{ $installment->status === InstallmentStatus::Paid || $isOverdue || $dueToday ? 500 : 400 }}">
+                                <td style="{{ $td }}; white-space: nowrap; font-variant-numeric: tabular-nums" class="klinik-hide-sm">{{ $installment->paid_at?->format('d/m/Y') ?? '–' }}</td>
+                                {{-- Oranye hanya untuk yang perlu ditagih; lunas cukup teks abu-abu. --}}
+                                <td style="{{ $td }}; color: {{ $isOverdue || $dueToday ? '#b54708' : '#52525b' }}; font-weight: {{ $isOverdue || $dueToday ? 500 : 400 }}">
                                     @if ($installment->status === InstallmentStatus::Paid)
                                         Lunas{{ $late ? ' · telat '.(int) $late.' hari' : '' }}
                                     @elseif ($dueToday)
@@ -67,11 +73,12 @@
                                         {{ $installment->status === InstallmentStatus::Billed ? 'Sudah ditagih' : 'Belum jatuh tempo' }}
                                     @endif
                                     @if ($installment->invoice)
-                                        <a href="{{ \App\Filament\Resources\Invoices\InvoiceResource::getUrl('view', ['record' => $installment->invoice]) }}" style="display: block; color: #0d6e63; font-size: 12px; font-weight: 400; font-family: ui-monospace, monospace">{{ $installment->invoice->invoice_number }}</a>
+                                        <a href="{{ \App\Filament\Resources\Invoices\InvoiceResource::getUrl('view', ['record' => $installment->invoice]) }}" class="klinik-mono" style="display: block; color: #0d6e63; font-size: 12px; font-weight: 400; white-space: nowrap">{{ $installment->invoice->invoice_number }}</a>
                                     @endif
                                 </td>
-                                <td style="{{ $td }}; text-align: right">
-                                    @if (in_array($installment->status, [InstallmentStatus::Pending, InstallmentStatus::Billed], true) && $package->status === \App\Enums\PatientPackageStatus::Active)
+                                <td style="{{ $td }}; text-align: right" class="klinik-hide-sm">
+                                    {{-- Hanya cicilan berikutnya, dan hanya bagi yang boleh menerima pembayaran (tombol utama ada di atas). --}}
+                                    @if ($canReceive && $nextOpen?->is($installment))
                                         {{ ($this->payInstallmentAction)(['installment' => $installment->id]) }}
                                     @endif
                                 </td>

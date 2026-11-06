@@ -60,6 +60,7 @@ class ScheduleExceptionsRelationManager extends RelationManager
                 TextColumn::make('date')->label('Tanggal')->date('D, d/m/Y')->sortable(),
                 TextColumn::make('start_time')
                     ->label('Jam')
+                    ->fontFamily('mono')
                     ->formatStateUsing(fn (ScheduleException $record): string => $record->isWholeDay()
                         ? 'Seharian'
                         : substr((string) $record->start_time, 0, 5).'–'.substr((string) $record->end_time, 0, 5))
@@ -73,7 +74,7 @@ class ScheduleExceptionsRelationManager extends RelationManager
                     ->query(fn (Builder $query) => $query->whereDate('date', '>=', today())),
             ])
             ->headerActions([
-                CreateAction::make()->label('Tambah cuti/libur'),
+                CreateAction::make()->label('Tambah cuti/libur')->color('gray'),
             ])
             ->recordActions([
                 EditAction::make(),

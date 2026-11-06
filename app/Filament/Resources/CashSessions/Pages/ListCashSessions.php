@@ -3,11 +3,11 @@
 namespace App\Filament\Resources\CashSessions\Pages;
 
 use App\Filament\Resources\CashSessions\CashSessionResource;
+use App\Filament\Support\MoneyInput;
 use App\Models\User;
 use App\Services\Billing\CashSessions;
 use App\Support\BranchContext;
 use Filament\Actions\Action;
-use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Icons\Heroicon;
@@ -15,6 +15,9 @@ use Filament\Support\Icons\Heroicon;
 class ListCashSessions extends ListRecords
 {
     protected static string $resource = CashSessionResource::class;
+
+    // Sama dengan label menu & panduan kasir ("Keuangan → Tutup kasir").
+    protected static ?string $title = 'Tutup kasir';
 
     protected ?string $subheading = 'Buka sesi di awal shift; tutup di akhir shift dengan hitung fisik laci dan cocokkan tiap metode bayar.';
 
@@ -35,7 +38,7 @@ class ListCashSessions extends ListRecords
                 ->visible($open === null && BranchContext::id() !== null)
                 ->authorize(fn (): bool => auth()->user()?->can('Create:CashSession') ?? false)
                 ->fillForm(fn (): array => ['opening_cash' => CashSessions::suggestedOpeningCash((int) BranchContext::id())])
-                ->schema([TextInput::make('opening_cash')->label('Kas awal di laci')->prefix('Rp')->numeric()->minValue(0)->required()])
+                ->schema([MoneyInput::make('opening_cash')->label('Kas awal di laci')->minValue(0)->required()])
                 ->action(function (array $data): void {
                     /** @var User $user */
                     $user = auth()->user();

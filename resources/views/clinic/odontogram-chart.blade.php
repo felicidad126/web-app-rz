@@ -30,7 +30,7 @@
     .odg-tooth polygon { stroke: #71717a; stroke-width: 1; transition: fill .15s; }
     .odg-num { font-size: 10px; font-weight: 600; color: #3f3f46; font-variant-numeric: tabular-nums; line-height: 1.1; }
     .odg-tooth.dec .odg-num { color: #a1a1aa; }
-    .odg-code { font-size: 9px; font-family: ui-monospace, monospace; min-height: 11px; line-height: 1.2; }
+    .odg-code { font-size: 9px; font-family: var(--font-family-mono), ui-monospace, monospace; min-height: 11px; line-height: 1.2; }
     .odg-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 16px; border-top: 1px solid #f4f4f5; font-size: 12px; color: #3f3f46; }
     .odg-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
     .odg-panel { padding: 16px; display: grid; gap: 12px; }

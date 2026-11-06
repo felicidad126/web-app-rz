@@ -21,7 +21,7 @@ final class NavGroup
 
     public const CLINICAL_MASTER = 'Master Klinis';
 
-    public const INVENTORY = 'Obat & Bahan';
+    public const INVENTORY = 'Master barang';
 
     public const ORGANIZATION = 'Organisasi';
 

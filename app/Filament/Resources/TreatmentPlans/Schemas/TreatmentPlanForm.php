@@ -6,6 +6,7 @@ use App\Enums\TreatmentPlanItemStatus;
 use App\Filament\Clinic\PatientSelect;
 use App\Filament\Clinic\PractitionerOptions;
 use App\Filament\Clinic\SurfacesField;
+use App\Filament\Support\MoneyInput;
 use App\Models\Treatment;
 use App\Support\BranchContext;
 use App\Support\Teeth;
@@ -67,17 +68,21 @@ class TreatmentPlanForm
                                     })
                                     ->required()
                                     ->columnSpan(4),
-                                Select::make('tooth_number')->label('Gigi')->options(Teeth::numberOptions())->searchable()->columnSpan(2),
+                                Select::make('tooth_number')->label('Gigi')->options(Teeth::numberOptions())->searchable()->placeholder('—')->columnSpan(2),
                                 SurfacesField::make()->columnSpan(3),
-                                TextInput::make('price_estimate')->label('Estimasi')->prefix('Rp')->numeric()->minValue(0)->required()->columnSpan(2),
+                                MoneyInput::make('price_estimate')->label('Estimasi')->minValue(0)->required()->columnSpan(2),
+                                // Item baru selalu "Direncanakan"; status hanya relevan saat mengubah rencana.
                                 Select::make('status')->label('Status')->options(TreatmentPlanItemStatus::class)->default(TreatmentPlanItemStatus::Planned)->required()->columnSpan(3)
-                                    ->disableOptionWhen(fn (string $value): bool => $value === TreatmentPlanItemStatus::Done->value),
-                                TextInput::make('notes')->label('Catatan')->maxLength(255)->columnSpan(9),
+                                    ->disableOptionWhen(fn (string $value): bool => $value === TreatmentPlanItemStatus::Done->value)
+                                    ->hiddenOn('create'),
+                                TextInput::make('notes')->label('Catatan')->maxLength(255)
+                                    ->columnSpan(fn (string $operation): int => $operation === 'create' ? 12 : 9),
                             ]),
                         Text::make(fn (Get $get): string => 'Total estimasi: Rp '.number_format(
                             collect($get('items') ?? [])
                                 ->reject(fn (array $item): bool => ($item['status'] ?? null) === TreatmentPlanItemStatus::Cancelled->value)
-                                ->sum(fn (array $item): int => (int) ($item['price_estimate'] ?? 0)),
+                                // Isian rupiah bermasker ("400.000"); ambil angkanya saja sebelum dijumlah.
+                                ->sum(fn (array $item): int => (int) preg_replace('/\D/', '', (string) ($item['price_estimate'] ?? 0))),
                             0, ',', '.')),
                     ]),
             ]);

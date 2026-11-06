@@ -27,7 +27,7 @@ class UserForm
                             ->required()
                             ->maxLength(255),
                         TextInput::make('email')
-                            ->label('Email')
+                            ->label('Alamat email')
                             ->email()
                             ->required()
                             ->maxLength(255)
@@ -37,7 +37,7 @@ class UserForm
                             ->tel()
                             ->maxLength(30),
                         TextInput::make('password')
-                            ->label('Password')
+                            ->label(fn (string $operation): string => $operation === 'edit' ? 'Kata sandi baru' : 'Kata sandi')
                             ->password()
                             ->revealable()
                             ->rule(Password::min(10)->letters()->numbers())
@@ -46,7 +46,7 @@ class UserForm
                             ->helperText(fn (string $operation): string => $operation === 'edit' ? 'Kosongkan jika tidak ingin mengganti.' : 'Minimal 10 karakter, kombinasi huruf dan angka.'),
                         Toggle::make('is_active')
                             ->label('Aktif')
-                            ->helperText('Pengguna nonaktif tidak bisa login.')
+                            ->helperText('Pengguna nonaktif tidak bisa masuk.')
                             ->default(true)
                             ->disabled(fn (?User $record): bool => $record?->is(auth()->user()) ?? false),
                     ]),

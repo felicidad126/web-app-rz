@@ -1,7 +1,8 @@
 <x-filament-panels::page>
     <style>
-        .guide-body { font-size: 15px; line-height: 1.6 }
-        .guide-body h2 { font-size: 18px; font-weight: 700; margin: 4px 0 10px }
+        /* Baris ±72 karakter agar nyaman dibaca di layar lebar. */
+        .guide-body { font-size: 15px; line-height: 1.6; max-width: 72ch }
+        .guide-body h2 { font-size: 17px; font-weight: 600; margin: 4px 0 10px }
         .guide-body p, .guide-body ul, .guide-body ol { margin: 0 0 10px }
         .guide-body ul { list-style: disc; padding-left: 22px }
         .guide-body ol { list-style: decimal; padding-left: 22px }

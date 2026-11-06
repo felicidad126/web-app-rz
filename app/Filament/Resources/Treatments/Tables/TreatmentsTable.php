@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Treatments\Tables;
 
 use App\Enums\TreatmentCategory;
+use App\Support\Money;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -21,13 +22,14 @@ class TreatmentsTable
         return $table
             ->defaultSort('code')
             ->columns([
-                TextColumn::make('code')->label('Kode')->weight('bold')->searchable()->sortable(),
+                TextColumn::make('code')->label('Kode')->fontFamily('mono')->searchable()->sortable(),
                 TextColumn::make('name')->label('Tindakan')->searchable()->sortable()->wrap(),
-                TextColumn::make('category')->label('Kategori')->badge()->visibleFrom('md'),
-                TextColumn::make('fee_group')->label('Jenis jasa')->badge()->visibleFrom('lg'),
-                TextColumn::make('icd9cm_code')->label('ICD-9-CM')->placeholder('-')->searchable()->visibleFrom('md'),
-                TextColumn::make('base_price')->label('Tarif dasar')->money('IDR', locale: 'id')->sortable(),
-                TextColumn::make('duration_minutes')->label('Durasi')->suffix(' mnt')->visibleFrom('lg'),
+                TextColumn::make('category')->label('Kategori')->badge()->color('gray')->visibleFrom('lg'),
+                TextColumn::make('fee_group')->label('Jenis jasa')->badge()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('icd9cm_code')->label('ICD-9-CM')->fontFamily('mono')->placeholder('—')->searchable()->visibleFrom('md'),
+                TextColumn::make('base_price')->label('Tarif dasar')->alignEnd()->sortable()
+                    ->formatStateUsing(fn ($state): string => Money::format((int) $state, false)),
+                TextColumn::make('duration_minutes')->label('Durasi')->suffix(' mnt')->alignEnd()->visibleFrom('lg'),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
             ])
             ->filters([

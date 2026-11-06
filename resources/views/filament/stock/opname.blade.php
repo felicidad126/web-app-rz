@@ -9,6 +9,12 @@
     $changed = $lines->filter(fn ($l) => $l->difference() !== null && abs($l->difference()) >= 0.0005);
     $value = $changed->sum(fn ($l) => (int) round($l->difference() * $l->unit_cost));
 @endphp
+{{-- Di HP kolom batch disembunyikan (.klinik-hide-sm) dan batch tampil di bawah nama barang. --}}
+<style>
+    .stock-lines .stock-batch-sm { color: #52525b; font-size: 12px }
+    @media (min-width: 48rem) { .stock-lines .stock-batch-sm { display: none } }
+    @media (max-width: 47.99rem) { .stock-lines th, .stock-lines td { padding-inline: 10px !important } }
+</style>
 <div style="display: grid; gap: 16px">
     <section style="{{ $card }}; padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 12px 32px; font-size: 14px">
         <div><div style="color: #52525b; font-size: 12px">Baris dihitung</div>{{ $lines->count() }}</div>
@@ -20,20 +26,27 @@
     </section>
     <section style="{{ $card }}">
         <div style="overflow-x: auto">
-            <table style="width: 100%; border-collapse: collapse; min-width: 640px">
+            <table class="stock-lines" style="width: 100%; border-collapse: collapse">
                 <thead><tr>
-                    <th style="{{ $th }}">Barang</th><th style="{{ $th }}">Batch · ED</th>
+                    <th style="{{ $th }}">Barang</th><th class="klinik-hide-sm" style="{{ $th }}">Batch · ED</th>
                     <th style="{{ $th }}; {{ $num }}">Sistem</th><th style="{{ $th }}; {{ $num }}">Fisik</th><th style="{{ $th }}; {{ $num }}">Selisih</th>
                 </tr></thead>
                 <tbody>
                     @foreach ($lines as $line)
-                        @php $diff = $line->difference(); @endphp
-                        <tr style="{{ $diff !== null && abs($diff) >= 0.0005 ? 'background: #fffaeb' : '' }}">
-                            <td style="{{ $td }}">{{ $line->item->name }}@if ($line->notes)<div style="color: #52525b; font-size: 12px">{{ $line->notes }}</div>@endif</td>
-                            <td style="{{ $td }}; font-family: ui-monospace, monospace; font-size: 13px">{{ ($line->batch_number ?: '—').($line->expired_at ? ' · ED '.$line->expired_at->format('m/Y') : '') }}</td>
+                        @php
+                            $diff = $line->difference();
+                            $batch = ($line->batch_number ?: '—').($line->expired_at ? ' · ED '.$line->expired_at->format('m/Y') : '');
+                        @endphp
+                        <tr>
+                            <td style="{{ $td }}">
+                                {{ $line->item->name }}
+                                <div class="stock-batch-sm klinik-mono">{{ $batch }}</div>
+                                @if ($line->notes)<div style="color: #52525b; font-size: 12px">{{ $line->notes }}</div>@endif
+                            </td>
+                            <td class="klinik-hide-sm klinik-mono" style="{{ $td }}">{{ $batch }}</td>
                             <td style="{{ $td }}; {{ $num }}">{{ $fmt((float) $line->system_qty) }} {{ $line->item->baseUnit->name }}</td>
                             <td style="{{ $td }}; {{ $num }}">{{ $fmt($line->counted_qty === null ? null : (float) $line->counted_qty) }}</td>
-                            <td style="{{ $td }}; {{ $num }}; color: {{ ($diff ?? 0) < 0 ? '#b42318' : (($diff ?? 0) > 0 ? '#0d6e63' : '#52525b') }}">{{ $diff === null ? '—' : (($diff > 0 ? '+' : ($diff < 0 ? '−' : '')).$fmt(abs($diff))) }}</td>
+                            <td style="{{ $td }}; {{ $num }}; font-weight: 500; color: {{ ($diff ?? 0) < 0 ? '#b42318' : (($diff ?? 0) > 0 ? 'inherit' : '#52525b') }}">{{ $diff === null ? '—' : (($diff > 0 ? '+' : ($diff < 0 ? '−' : '')).$fmt(abs($diff))) }}</td>
                         </tr>
                     @endforeach
                 </tbody>

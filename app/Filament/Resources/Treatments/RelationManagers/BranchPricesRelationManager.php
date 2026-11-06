@@ -2,11 +2,12 @@
 
 namespace App\Filament\Resources\Treatments\RelationManagers;
 
+use App\Filament\Support\MoneyInput;
+use App\Support\Money;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -17,7 +18,7 @@ class BranchPricesRelationManager extends RelationManager
 {
     protected static string $relationship = 'branchPrices';
 
-    protected static ?string $title = 'Tarif per Cabang';
+    protected static ?string $title = 'Tarif per cabang';
 
     protected static ?string $modelLabel = 'tarif cabang';
 
@@ -31,12 +32,9 @@ class BranchPricesRelationManager extends RelationManager
                     ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule) => $rule->where('treatment_id', $this->getOwnerRecord()->getKey()))
                     ->preload()
                     ->required(),
-                TextInput::make('price')
+                MoneyInput::make('price')
                     ->label('Tarif')
-                    ->prefix('Rp')
-                    ->numeric()
                     ->minValue(0)
-                    ->step(1000)
                     ->required(),
             ]);
     }
@@ -47,10 +45,11 @@ class BranchPricesRelationManager extends RelationManager
             ->description('Kosongkan jika cabang memakai tarif dasar.')
             ->columns([
                 TextColumn::make('branch.name')->label('Cabang'),
-                TextColumn::make('price')->label('Tarif')->money('IDR', locale: 'id'),
+                TextColumn::make('price')->label('Tarif')->alignEnd()
+                    ->formatStateUsing(fn ($state): string => Money::format((int) $state, false)),
             ])
             ->headerActions([
-                CreateAction::make()->label('Tambah tarif cabang'),
+                CreateAction::make()->label('Tambah tarif cabang')->color('gray'),
             ])
             ->recordActions([
                 EditAction::make(),

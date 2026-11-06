@@ -5,6 +5,7 @@ namespace App\Filament\Resources\CommissionPayouts\Pages;
 use App\Enums\PayoutStatus;
 use App\Enums\SalaryComponentKind;
 use App\Filament\Resources\CommissionPayouts\CommissionPayoutResource;
+use App\Filament\Support\MoneyInput;
 use App\Models\CommissionPayout;
 use App\Models\CommissionPayoutAdjustment;
 use App\Models\User;
@@ -77,7 +78,7 @@ class ViewCommissionPayout extends ViewRecord
                     ->schema([
                         Select::make('kind')->label('Jenis')->options(SalaryComponentKind::class)->default(SalaryComponentKind::Deduction)->required(),
                         TextInput::make('description')->label('Keterangan')->placeholder('Mis. PPh 21, kasbon, insentif')->required()->maxLength(255),
-                        TextInput::make('amount')->label('Nominal')->prefix('Rp')->numeric()->minValue(1)->required(),
+                        MoneyInput::make('amount')->label('Nominal')->minValue(1)->required(),
                     ])
                     ->action(fn (array $data) => $this->run(fn (User $u) => CommissionPayouts::addAdjustment(
                         $this->payout(),

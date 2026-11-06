@@ -9,16 +9,19 @@ use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
 
-/** Produksi per bulan, 12 bulan terakhir (bulan berjalan ditandai lebih terang karena belum penuh). */
+/**
+ * Produksi per bulan, 12 bulan terakhir. Batang abu-abu (teal hanya untuk aksi utama); bulan lalu lebih gelap,
+ * bulan berjalan putih bergaris karena belum penuh (mockup Dashboard).
+ */
 class ProductionTrendWidget extends ChartWidget
 {
     use HasWidgetShield;
 
     protected static ?int $sort = 2;
 
-    protected int|string|array $columnSpan = 1;
+    protected int|string|array $columnSpan = 'full';
 
-    protected ?string $maxHeight = '260px';
+    protected ?string $maxHeight = '220px';
 
     public function getHeading(): ?string
     {
@@ -45,7 +48,13 @@ class ProductionTrendWidget extends ChartWidget
             'datasets' => [[
                 'label' => 'Produksi (juta Rp)',
                 'data' => $months->map(fn (Carbon $m): float => round(($values[$m->format('Y-m')] ?? 0) / 1_000_000, 1))->all(),
-                'backgroundColor' => $months->map(fn (Carbon $m): string => $m->isSameMonth(now()) ? 'rgba(13, 110, 99, 0.35)' : '#0d6e63')->all(),
+                'backgroundColor' => $months->map(fn (Carbon $m): string => match (true) {
+                    $m->isSameMonth(now()) => '#ffffff',
+                    $m->isSameMonth(now()->subMonthNoOverflow()) => '#3f3f46',
+                    default => '#a1a1aa',
+                })->all(),
+                'borderColor' => $months->map(fn (Carbon $m): string => $m->isSameMonth(now()) ? '#52525b' : 'transparent')->all(),
+                'borderWidth' => 1,
                 'borderRadius' => 4,
                 'maxBarThickness' => 28,
             ]],
@@ -60,7 +69,7 @@ class ProductionTrendWidget extends ChartWidget
             'plugins' => ['legend' => ['display' => false]],
             'scales' => [
                 'y' => ['beginAtZero' => true, 'grid' => ['color' => '#f4f4f5']],
-                'x' => ['grid' => ['display' => false]],
+                'x' => ['grid' => ['display' => false], 'ticks' => ['maxRotation' => 0, 'autoSkip' => true]],
             ],
         ];
     }

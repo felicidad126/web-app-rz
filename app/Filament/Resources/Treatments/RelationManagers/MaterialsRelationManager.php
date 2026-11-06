@@ -31,7 +31,7 @@ class MaterialsRelationManager extends RelationManager
 {
     protected static string $relationship = 'materials';
 
-    protected static ?string $title = 'Bahan (BOM)';
+    protected static ?string $title = 'Bahan per tindakan';
 
     protected static ?string $modelLabel = 'bahan';
 
@@ -52,7 +52,7 @@ class MaterialsRelationManager extends RelationManager
                     ->live()
                     ->afterStateUpdated(fn ($state, $set) => $set('unit_id', Item::find($state)?->base_unit_id))
                     ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule) => $rule->where('treatment_id', $this->getOwnerRecord()->getKey()))
-                    ->validationMessages(['unique' => 'Barang ini sudah ada di BOM tindakan ini.']),
+                    ->validationMessages(['unique' => 'Barang ini sudah ada di daftar bahan tindakan ini.']),
                 TextInput::make('qty')
                     ->label('Jumlah per tindakan')
                     ->numeric()
@@ -77,16 +77,16 @@ class MaterialsRelationManager extends RelationManager
                 .'Perkiraan HPP bahan per tindakan: '.Money::format(StockAlerts::estimatedMaterialCost($treatment->fresh() ?? $treatment, $branchId)).'.')
             ->columns([
                 TextColumn::make('item.name')->label('Barang'),
-                TextColumn::make('qty')->label('Jumlah')
+                TextColumn::make('qty')->label('Jumlah')->alignEnd()
                     ->formatStateUsing(fn (TreatmentMaterial $record): string => StockLedger::format((float) $record->qty).' '.$record->unit->name)
                     ->description(fn (TreatmentMaterial $record): ?string => $record->unit_id === $record->item->base_unit_id
                         ? null
                         : '= '.StockLedger::format($record->baseQty()).' '.$record->item->baseUnit->name),
                 TextColumn::make('cost')->label('Perkiraan HPP')->alignEnd()
-                    ->state(fn (TreatmentMaterial $record): string => Money::format((int) round($record->baseQty() * StockLedger::averageCost($record->item_id, $branchId)))),
+                    ->state(fn (TreatmentMaterial $record): string => Money::format((int) round($record->baseQty() * StockLedger::averageCost($record->item_id, $branchId)), false)),
             ])
             ->headerActions([
-                CreateAction::make()->label('Tambah bahan'),
+                CreateAction::make()->label('Tambah bahan')->color('gray'),
             ])
             ->recordActions([
                 EditAction::make(),

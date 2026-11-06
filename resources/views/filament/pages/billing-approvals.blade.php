@@ -18,7 +18,18 @@
         ];
     @endphp
 
-    @foreach ($groups as $group)
+    @php $pending = collect($groups)->sum(fn ($group) => $group['rows']->count()); @endphp
+
+    @if ($pending === 0)
+        {{-- Satu keadaan kosong, bukan tiga kartu "Tidak ada pengajuan". --}}
+        <section style="background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; padding: 32px 16px; text-align: center">
+            <x-filament::icon icon="heroicon-o-check-circle" style="width: 32px; height: 32px; margin: 0 auto 8px; color: #a1a1aa" />
+            <div style="font-weight: 600; font-size: 15px">Tidak ada pengajuan yang menunggu</div>
+            <div style="color: #52525b; font-size: 13px; margin-top: 4px">Void pembayaran, void tagihan, dan refund dari kasir muncul di sini untuk disetujui.</div>
+        </section>
+    @endif
+
+    @foreach (collect($groups)->filter(fn ($group) => $group['rows']->isNotEmpty()) as $group)
         <section style="background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; overflow: hidden">
             <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #e4e4e7; flex-wrap: wrap">
                 <div><div style="font-weight: 600; font-size: 14px">{{ $group['title'] }}</div><div style="color: #52525b; font-size: 13px">{{ $group['hint'] }}</div></div>
@@ -26,7 +37,7 @@
             </div>
             @forelse ($group['rows'] as $row)
                 <div style="display: flex; gap: 12px 20px; align-items: center; padding: 12px 16px; border-top: {{ $loop->first ? '0' : '1px solid #f4f4f5' }}; flex-wrap: wrap; font-size: 14px">
-                    <span style="font-family: ui-monospace, monospace; font-size: 13px; min-width: 130px">{{ $row['ref'] }}</span>
+                    <span class="klinik-mono" style="min-width: 130px">{{ $row['ref'] }}</span>
                     <div style="flex: 1; min-width: 240px">
                         <div><strong style="font-weight: 600">{{ $row['who'] }}</strong> · {{ $row['what'] }}</div>
                         <div style="color: #52525b; font-size: 13px">Alasan: {{ $row['reason'] }} · diajukan {{ $row['by'] }}</div>

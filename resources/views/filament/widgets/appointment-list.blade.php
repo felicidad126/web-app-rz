@@ -13,9 +13,12 @@
             <div style="display: grid; grid-template-columns: 64px 1fr; gap: 12px; padding: 10px 16px; border-top: 1px solid #f4f4f5">
                 <div style="font-variant-numeric: tabular-nums; font-weight: 600">{{ $a->start_at->format('H:i') }}</div>
                 <div>
-                    <div style="font-weight: 500">{{ $a->patient->name }} <span style="font-size: 12px; color: #71717a">{{ $a->patient->rm_number }}{{ $showDoctor ? ' · '.$a->practitioner->displayName() : '' }}{{ $a->chair ? ' · '.$a->chair->name : '' }}</span></div>
+                    @php [$dotColor, $statusText] = \App\Filament\Clinic\StatusDot::forAppointment($a, withTime: true); @endphp
+                    <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px">
+                        <div style="font-weight: 500">{{ $a->patient->name }} <span style="font-size: 12px; color: #71717a"><span class="klinik-mono" style="font-size: 12px">{{ $a->patient->rm_number }}</span>{{ $showDoctor ? ' · '.$a->practitioner->displayName() : '' }}{{ $a->chair ? ' · '.$a->chair->name : '' }}</span></div>
+                        <div style="font-size: 13px; color: #3f3f46">{{ \App\Filament\Clinic\StatusDot::html($dotColor, $statusText) }}</div>
+                    </div>
                     @if ($a->reason)<div style="font-size: 13px; color: #52525b">{{ $a->reason }}</div>@endif
-                    @if ($a->status === \App\Enums\AppointmentStatus::NoShow)<div style="font-size: 12px; color: #b91c1c">Tidak datang</div>@endif
                     @if (! empty($item['flags']))
                         <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px">
                             @foreach ($item['flags'] as $flag)

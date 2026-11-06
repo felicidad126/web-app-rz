@@ -12,7 +12,7 @@ class ManageSalaryComponents extends ManageRecords
 
     public function getSubheading(): ?string
     {
-        return 'PPh 21 diisi manual per slip (perhitungan otomatis masuk backlog setelah divalidasi konsultan pajak).';
+        return 'Nominal bawaan dipakai bila karyawan belum punya nominal sendiri. PPh 21 diisi manual per slip (hitung otomatis belum tersedia).';
     }
 
     protected function getHeaderActions(): array

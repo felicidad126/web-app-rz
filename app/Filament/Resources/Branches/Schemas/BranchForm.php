@@ -35,7 +35,7 @@ class BranchForm
                             ->tel()
                             ->maxLength(30),
                         TextInput::make('satusehat_location_id')
-                            ->label('Location ID SATUSEHAT')
+                            ->label('ID lokasi SATUSEHAT')
                             ->helperText('Dari SATUSEHAT Platform, atau klik "Daftarkan ke SATUSEHAT" di atas.')
                             ->maxLength(255),
                         Textarea::make('address')

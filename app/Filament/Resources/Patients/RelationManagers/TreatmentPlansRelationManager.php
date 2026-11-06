@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Patients\RelationManagers;
 
 use App\Filament\Resources\TreatmentPlans\TreatmentPlanResource;
 use App\Models\TreatmentPlan;
+use App\Support\Money;
 use Filament\Actions\Action;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
@@ -36,8 +37,9 @@ class TreatmentPlansRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('title')->label('Rencana'),
                 TextColumn::make('practitioner.user.name')->label('Dokter'),
-                TextColumn::make('status')->label('Status')->badge(),
-                TextColumn::make('total')->label('Estimasi')->state(fn (TreatmentPlan $record): int => $record->totalEstimate())->money('IDR', locale: 'id'),
+                TextColumn::make('status')->label('Status')->badge()->extraAttributes(['class' => 'klinik-status']),
+                TextColumn::make('total')->label('Estimasi')->state(fn (TreatmentPlan $record): int => $record->totalEstimate())
+                    ->formatStateUsing(fn ($state): string => Money::format((int) $state, false))->alignEnd(),
                 TextColumn::make('created_at')->label('Dibuat')->date('d/m/Y'),
             ])
             ->headerActions([

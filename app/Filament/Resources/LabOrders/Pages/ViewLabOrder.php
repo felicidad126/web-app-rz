@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\LabOrders\Pages;
 
 use App\Enums\LabOrderStatus;
+use App\Filament\Clinic\CodeText;
 use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Filament\Resources\LabOrders\LabOrderResource;
 use App\Models\LabOrder;
@@ -36,8 +37,12 @@ class ViewLabOrder extends ViewRecord
 
     public function infolist(Schema $schema): Schema
     {
+        /** @var LabOrder $order */
+        $order = $this->getRecord();
+
         return $schema->columns(1)->components([
-            View::make('filament.lab.order')->viewData(['order' => $this->getRecord()]),
+            View::make('filament.clinic.patient-banner')->viewData(['patient' => $order->patient]),
+            View::make('filament.lab.order')->viewData(['order' => $order]),
         ]);
     }
 
@@ -49,12 +54,12 @@ class ViewLabOrder extends ViewRecord
         return 'Order lab · '.$order->patient->name;
     }
 
-    public function getSubheading(): ?string
+    public function getSubheading(): string|Htmlable|null
     {
         /** @var LabOrder $order */
         $order = $this->getRecord();
 
-        return $order->number.' · '.$order->status->getLabel().' · '.$order->branch->name;
+        return CodeText::join([[$order->number, true], $order->status->getLabel(), $order->branch->name]);
     }
 
     protected function getHeaderActions(): array

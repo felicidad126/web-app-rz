@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Visits\Tables;
 
 use App\Enums\VisitStatus;
+use App\Filament\Clinic\CodeText;
 use App\Filament\Clinic\PractitionerOptions;
 use App\Filament\Resources\Visits\VisitActions;
 use App\Filament\Resources\Visits\VisitResource;
@@ -10,12 +11,15 @@ use App\Models\Visit;
 use App\Support\BranchContext;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\DatePicker;
+use Filament\Support\Enums\FontFamily;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\HtmlString;
 
 class VisitsTable
 {
@@ -29,15 +33,17 @@ class VisitsTable
                 ? VisitResource::getUrl('examine', ['record' => $record])
                 : null)
             ->searchPlaceholder('Cari nama / No. RM / No. kunjungan')
+            ->emptyStateHeading('Belum ada kunjungan')
+            ->emptyStateDescription('Tidak ada kunjungan untuk tanggal & cabang di filter.')
             ->columns([
-                TextColumn::make('queue_number')->label('#')->sortable(),
+                TextColumn::make('queue_number')->label('#')->sortable()->fontFamily(FontFamily::Mono),
                 TextColumn::make('patient.name')
                     ->label('Pasien')
-                    ->description(fn (Visit $record): string => $record->patient->rm_number.' · '.$record->visit_number)
+                    ->description(fn (Visit $record): HtmlString => CodeText::join([[$record->patient->rm_number, true], [$record->visit_number, true]]))
                     ->searchable(['name', 'rm_number']),
-                TextColumn::make('practitioner.user.name')->label('Dokter'),
+                TextColumn::make('practitioner.user.name')->label('Dokter')->visibleFrom('md'),
                 TextColumn::make('chair.name')->label('Kursi')->placeholder('—')->visibleFrom('md'),
-                TextColumn::make('status')->label('Status')->badge(),
+                TextColumn::make('status')->label('Status')->badge()->extraAttributes(['class' => 'klinik-status']),
                 TextColumn::make('arrived_at')
                     ->label('Datang')
                     ->time('H:i')
@@ -49,8 +55,9 @@ class VisitsTable
             ->filters([
                 Filter::make('visit_date')
                     ->label('Tanggal')
-                    ->schema([DatePicker::make('date')->label('Tanggal')->native(false)->displayFormat('d/m/Y')->default(today())])
-                    ->query(fn (Builder $query, array $data): Builder => $query->when($data['date'] ?? null, fn (Builder $q, $date) => $q->whereDate('visit_date', $date)))
+                    ->schema([DatePicker::make('date')->label('Tanggal')->native(false)->displayFormat('d/m/Y')->default(today()->toDateString())])
+                    // Bandingkan tanggal saja: nilai bawaan bisa berjam ("2026-11-06 00:00:00").
+                    ->query(fn (Builder $query, array $data): Builder => $query->when($data['date'] ?? null, fn (Builder $q, $date) => $q->whereDate('visit_date', Carbon::parse($date)->toDateString())))
                     ->indicateUsing(fn (array $data): ?string => ($data['date'] ?? null) ? 'Tanggal '.date('d/m/Y', strtotime($data['date'])) : null),
                 SelectFilter::make('branch_id')->label('Cabang')->options(fn (): array => BranchContext::options())->default(fn (): ?int => BranchContext::id()),
                 SelectFilter::make('status')->label('Status')->options(VisitStatus::class)->multiple(),

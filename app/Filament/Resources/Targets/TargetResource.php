@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Targets;
 use App\Filament\Clinic\PractitionerOptions;
 use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Targets\Pages\ManageTargets;
+use App\Filament\Support\MoneyInput;
 use App\Filament\Support\NavGroup;
 use App\Models\Target;
 use App\Services\Reports\Targets;
@@ -13,7 +14,6 @@ use App\Support\Money;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
@@ -61,7 +61,7 @@ class TargetResource extends Resource
                 ->unique(ignoreRecord: true, modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
                     ->where('period', $get('period'))->where('branch_id', $get('branch_id'))->where('metric', 'production'))
                 ->validationMessages(['unique' => 'Target untuk dokter ini di bulan & cabang itu sudah ada.']),
-            TextInput::make('amount')->label('Target produksi sebulan')->prefix('Rp')->numeric()->minValue(1)->required(),
+            MoneyInput::make('amount')->label('Target produksi sebulan')->minValue(1)->required(),
         ]);
     }
 
@@ -71,11 +71,12 @@ class TargetResource extends Resource
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['branch', 'practitioner.user']))
             ->defaultSort(fn (Builder $query) => $query->orderByDesc('period')->orderBy('branch_id')->orderBy('practitioner_id'))
             ->columns([
-                TextColumn::make('period')->label('Bulan')->formatStateUsing(fn (Target $record): string => $record->period->locale('id')->translatedFormat('F Y')),
-                TextColumn::make('branch.name')->label('Cabang'),
-                TextColumn::make('practitioner.user.name')->label('Dokter')->placeholder('Seluruh cabang'),
+                // Cabang di bawah bulan supaya di HP cukup Bulan, Target, Target harian.
+                TextColumn::make('period')->label('Bulan / cabang')->formatStateUsing(fn (Target $record): string => $record->period->locale('id')->translatedFormat('F Y'))
+                    ->description(fn (Target $record): string => $record->branch->name),
+                TextColumn::make('practitioner.user.name')->label('Dokter')->placeholder('Seluruh cabang')->visibleFrom('md'),
                 TextColumn::make('amount')->label('Target')->alignEnd()->formatStateUsing(fn ($state): string => Money::format((int) $state, false)),
-                TextColumn::make('working_days')->label('Hari kerja')->alignEnd()
+                TextColumn::make('working_days')->label('Hari kerja')->alignEnd()->visibleFrom('md')
                     ->state(fn (Target $record): int => Targets::workingDays($record->period, $record->branch_id, $record->practitioner_id)->count()),
                 TextColumn::make('daily')->label('Target harian')->alignEnd()
                     ->state(function (Target $record): string {

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Practitioners\Schemas;
 
 use App\Enums\PractitionerType;
+use App\Filament\Support\MoneyInput;
 use App\Filament\Support\NikField;
 use App\Models\Practitioner;
 use Filament\Forms\Components\DatePicker;
@@ -60,14 +61,14 @@ class PractitionerForm
                     ->columnSpanFull()
                     ->visible(fn (): bool => auth()->user()?->can('Manage:Commission') ?? false)
                     ->components([
-                        TextInput::make('attendance_fee')->label('Uang hadir per hari')->prefix('Rp')->numeric()->minValue(0)->default(0),
-                        TextInput::make('on_call_fee')->label('Uang on call per hari')->prefix('Rp')->numeric()->minValue(0)->default(0),
+                        MoneyInput::make('attendance_fee')->label('Uang hadir per hari')->minValue(0)->default(0),
+                        MoneyInput::make('on_call_fee')->label('Uang on call per hari')->minValue(0)->default(0),
                     ]),
                 Section::make('SATUSEHAT')
                     ->columnSpanFull()
                     ->components([
                         TextInput::make('satusehat_ihs_id')
-                            ->label('IHS Practitioner ID')
+                            ->label('ID IHS tenaga kesehatan')
                             ->helperText('Dicari otomatis dari NIK saat kunjungan dikirim, atau klik "Cari IHS SATUSEHAT" di atas.')
                             ->maxLength(255),
                     ]),

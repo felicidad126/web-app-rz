@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Recalls;
 
 use App\Enums\RecallStatus;
+use App\Filament\Clinic\CodeText;
 use App\Filament\Clinic\PatientSelect;
 use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Appointments\AppointmentResource;
@@ -27,6 +28,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 use UnitEnum;
 
 class RecallResource extends Resource
@@ -78,10 +80,10 @@ class RecallResource extends Resource
                     ->sortable(),
                 TextColumn::make('patient.name')
                     ->label('Pasien')
-                    ->description(fn (Recall $record): string => trim($record->patient->rm_number.' · '.$record->patient->phone, ' ·'))
+                    ->description(fn (Recall $record): HtmlString => CodeText::join([[$record->patient->rm_number, true], $record->patient->phone]))
                     ->searchable(['name', 'rm_number', 'phone']),
-                TextColumn::make('reason')->label('Keperluan'),
-                TextColumn::make('status')->label('Status')->badge(),
+                TextColumn::make('reason')->label('Keperluan')->visibleFrom('md'),
+                TextColumn::make('status')->label('Status')->badge()->extraAttributes(['class' => 'klinik-status'])->visibleFrom('sm'),
                 TextColumn::make('last_contacted_at')->label('Terakhir dihubungi')->dateTime('d/m H:i')->placeholder('—')->visibleFrom('lg'),
                 TextColumn::make('notes')->label('Catatan')->placeholder('—')->limit(30)->visibleFrom('xl'),
             ])
@@ -98,7 +100,12 @@ class RecallResource extends Resource
                 Action::make('contacted')
                     ->label('Dihubungi')
                     ->icon(Heroicon::OutlinedPhone)
-                    ->color('info')
+                    ->color('gray')
+                    // Tombol kecil; di HP cukup ikon telepon agar kolom pasien tetap terbaca.
+                    ->button()
+                    ->size('sm')
+                    ->labeledFrom('md')
+                    ->tooltip('Tandai sudah dihubungi')
                     ->schema([TextInput::make('notes')->label('Hasil')->placeholder('Mis. minta dihubungi minggu depan')->maxLength(255)])
                     ->visible(fn (Recall $record): bool => in_array($record->status, [RecallStatus::Pending, RecallStatus::Contacted], true))
                     ->authorize(fn (Recall $record): bool => auth()->user()?->can('update', $record) ?? false)

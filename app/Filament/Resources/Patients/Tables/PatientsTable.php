@@ -3,13 +3,15 @@
 namespace App\Filament\Resources\Patients\Tables;
 
 use App\Enums\Gender;
+use App\Filament\Resources\Patients\PatientResource;
 use App\Models\Patient;
 use App\Support\BlindIndex;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Actions\ViewAction;
+use Filament\Support\Enums\FontFamily;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
@@ -26,7 +28,8 @@ class PatientsTable
             ->columns([
                 TextColumn::make('rm_number')
                     ->label('No. RM')
-                    ->weight('bold')
+                    ->fontFamily(FontFamily::Mono)
+                    ->weight(FontWeight::Medium)
                     ->copyable()
                     ->sortable()
                     ->searchable(query: function (Builder $query, string $search): Builder {
@@ -80,9 +83,10 @@ class PatientsTable
                 SelectFilter::make('default_payer_id')->label('Penjamin')->relationship('defaultPayer', 'name'),
                 TrashedFilter::make(),
             ])
+            // Klik baris membuka data pasien; tombol "Lihat" tidak perlu, "Ubah" cukup ikon agar muat di HP.
+            ->recordUrl(fn (Patient $record): ?string => PatientResource::canView($record) ? PatientResource::getUrl('view', ['record' => $record]) : null)
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()->hiddenLabel()->tooltip('Ubah'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

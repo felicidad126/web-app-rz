@@ -50,12 +50,23 @@
                 </div>
                 <div style="margin-top: 12px">
                     <div style="{{ $label }}">Slot kosong hari ini</div>
-                    <div style="font-size: 14px">
-                        {{ collect($today['slots'])->map(fn ($s) => $s['start'].'–'.$s['end'].' '.($s['chair'] ? $s['chair'].' · ' : '').$s['practitioner'])->implode(' · ') ?: 'Tidak ada slot kosong ≥ 30 menit' }}
-                    </div>
+                    @if (count($today['slots']))
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0 16px; font-size: 14px">
+                            @foreach ($today['slots'] as $slot)
+                                <div style="padding: 4px 0; border-top: 1px solid #f4f4f5">
+                                    <span style="font-variant-numeric: tabular-nums; font-weight: 500">{{ $slot['start'] }}–{{ $slot['end'] }}</span>
+                                    <span style="color: #52525b; font-size: 13px">{{ $slot['chair'] ? $slot['chair'].' · ' : '' }}{{ $slot['practitioner'] }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div style="font-size: 14px; color: #71717a">Tidak ada slot kosong ≥ 30 menit</div>
+                    @endif
                 </div>
             </section>
 
+            {{-- Kemarin & besok berdampingan selebar halaman (bukan 2 dari 3 kolom). --}}
+            <div style="grid-column: 1 / -1; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start">
             {{-- Kemarin --}}
             <section style="{{ $card }}">
                 <div style="font-weight: 600; font-size: 16px">Kemarin <span style="{{ $label }}">{{ $yesterday['date']->locale('id')->translatedFormat('D, j M') }}</span></div>
@@ -71,11 +82,13 @@
                     </div>
                     <div>
                         <div style="{{ $label }}">Pasien</div>
-                        <div style="{{ $big }}">{{ $yesterday['visits'] }} · {{ $yesterday['new'] }} baru</div>
+                        <div style="{{ $big }}">{{ $yesterday['visits'] }}</div>
+                        <div style="{{ $label }}">{{ $yesterday['new'] }} pasien baru</div>
                     </div>
                     <div title="{{ \App\Enums\Kpi::NoShow->definition() }}">
                         <div style="{{ $label }}">Tidak datang</div>
-                        <div style="{{ $big }}">{{ $yesterday['no_shows'] }} · {{ Money::format($yesterday['no_show_value']) }}</div>
+                        <div style="{{ $big }}">{{ $yesterday['no_shows'] }}</div>
+                        <div style="{{ $label }}">{{ $yesterday['no_shows'] > 0 ? 'Nilai '.Money::format($yesterday['no_show_value']) : 'Tidak ada' }}</div>
                     </div>
                 </div>
                 <div style="margin-top: 12px">
@@ -92,7 +105,7 @@
             <section style="{{ $card }}">
                 <div style="font-weight: 600; font-size: 16px">Besok <span style="{{ $label }}">{{ $tomorrow['date']->locale('id')->translatedFormat('D, j M') }}</span></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px">
-                    <div><div style="{{ $label }}">Janji</div><div style="{{ $big }}">{{ $tomorrow['count'] }} · {{ $tomorrow['confirmed'] }} dikonfirmasi</div></div>
+                    <div><div style="{{ $label }}">Janji</div><div style="{{ $big }}">{{ $tomorrow['count'] }}</div><div style="{{ $label }}">{{ $tomorrow['confirmed'] }} dikonfirmasi</div></div>
                     <div><div style="{{ $label }}">Slot kosong</div><div style="{{ $big }}">{{ count($tomorrow['slots']) }}</div></div>
                 </div>
                 <div style="font-size: 13px; margin-top: 6px">
@@ -112,6 +125,7 @@
                     @endforelse
                 </div>
             </section>
+            </div>
         </div>
     @endif
 </x-filament-panels::page>

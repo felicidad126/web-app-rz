@@ -68,7 +68,7 @@ class DoctorPerformanceWidget extends Widget
                 ['label' => 'Est. jasa', 'align' => 'end', 'tip' => Kpi::Commission->definition()],
             ],
             'rows' => $rows,
-            'note' => 'Penerimaan rencana = nilai rencana disetujui ÷ nilai rencana diajukan (bulan ini).',
+            'note' => 'Penerimaan rencana = nilai rencana disetujui ÷ nilai rencana diajukan (bulan berjalan).',
             'empty' => 'Belum ada dokter dengan jadwal atau produksi.',
         ];
     }

@@ -7,6 +7,7 @@ use App\Enums\CommissionStatus;
 use App\Filament\Clinic\PractitionerOptions;
 use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Commissions\Pages\ListCommissions;
+use App\Filament\Resources\Invoices\Tables\InvoicesTable;
 use App\Filament\Support\NavGroup;
 use App\Models\Commission;
 use App\Support\BranchContext;
@@ -22,6 +23,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 use UnitEnum;
 
 /** Rincian entri jasa per tindakan (hanya baca). Koreksi lewat void/refund tagihan. */
@@ -64,21 +66,26 @@ class CommissionResource extends Resource
             ->defaultSort(fn (Builder $query) => $query->orderByDesc('service_date')->orderByDesc('id'))
             ->columns([
                 TextColumn::make('service_date')->label('Tanggal')->date('d/m/Y')->sortable()
-                    ->description(fn (Commission $record): string => $record->invoice->label()),
-                TextColumn::make('invoice.patient.name')->label('Pasien')->searchable()->wrap(),
-                TextColumn::make('invoiceItem.description')->label('Tindakan')->wrap()
-                    ->description(fn (Commission $record): ?string => $record->isReversal() ? 'Pembalik: '.$record->reason : ($record->rule_snapshot['summary'] ?? null)),
+                    ->description(fn (Commission $record): HtmlString => InvoicesTable::code($record->invoice->label())),
+                TextColumn::make('invoice.patient.name')->label('Pasien')->searchable()->visibleFrom('md'),
+                // Nama tindakan dipotong (lengkap di tooltip; boleh turun baris di HP), aturan jasa di tooltip kolom Jasa.
+                TextColumn::make('invoiceItem.description')->label('Tindakan')
+                    ->limit(36)
+                    ->wrap()
+                    ->tooltip(fn (Commission $record): ?string => mb_strlen($record->invoiceItem->description) > 36 ? $record->invoiceItem->description : null)
+                    ->description(fn (Commission $record): ?string => $record->isReversal() ? 'Pembalik: '.$record->reason : null),
                 TextColumn::make('practitioner.user.name')->label('Dokter / nakes')
                     ->description(fn (Commission $record): ?string => $record->role === CommissionRole::Assistant ? 'Asisten' : null)
-                    ->visible(fn (): bool => auth()->user()?->can('ViewAll:Commission') ?? false),
+                    ->visible(fn (): bool => auth()->user()?->can('ViewAll:Commission') ?? false)
+                    ->visibleFrom('lg'),
                 TextColumn::make('gross_amount')->label('Bruto')->alignEnd()->formatStateUsing($money)->visibleFrom('lg'),
-                TextColumn::make('discount_amount')->label('Diskon')->alignEnd()->formatStateUsing($money)->visibleFrom('xl'),
-                TextColumn::make('lab_cost')->label('Lab')->alignEnd()->formatStateUsing($money)->visibleFrom('xl'),
+                TextColumn::make('discount_amount')->label('Diskon')->alignEnd()->formatStateUsing($money)->visibleFrom('2xl'),
+                TextColumn::make('lab_cost')->label('Lab')->alignEnd()->formatStateUsing($money)->visibleFrom('2xl'),
                 TextColumn::make('base_amount')->label('Basis')->alignEnd()->formatStateUsing($money)->visibleFrom('md'),
                 TextColumn::make('amount')->label('Jasa')->alignEnd()->formatStateUsing($money)
-                    ->color(fn (int $state): ?string => $state < 0 ? 'danger' : null)
-                    ->summarize(Sum::make()->label('Total')->formatStateUsing($money)),
-                TextColumn::make('status')->label('Status')->badge()
+                    ->tooltip(fn (Commission $record): ?string => $record->rule_snapshot['summary'] ?? null)
+                    ->summarize(Sum::make()->label('')->formatStateUsing($money)),
+                TextColumn::make('status')->label('Status')->badge()->extraAttributes(['class' => 'klinik-status'])->visibleFrom('sm')
                     ->description(fn (Commission $record): ?string => $record->payout ? 'Rekap '.$record->payout->periodLabel() : null),
             ])
             ->filters([

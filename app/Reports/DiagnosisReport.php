@@ -16,7 +16,7 @@ class DiagnosisReport extends Report
 
     public static function label(): string
     {
-        return 'Top diagnosa';
+        return 'Diagnosis terbanyak';
     }
 
     public static function description(): string

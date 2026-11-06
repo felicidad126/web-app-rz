@@ -7,10 +7,12 @@ use App\Enums\SalaryComponentKind;
 use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Payslips\Pages\EditPayslip;
 use App\Filament\Resources\Payslips\Pages\ListPayslips;
+use App\Filament\Support\MoneyInput;
 use App\Filament\Support\NavGroup;
 use App\Models\Payslip;
 use App\Support\Money;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
@@ -23,6 +25,8 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -64,14 +68,15 @@ class PayslipResource extends Resource
                         ->hiddenLabel()
                         ->relationship(modifyQueryUsing: fn ($query) => $query->orderBy('sort'))
                         ->table([
-                            TableColumn::make('Jenis')->width('22%'),
-                            TableColumn::make('Komponen')->width('48%'),
-                            TableColumn::make('Nominal')->width('30%'),
+                            TableColumn::make('Jenis')->width('22%')->alignStart(),
+                            TableColumn::make('Komponen')->width('48%')->alignStart(),
+                            TableColumn::make('Nominal')->width('30%')->alignEnd(),
                         ])
+                        // Label dipakai di HP (tabel repeater ditumpuk per baris).
                         ->schema([
-                            Select::make('kind')->options(SalaryComponentKind::class)->required(),
-                            TextInput::make('name')->required()->maxLength(80),
-                            TextInput::make('amount')->numeric()->minValue(0)->prefix('Rp')->required(),
+                            Select::make('kind')->label('Jenis')->options(SalaryComponentKind::class)->required(),
+                            TextInput::make('name')->label('Komponen')->required()->maxLength(80),
+                            MoneyInput::make('amount')->label('Nominal')->minValue(0)->required(),
                         ])
                         ->orderColumn('sort')
                         ->addActionLabel('Tambah baris'),
@@ -88,23 +93,33 @@ class PayslipResource extends Resource
             ->modifyQueryUsing(fn (Builder $query) => $query->with('user'))
             ->defaultSort(fn (Builder $query) => $query->orderByDesc('period')->orderBy('user_id'))
             ->columns([
+                // Bulan cukup di filter Periode; ditulis per baris hanya bila semua periode ditampilkan.
                 TextColumn::make('user.name')->label('Karyawan')->searchable()
-                    ->description(fn (Payslip $record): string => $record->periodLabel()),
-                TextColumn::make('earning_total')->label('Pendapatan')->alignEnd()->formatStateUsing($money)
+                    ->description(fn (Payslip $record, HasTable $livewire): ?string => filled($livewire->getTableFilterState('period')['value'] ?? null) ? null : $record->periodLabel()),
+                TextColumn::make('earning_total')->label('Pendapatan')->alignEnd()->formatStateUsing($money)->visibleFrom('md')
                     ->summarize(Sum::make()->label('')->formatStateUsing($money)),
-                TextColumn::make('deduction_total')->label('Potongan')->alignEnd()->formatStateUsing($money)
+                TextColumn::make('deduction_total')->label('Potongan')->alignEnd()->formatStateUsing($money)->visibleFrom('md')
                     ->summarize(Sum::make()->label('')->formatStateUsing($money)),
                 TextColumn::make('net_total')->label('Diterima')->alignEnd()->weight('bold')->formatStateUsing($money)
                     ->summarize(Sum::make()->label('')->formatStateUsing($money)),
-                TextColumn::make('status')->label('Status')->badge(),
+                TextColumn::make('status')->label('Status')->badge()->extraAttributes(['class' => 'klinik-status']),
             ])
             ->filters([
                 SelectFilter::make('period')->label('Periode')
                     ->options(fn (): array => self::periodOptions())
+                    ->default(fn (): ?string => ($period = Payslip::query()->max('period')) ? Carbon::parse($period)->toDateString() : null)
                     ->query(fn (Builder $query, array $data) => filled($data['value'] ?? null) ? $query->whereDate('period', $data['value']) : $query),
                 SelectFilter::make('status')->label('Status')->options(PayoutStatus::class),
             ])
-            ->recordActions([EditAction::make()->label(fn (Payslip $record): string => $record->isDraft() ? 'Ubah' : 'Lihat')]);
+            // Filter Periode selalu terlihat dan langsung berlaku (tanpa tombol "Terapkan" kedua yang berwarna teal).
+            ->filtersLayout(FiltersLayout::AboveContent)
+            ->filtersFormColumns(['default' => 2, 'lg' => 4])
+            ->deferFilters(false)
+            ->filtersResetAction(fn (Action $action): Action => $action->color('gray'))
+            ->recordActions([EditAction::make()
+                ->extraAttributes(['class' => 'klinik-hide-sm'])
+                ->label(fn (Payslip $record): string => $record->isDraft() ? 'Ubah' : 'Lihat')
+                ->icon(fn (Payslip $record): Heroicon => $record->isDraft() ? Heroicon::OutlinedPencilSquare : Heroicon::OutlinedEye)]);
     }
 
     /** @return array<string, string> */

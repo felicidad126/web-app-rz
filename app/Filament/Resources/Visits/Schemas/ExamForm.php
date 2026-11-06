@@ -31,8 +31,8 @@ use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontFamily;
 use Filament\Support\Enums\FontWeight;
 
 /**
@@ -45,7 +45,6 @@ class ExamForm
         return $schema
             ->columns(1)
             ->components([
-                View::make('filament.clinic.patient-banner')->viewData(['patient' => $visit->patient]),
                 Group::make()
                     ->relationship('medicalRecord')
                     ->schema([
@@ -54,7 +53,7 @@ class ExamForm
                             ->schema([
                                 Textarea::make('subjective')->label('Keluhan & anamnesis (S)')->rows(3)->required(),
                                 Textarea::make('objective')->label('Pemeriksaan klinis (O)')->rows(3),
-                                Grid::make(4)->columnSpanFull()->schema([
+                                Grid::make(['default' => 2, 'lg' => 4])->columnSpanFull()->schema([
                                     TextInput::make('vitals.blood_pressure')->label('Tekanan darah')->placeholder('120/80')->suffix('mmHg')->maxLength(7),
                                     TextInput::make('vitals.pulse')->label('Nadi')->numeric()->minValue(20)->maxValue(250)->suffix('/menit'),
                                     TextInput::make('vitals.temperature')->label('Suhu')->numeric()->minValue(30)->maxValue(45)->step(0.1)->suffix('°C'),
@@ -182,7 +181,7 @@ class ExamForm
             ->live();
 
         $teeth = collect(OralHygiene::INDEX_TEETH)->map(fn (string $surface, int|string $tooth): Group => Group::make([
-            Text::make($tooth.' · '.$surface)->weight(FontWeight::SemiBold),
+            Text::make($tooth.' · '.$surface)->weight(FontWeight::SemiBold)->fontFamily(FontFamily::Mono),
             $score((string) $tooth, 'debris', 'Debris'),
             $score((string) $tooth, 'calculus', 'Kalkulus'),
         ]))->values()->all();
@@ -193,6 +192,8 @@ class ExamForm
                 Section::make('Pemeriksaan intraoral & OHI-S')
                     ->description('Isi bila diperiksa. OHI-S (Greene & Vermillion) dihitung otomatis dari skor 0–3 enam gigi indeks; gigi indeks yang hilang dikosongkan.')
                     ->collapsible()
+                    // Opsional: tertutup sampai ada isinya, agar form pemeriksaan tidak terlalu panjang.
+                    ->collapsed(fn (): bool => ! $visit->oralExamination()->exists())
                     ->schema([
                         Grid::make(['default' => 2, 'md' => 3, 'xl' => 6])->schema([
                             Select::make('occlusion')->label('Oklusi')->placeholder('—')->options(Occlusion::class),
@@ -202,7 +203,7 @@ class ExamForm
                             TextInput::make('diastema')->label('Diastema')->placeholder('Tidak ada')->maxLength(255),
                             TextInput::make('anomaly')->label('Gigi anomali')->placeholder('Tidak ada')->maxLength(255),
                         ]),
-                        Grid::make(['default' => 1, 'sm' => 2, 'lg' => 3])->schema($teeth),
+                        Grid::make(['default' => 2, 'md' => 3, 'xl' => 6])->schema($teeth),
                         Text::make(fn (Get $get): string => self::ohisSummary($get('ohis_scores')))->weight(FontWeight::SemiBold),
                         Text::make(fn (): string => self::dmftSummary($visit))->color('gray'),
                     ]),

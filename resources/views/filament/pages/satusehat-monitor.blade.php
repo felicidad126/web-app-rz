@@ -13,11 +13,15 @@
 
     @if (! \App\Services\SatuSehat\VisitSync::enabled() || ! $configured)
         <section style="background: #fffaeb; border: 1px solid #fedf89; border-radius: 12px; padding: 12px 16px; font-size: 14px">
-            <div style="font-weight: 600">Bridging SATUSEHAT belum aktif</div>
+            <div style="font-weight: 600">Integrasi SATUSEHAT belum aktif</div>
             <div style="color: #52525b; margin-top: 2px">
-                Isi <code>SATUSEHAT_ORGANIZATION_ID</code>, <code>SATUSEHAT_CLIENT_ID</code>, <code>SATUSEHAT_CLIENT_SECRET</code>, dan
-                <code>SATUSEHAT_ENABLED=true</code> di <code>.env</code> server, lalu klik <strong>Tes koneksi</strong>.
-                Setiap cabang juga perlu Location ID (Organisasi → Cabang).
+                @if (\App\Filament\Pages\SatuSehatMonitor::canResend())
+                    Isi <code>SATUSEHAT_ORGANIZATION_ID</code>, <code>SATUSEHAT_CLIENT_ID</code>, <code>SATUSEHAT_CLIENT_SECRET</code>, dan
+                    <code>SATUSEHAT_ENABLED=true</code> di <code>.env</code> server, lalu klik <strong>Tes koneksi</strong>.
+                @else
+                    Kredensial SATUSEHAT diisi oleh admin/IT di server (<code>.env</code>), lalu diuji lewat tombol <strong>Tes koneksi</strong> di halaman ini.
+                @endif
+                Setiap cabang juga perlu ID lokasi SATUSEHAT (Organisasi → Cabang).
             </div>
         </section>
     @endif
@@ -25,7 +29,7 @@
     <section style="{{ $card }}">
         <div style="{{ $head }}">
             <span>Perlu diperbaiki</span>
-            <span style="color: {{ $problems->isEmpty() ? '#0d6e63' : '#b42318' }}">{{ $problems->isEmpty() ? 'tidak ada' : $problems->count().' kunjungan' }}</span>
+            <span style="color: {{ $problems->isEmpty() ? '#52525b' : '#b42318' }}; font-weight: {{ $problems->isEmpty() ? 400 : 600 }}">{{ $problems->isEmpty() ? 'Tidak ada' : $problems->count().' kunjungan' }}</span>
         </div>
         @if ($problems->isEmpty())
             <div style="padding: 12px 16px; color: #52525b; font-size: 14px">Semua kunjungan yang sudah ditandatangani terkirim atau sedang antre.</div>
@@ -38,7 +42,7 @@
                             <tr>
                                 <td style="{{ $td }}; white-space: nowrap">
                                     <div style="font-weight: 500">{{ $sync->visit?->patient->name ?? '—' }}</div>
-                                    <div style="color: #52525b; font-family: ui-monospace, monospace; font-size: 12px">{{ $sync->visit?->visit_number }}</div>
+                                    <div class="klinik-mono" style="color: #52525b; font-size: 12px">{{ $sync->visit?->visit_number }}</div>
                                 </td>
                                 <td style="{{ $td }}">
                                     <div style="color: #b42318; font-weight: 500">{{ $sync->issue_code?->title() ?? $sync->status->getLabel() }}</div>
@@ -69,11 +73,11 @@
         <section style="{{ $card }}">
             <div style="{{ $head }}"><span>Hari ini per jenis data</span><span style="font-weight: 400; color: #52525b; font-size: 13px">{{ $byType['Encounter']['sent'] + $byType['Encounter']['pending'] + $byType['Encounter']['failed'] }} kunjungan</span></div>
             <table style="width: 100%; border-collapse: collapse">
-                <thead><tr><th style="{{ $th }}">Jenis data</th><th style="{{ $th }}; {{ $num }}">Terkirim</th><th style="{{ $th }}; {{ $num }}">Antre</th><th style="{{ $th }}; {{ $num }}">Gagal</th></tr></thead>
+                <thead><tr><th style="{{ $th }}">Jenis data</th><th style="{{ $th }}; {{ $num }}">Terkirim</th><th style="{{ $th }}; {{ $num }}">Antrean</th><th style="{{ $th }}; {{ $num }}">Gagal</th></tr></thead>
                 <tbody>
                     @foreach ($byType as $type => $row)
                         <tr>
-                            <td style="{{ $td }}">{{ $row['label'] }} <span style="color: #71717a; font-family: ui-monospace, monospace; font-size: 12px">{{ $type }}</span></td>
+                            <td style="{{ $td }}">{{ $row['label'] }} <span class="klinik-mono" style="color: #71717a; font-size: 12px">{{ $type }}</span></td>
                             <td style="{{ $td }}; {{ $num }}">{{ $row['sent'] }}</td>
                             <td style="{{ $td }}; {{ $num }}">{{ $row['pending'] }}</td>
                             <td style="{{ $td }}; {{ $num }}; color: {{ $row['failed'] ? '#b42318' : 'inherit' }}">{{ $row['failed'] }}</td>
@@ -94,7 +98,7 @@
             @forelse ($recent as $sync)
                 <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 16px; border-top: {{ $loop->first ? '0' : '1px solid #f4f4f5' }}; font-size: 14px">
                     <span><span style="color: #52525b; font-variant-numeric: tabular-nums">{{ $sync->sent_at?->format('d/m H:i') }}</span> · {{ $sync->visit?->patient->name }}</span>
-                    <span style="font-family: ui-monospace, monospace; font-size: 12px; color: #0d6e63">{{ $sync->satusehat_id ? substr($sync->satusehat_id, 0, 4).'…'.substr($sync->satusehat_id, -4) : 'diterima' }}</span>
+                    <span class="klinik-mono" style="font-size: 12px; color: #52525b">{{ $sync->satusehat_id ? substr($sync->satusehat_id, 0, 4).'…'.substr($sync->satusehat_id, -4) : 'diterima' }}</span>
                 </div>
             @empty
                 <div style="padding: 12px 16px; color: #52525b; font-size: 14px">Belum ada kunjungan yang terkirim.</div>

@@ -37,7 +37,7 @@
             <ul style="list-style: none; margin: 0; padding: 0">
                 @foreach ($outstanding as $other)
                     <li style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 16px; border-top: {{ $loop->first ? '0' : '1px solid #f4f4f5' }}; font-size: 13px">
-                        <span><span style="font-family: ui-monospace, monospace">{{ $other->invoice_number }}</span> · {{ $other->issued_at?->format('d/m/Y') }} · {{ $other->issued_at?->diffForHumans(null, true) }}</span>
+                        <span><span class="klinik-mono">{{ $other->invoice_number }}</span> · {{ $other->issued_at?->format('d/m/Y') }} · {{ $other->issued_at?->diffForHumans(null, true) }}</span>
                         <span style="font-variant-numeric: tabular-nums">{{ \App\Support\Money::format($other->balance(), false) }}</span>
                     </li>
                 @endforeach

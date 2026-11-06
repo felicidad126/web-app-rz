@@ -27,7 +27,7 @@ class TopTreatmentsWidget extends Widget
         $rows = TreatmentMargins::between(now()->startOfMonth(), today(), BranchContext::available()->pluck('id')->all())->take(10);
 
         return [
-            'heading' => 'Top tindakan bulan ini',
+            'heading' => 'Top tindakan bulan berjalan',
             'description' => 'Berdasarkan omzet (termasuk hari ini). '.Kpi::Margin->definition(),
             'columns' => [
                 ['label' => 'Tindakan'], ['label' => 'Jumlah', 'align' => 'end'], ['label' => 'Omzet', 'align' => 'end', 'tip' => Kpi::Production->definition()],
@@ -43,7 +43,7 @@ class TopTreatmentsWidget extends Widget
                 ['text' => Money::format($r->margin, false), 'color' => $r->margin < 0 ? 'danger' : null],
                 Metrics::percent(Metrics::ratio($r->margin, $r->revenue)),
             ])->all(),
-            'empty' => 'Belum ada tindakan selesai bulan ini.',
+            'empty' => 'Belum ada tindakan selesai bulan berjalan.',
         ];
     }
 }

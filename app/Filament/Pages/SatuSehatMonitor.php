@@ -87,7 +87,7 @@ class SatuSehatMonitor extends Page implements HasActions, HasSchemas, HasTable
 
     public function getSubheading(): ?string
     {
-        $env = config('satusehat.environment') === 'production' ? 'lingkungan produksi' : 'lingkungan sandbox (uji coba)';
+        $env = config('satusehat.environment') === 'production' ? 'Lingkungan produksi' : 'Lingkungan sandbox (uji coba)';
         $mode = VisitSync::enabled() ? 'dikirim otomatis setelah rekam medis ditandatangani' : 'pengiriman otomatis belum aktif';
 
         return $env.' · '.$mode;
@@ -157,6 +157,9 @@ class SatuSehatMonitor extends Page implements HasActions, HasSchemas, HasTable
                 ->with(['visit.patient', 'branch'])
                 ->where(fn (Builder $q) => $q->whereNull('branch_id')->orWhereIn('branch_id', BranchContext::available()->pluck('id'))))
             ->defaultSort('updated_at', 'desc')
+            ->emptyStateHeading('Belum ada pengiriman')
+            ->emptyStateDescription('Kunjungan yang rekam medisnya sudah ditandatangani akan muncul di sini setelah masuk antrean kirim.')
+            ->emptyStateIcon(Heroicon::OutlinedCloudArrowUp)
             ->columns([
                 TextColumn::make('updated_at')->label('Terakhir')->dateTime('d/m H:i')->sortable(),
                 TextColumn::make('visit.patient.name')->label('Pasien')
@@ -164,7 +167,7 @@ class SatuSehatMonitor extends Page implements HasActions, HasSchemas, HasTable
                     ->searchable(),
                 TextColumn::make('status')->label('Status')->badge()
                     ->description(fn (SatuSehatSync $record): ?string => $record->issue_code?->title()),
-                TextColumn::make('attempts')->label('Percobaan')->alignCenter()->visibleFrom('md'),
+                TextColumn::make('attempts')->label('Percobaan')->alignEnd()->visibleFrom('md'),
                 TextColumn::make('satusehat_id')->label('ID SATUSEHAT')->fontFamily('mono')->placeholder('—')
                     ->formatStateUsing(fn (?string $state): string => $state ? substr($state, 0, 4).'…'.substr($state, -4) : '—')
                     ->visibleFrom('lg'),

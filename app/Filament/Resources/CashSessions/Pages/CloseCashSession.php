@@ -5,6 +5,7 @@ namespace App\Filament\Resources\CashSessions\Pages;
 use App\Enums\CashDifferenceReason;
 use App\Enums\PaymentMethod;
 use App\Filament\Resources\CashSessions\CashSessionResource;
+use App\Filament\Support\MoneyInput;
 use App\Models\CashSession;
 use App\Models\User;
 use App\Services\Billing\CashSessions;
@@ -118,7 +119,7 @@ class CloseCashSession extends Page
                             ]),
                         Section::make('Setelah ditutup')
                             ->schema([
-                                TextInput::make('next_opening_cash')->label('Kas awal besok (tinggal di laci)')->prefix('Rp')->numeric()->minValue(0)->required()->live(onBlur: true),
+                                MoneyInput::make('next_opening_cash')->label('Kas awal besok (tinggal di laci)')->minValue(0)->required()->live(onBlur: true),
                                 Text::make(fn (Get $get): string => 'Disetor ke brankas: '.Money::format(max(0, $this->counted($get('denominations')) - (int) $get('next_opening_cash')))),
                             ]),
                     ]),
@@ -185,7 +186,7 @@ class CloseCashSession extends Page
         if ($method === PaymentMethod::Cash) {
             $diff = $this->counted($get('denominations')) - $system;
 
-            return $diff === 0 ? 'cocok' : Money::format($diff, false);
+            return $diff === 0 ? 'Cocok' : Money::format($diff, false);
         }
 
         $reported = $get('reported.'.$method->value);
@@ -196,7 +197,7 @@ class CloseCashSession extends Page
 
         $diff = (int) $reported - $system;
 
-        return $diff === 0 ? 'cocok' : Money::format($diff, false);
+        return $diff === 0 ? 'Cocok' : Money::format($diff, false);
     }
 
     private function counted(mixed $denominations): int

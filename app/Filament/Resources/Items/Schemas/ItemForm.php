@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Items\Schemas;
 
 use App\Enums\ItemType;
+use App\Filament\Support\MoneyInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -59,11 +60,9 @@ class ItemForm
                             ->minValue(0)
                             ->default(0)
                             ->required(),
-                        TextInput::make('sell_price')
+                        MoneyInput::make('sell_price')
                             ->label('Harga jual')
                             ->helperText('Per satuan dasar. Kosongkan jika tidak dijual terpisah.')
-                            ->prefix('Rp')
-                            ->numeric()
                             ->minValue(0),
                         Toggle::make('track_expiry')
                             ->label('Lacak tanggal kedaluwarsa')

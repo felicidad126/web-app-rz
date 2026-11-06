@@ -22,7 +22,7 @@
         'Lab' => $order->supplier->name.($order->supplier->phone ? ' · '.$order->supplier->phone : ''),
         'Biaya lab' => Money::format($order->cost),
         'Dokter' => $order->practitioner->user->name,
-        'Kunjungan' => $order->visit ? $order->visit->visit_number.' · '.$order->visit->visit_date->format('d/m/Y') : null,
+        'Kunjungan' => $order->visit ? \App\Filament\Clinic\CodeText::join([[$order->visit->visit_number, true], $order->visit->visit_date->format('d/m/Y')]) : null,
         'Tindakan' => $order->visitProcedure ? $order->visitProcedure->treatment->name.($order->visitProcedure->tooth_number ? ' · gigi '.$order->visitProcedure->tooth_number : '') : null,
         'Jatuh tempo' => $order->due_at ? $order->due_at->format('d/m/Y').(($note = LabOrderResource::dueNote($order)) ? ' ('.$note.')' : '') : null,
         'Janji pasang' => $appointment ? $appointment->format('d/m/Y H:i') : 'Belum dijadwalkan',
@@ -36,7 +36,7 @@
             @foreach ($details as $name => $value)
                 <div>
                     <dt style="{{ $label }}">{{ $name }}</dt>
-                    <dd style="margin: 0; white-space: pre-line; {{ ($name === 'Jatuh tempo' && $order->isLate()) || ($name === 'Janji pasang' && $warning) ? 'color: #b91c1c; font-weight: 500' : '' }}">{{ $value }}@if ($name === 'Janji pasang' && $warning) — {{ $warning }}@endif</dd>
+                    <dd style="margin: 0; white-space: pre-line; {{ ($name === 'Jatuh tempo' && $order->isLate()) || ($name === 'Janji pasang' && $warning) ? 'color: #b54708; font-weight: 500' : '' }}">{{ $value }}@if ($name === 'Janji pasang' && $warning) — {{ $warning }}@endif</dd>
                 </div>
             @endforeach
         </dl>
@@ -44,7 +44,7 @@
     <section style="{{ $card }}; padding: 16px">
         <div style="{{ $label }}; margin-bottom: 10px">Tahap</div>
         @if ($order->status === LabOrderStatus::Cancelled)
-            <p style="margin: 0 0 12px; color: #b91c1c; font-size: 14px">Dibatalkan {{ $order->cancelled_at?->format('d/m/Y H:i') }}</p>
+            <p style="margin: 0 0 12px; color: #52525b; font-size: 14px; font-weight: 500">Dibatalkan {{ $order->cancelled_at?->format('d/m/Y H:i') }}</p>
         @endif
         <ol style="list-style: none; margin: 0; padding: 0; display: grid; gap: 0">
             @foreach ($steps as $i => [$status, $at, $by])

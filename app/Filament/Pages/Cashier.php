@@ -8,6 +8,7 @@ use App\Enums\VisitStatus;
 use App\Filament\Clinic\PatientSelect;
 use App\Filament\Resources\CashSessions\CashSessionResource;
 use App\Filament\Resources\Invoices\InvoiceResource;
+use App\Filament\Support\MoneyInput;
 use App\Filament\Support\NavGroup;
 use App\Models\CashSession;
 use App\Models\Invoice;
@@ -23,7 +24,6 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
@@ -35,6 +35,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\HtmlString;
 use InvalidArgumentException;
 use UnitEnum;
 
@@ -96,18 +97,21 @@ class Cashier extends Page implements HasActions, HasSchemas, HasTable
             ->defaultSort('queue_number')
             ->paginated(false)
             ->emptyStateHeading('Belum ada pasien selesai diperiksa hari ini')
+            ->emptyStateDescription('Pasien muncul di sini setelah dokter selesai memeriksa. Untuk pembelian tanpa kunjungan, pakai "Penjualan langsung".')
+            ->emptyStateIcon(Heroicon::OutlinedUserGroup)
             ->columns([
-                TextColumn::make('queue_number')->label('No.')->alignCenter(),
+                TextColumn::make('queue_number')->label('No.')->alignCenter()->visibleFrom('sm'),
                 TextColumn::make('patient.name')
                     ->label('Pasien')
-                    ->description(fn (Visit $record): string => $record->patient->rm_number.' · '.$record->visit_number)
+                    ->description(fn (Visit $record): HtmlString => new HtmlString('<span class="klinik-mono">'.e($record->patient->rm_number.' · '.$record->visit_number).'</span>'))
                     ->searchable(),
                 TextColumn::make('practitioner.user.name')->label('Dokter')->visibleFrom('md'),
-                TextColumn::make('status')->label('Kunjungan')->badge()
+                TextColumn::make('status')->label('Kunjungan')->badge()->extraAttributes(['class' => 'klinik-status'])->visibleFrom('md')
                     ->description(fn (Visit $record): ?string => $record->isLocked() ? null : 'RM belum ditandatangani'),
                 TextColumn::make('invoice_status')
                     ->label('Tagihan')
                     ->badge()
+                    ->extraAttributes(['class' => 'klinik-status'])
                     ->state(fn (Visit $record): ?InvoiceStatus => self::invoiceOf($record)?->status)
                     ->placeholder('Belum dibuat'),
                 TextColumn::make('balance')
@@ -121,7 +125,9 @@ class Cashier extends Page implements HasActions, HasSchemas, HasTable
                 Action::make('checkout')
                     ->label('Kasir')
                     ->icon(Heroicon::OutlinedCalculator)
+                    // Satu tombol utama per layar: aksi baris abu-abu.
                     ->button()
+                    ->color('gray')
                     ->authorize(fn (): bool => auth()->user()?->can('Create:Invoice') ?? false)
                     ->action(function (Visit $record, Action $action): void {
                         try {
@@ -146,7 +152,7 @@ class Cashier extends Page implements HasActions, HasSchemas, HasTable
                 ->visible(fn (): bool => $this->session() === null && BranchContext::id() !== null)
                 ->authorize(fn (): bool => auth()->user()?->can('Create:CashSession') ?? false)
                 ->fillForm(fn (): array => ['opening_cash' => CashSessions::suggestedOpeningCash((int) BranchContext::id())])
-                ->schema([TextInput::make('opening_cash')->label('Kas awal di laci')->prefix('Rp')->numeric()->minValue(0)->required()])
+                ->schema([MoneyInput::make('opening_cash')->label('Kas awal di laci')->minValue(0)->required()])
                 ->action(function (array $data): void {
                     /** @var User $user */
                     $user = auth()->user();

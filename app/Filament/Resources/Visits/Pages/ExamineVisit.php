@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Visits\Pages;
 
 use App\Enums\VisitStatus;
+use App\Filament\Clinic\CodeText;
+use App\Filament\Clinic\StatusDot;
 use App\Filament\Resources\LabOrders\LabOrderResource;
 use App\Filament\Resources\Patients\PatientResource;
 use App\Filament\Resources\TreatmentPlans\TreatmentPlanResource;
@@ -17,10 +19,12 @@ use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Schemas\Components\View as ViewComponent;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\HtmlString;
 use InvalidArgumentException;
 
 /**
@@ -103,15 +107,31 @@ class ExamineVisit extends EditRecord
         return 'Pemeriksaan · '.$visit->patient->name;
     }
 
-    public function getSubheading(): ?string
+    public function getSubheading(): string|Htmlable|null
     {
         /** @var Visit $visit */
         $visit = $this->getRecord();
         $record = $visit->medicalRecord;
-        $signed = $record?->signed_at ? ' · ditandatangani '.$record->signer?->name.' '.$record->signed_at->format('d/m/Y H:i') : '';
+        [$color, $status] = StatusDot::forVisit($visit);
 
-        return $visit->visit_number.' · '.$visit->visit_date->format('d/m/Y').' · '.$visit->practitioner->user->name
-            .' · '.$visit->status->getLabel().$signed;
+        return new HtmlString(CodeText::join([
+            [$visit->visit_number, true],
+            $visit->visit_date->format('d/m/Y'),
+            $visit->practitioner->user->name,
+        ]).' · '.StatusDot::html($color, $status)
+            .($record?->signed_at ? e(' · ditandatangani '.$record->signer?->name.' '.$record->signed_at->format('d/m/Y H:i')) : ''));
+    }
+
+    /** Banner pasien di atas tab, sehingga tetap terlihat di tab Odontogram, Lampiran, dan Persetujuan. */
+    public function content(Schema $schema): Schema
+    {
+        /** @var Visit $visit */
+        $visit = $this->getRecord();
+
+        return $schema->components([
+            ViewComponent::make('filament.clinic.patient-banner')->viewData(['patient' => $visit->patient]),
+            $this->getRelationManagersContentComponent(),
+        ]);
     }
 
     public function hasCombinedRelationManagerTabsWithContent(): bool
@@ -126,7 +146,8 @@ class ExamineVisit extends EditRecord
 
     protected function getFormActions(): array
     {
-        return $this->isReadOnly() ? [] : [$this->getSaveFormAction()->label('Simpan draf')];
+        // Aksi utama halaman ini "Tanda tangani & kunci"; simpan draf abu-abu.
+        return $this->isReadOnly() ? [] : [$this->getSaveFormAction()->label('Simpan draf')->color('gray')];
     }
 
     protected function getSavedNotificationTitle(): ?string

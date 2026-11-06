@@ -1,6 +1,6 @@
 ## Resepsionis
 
-**Pasien baru** — *Pasien → Data Pasien → Pasien baru*. Nomor RM terisi otomatis. NIK 16 digit dari KTP/KK (wajib untuk SATUSEHAT). Centang persetujuan data setelah pasien setuju.
+**Pasien baru** — *Pasien → Data pasien → Pasien baru*. Nomor RM terisi otomatis. NIK 16 digit dari KTP/KK (wajib untuk SATUSEHAT). Centang persetujuan data setelah pasien setuju.
 
 **Pasien lama dari sistem sebelumnya** — catatan "[Data sistem lama]" berarti data hasil migrasi. Lengkapi saat pasien datang: **NIK** (banyak yang rusak di Excel lama), **tanggal lahir** (bila tertulis "perkiraan dari umur"), dan nomor HP.
 

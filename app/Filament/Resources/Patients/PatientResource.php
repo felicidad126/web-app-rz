@@ -45,7 +45,7 @@ class PatientResource extends Resource
 
     protected static ?string $pluralModelLabel = 'pasien';
 
-    protected static ?string $navigationLabel = 'Data Pasien';
+    protected static ?string $navigationLabel = 'Data pasien';
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -67,12 +67,12 @@ class PatientResource extends Resource
     public static function getRelations(): array
     {
         return [
-            PatientPayersRelationManager::class,
             VisitsRelationManager::class,
             TreatmentPlansRelationManager::class,
             RecallsRelationManager::class,
             AttachmentsRelationManager::class,
             DepositRelationManager::class,
+            PatientPayersRelationManager::class,
         ];
     }
 

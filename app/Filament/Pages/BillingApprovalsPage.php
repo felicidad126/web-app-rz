@@ -93,7 +93,10 @@ class BillingApprovalsPage extends Page
     {
         return Action::make('decide')
             ->label(fn (array $arguments): string => ($arguments['approve'] ?? false) ? 'Setujui' : 'Tolak')
-            ->color(fn (array $arguments): string => ($arguments['approve'] ?? false) ? 'primary' : 'danger')
+            // Tombol di tiap baris abu-abu (bisa banyak baris); warna tegas hanya di tombol konfirmasi.
+            ->color('gray')
+            ->icon(fn (array $arguments): Heroicon => ($arguments['approve'] ?? false) ? Heroicon::OutlinedCheck : Heroicon::OutlinedXMark)
+            ->modalSubmitAction(fn (Action $action, array $arguments): Action => $action->color(($arguments['approve'] ?? false) ? 'primary' : 'danger'))
             ->size('sm')
             ->requiresConfirmation()
             ->modalHeading(fn (array $arguments): string => (($arguments['approve'] ?? false) ? 'Setujui ' : 'Tolak ').match ($arguments['type'] ?? '') {

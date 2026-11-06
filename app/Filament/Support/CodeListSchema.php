@@ -10,6 +10,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 /** Form & tabel bersama untuk master kode (ICD-10, ICD-9-CM). */
 final class CodeListSchema
@@ -41,9 +42,11 @@ final class CodeListSchema
         return $table
             ->defaultSort('code')
             ->columns([
-                TextColumn::make('code')->label('Kode')->weight('bold')->searchable()->sortable(),
-                TextColumn::make('name')->label('Nama')->searchable()->wrap(),
-                TextColumn::make('name_id')->label('Nama Indonesia')->searchable()->placeholder('-')->wrap()->visibleFrom('md'),
+                TextColumn::make('code')->label('Kode')->fontFamily('mono')->searchable()->sortable(),
+                // Nama Indonesia yang dibaca staf (jatuh ke nama klasifikasi bila belum diisi); nama asli hanya di layar lebar.
+                TextColumn::make('name_id')->label('Nama')->searchable()->wrap()
+                    ->state(fn (Model $record): ?string => $record->getAttribute('name_id') ?: $record->getAttribute('name')),
+                TextColumn::make('name')->label('Nama klasifikasi')->searchable()->wrap()->visibleFrom('lg'),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
             ])
             ->filters([

@@ -7,6 +7,7 @@ use App\Filament\Resources\ItemCategories\Pages\ManageItemCategories;
 use App\Filament\Support\NavGroup;
 use App\Models\ItemCategory;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\RestoreAction;
@@ -69,8 +70,7 @@ class ItemCategoryResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make(),
-                RestoreAction::make(),
+                ActionGroup::make([DeleteAction::make(), RestoreAction::make()]),
             ]);
     }
 

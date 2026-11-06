@@ -52,7 +52,7 @@ class Schedule extends Page
     protected static ?string $slug = 'jadwal';
 
     /** Piksel per menit di papan jadwal. */
-    public const SCALE = 1.2;
+    public const SCALE = 1.4;
 
     #[Url]
     public string $date = '';
@@ -222,7 +222,8 @@ class Schedule extends Page
 
     public function checkInAppointmentAction(): Action
     {
-        return $this->bindAppointment(AppointmentActions::checkIn());
+        // Satu aksi utama per layar (Buat janji); aksi per janji tetap abu-abu.
+        return $this->bindAppointment(AppointmentActions::checkIn()->color('gray'));
     }
 
     public function noShowAppointmentAction(): Action
@@ -271,6 +272,7 @@ class Schedule extends Page
         return Action::make('startVisit')
             ->label('Panggil')
             ->button()
+            ->color('gray')
             ->size('sm')
             ->record(fn (array $arguments): ?Visit => Visit::find($arguments['visit'] ?? null))
             ->authorize(fn (?Visit $record): bool => $record !== null && (auth()->user()?->can('update', $record) ?? false))

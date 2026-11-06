@@ -71,14 +71,14 @@ class StockCardRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('movement.movement_date')->label('Tanggal')->date('d/m/Y')
                     ->description(fn (StockMovementLine $record): string => $record->movement->number),
-                TextColumn::make('movement.type')->label('Jenis')->badge(),
+                TextColumn::make('movement.type')->label('Jenis')->badge()->visibleFrom('md'),
                 TextColumn::make('movement.branch.name')->label('Cabang')->visible($branches->count() > 1),
                 TextColumn::make('batch_label')->label('Batch')
                     ->state(fn (StockMovementLine $record): string => $record->batch?->label() ?? ($record->batch_number ?: '—'))
+                    ->fontFamily('mono')
                     ->visibleFrom('md'),
                 TextColumn::make('qty')->label('Masuk / keluar')->alignEnd()
-                    ->formatStateUsing(fn ($state): string => ((float) $state < 0 ? '−' : '+').StockLedger::format(abs((float) $state)).' '.$unit)
-                    ->color(fn ($state): string => (float) $state < 0 ? 'danger' : 'success'),
+                    ->formatStateUsing(fn ($state): string => ((float) $state < 0 ? '−' : '+').StockLedger::format(abs((float) $state)).' '.$unit),
                 TextColumn::make('balance_after')->label('Saldo cabang')->alignEnd()
                     ->formatStateUsing(fn ($state): string => StockLedger::format((float) $state).' '.$unit),
             ])

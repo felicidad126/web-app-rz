@@ -8,6 +8,8 @@
     $num = 'text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap';
     $m = fn (int $v): string => Money::format($v, false);
     $lines = $payout->commissions;
+    // Rekap bisa ratusan baris: tampilkan 25 dulu, sisanya lewat tombol.
+    $visibleLines = 25;
     $stats = [
         ['Jasa tindakan', $payout->commission_total, $lines->whereNull('reverses_commission_id')->count().' tindakan'],
         ['Uang hadir / on call', $payout->allowance_total, $payout->attendances->count().' hari'],
@@ -16,67 +18,78 @@
     ];
 @endphp
 <div style="display: grid; gap: 16px">
-    <div style="display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr))">
+    <div style="display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr))">
         @foreach ($stats as [$label, $value, $note])
             <div style="{{ $card }}; padding: 14px 16px">
                 <div style="font-size: 12px; color: #52525b">{{ $label }}</div>
-                <div style="font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 4px; color: {{ $value < 0 ? '#b91c1c' : '#18181b' }}">{{ Money::format($value) }}</div>
+                <div style="font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; margin-top: 4px; color: #18181b">{{ Money::format($value) }}</div>
                 <div style="font-size: 12px; color: #71717a">{{ $note }}</div>
             </div>
         @endforeach
     </div>
 
-    <section style="{{ $card }}">
-        <div style="padding: 12px 16px; font-weight: 600; font-size: 14px">Rincian tindakan</div>
+    <section style="{{ $card }}" x-data="{ all: false }">
+        <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; font-weight: 600; font-size: 14px">
+            <span>Rincian tindakan</span><span style="font-weight: 400; color: #52525b; font-size: 13px">{{ $lines->count() }} baris</span>
+        </div>
         <div style="overflow-x: auto">
-            <table style="width: 100%; border-collapse: collapse; min-width: 860px">
+            {{-- Di HP hanya Pasien (+ No. tagihan), Tindakan, Jasa; kolom lain disembunyikan. --}}
+            <table style="width: 100%; border-collapse: collapse">
                 <thead><tr>
-                    <th style="{{ $th }}">Tanggal</th><th style="{{ $th }}">Pasien</th><th style="{{ $th }}">Tindakan</th>
-                    <th style="{{ $th }}; {{ $num }}">Bruto</th><th style="{{ $th }}; {{ $num }}">Diskon</th><th style="{{ $th }}; {{ $num }}">Bahan</th>
-                    <th style="{{ $th }}; {{ $num }}">Lab</th><th style="{{ $th }}; {{ $num }}">Basis</th><th style="{{ $th }}">Aturan</th><th style="{{ $th }}; {{ $num }}">Jasa</th>
+                    <th style="{{ $th }}" class="klinik-hide-sm">Tanggal</th><th style="{{ $th }}">Pasien</th><th style="{{ $th }}">Tindakan</th>
+                    <th style="{{ $th }}; {{ $num }}" class="klinik-hide-sm">Bruto</th><th style="{{ $th }}; {{ $num }}" class="klinik-hide-sm">Diskon</th><th style="{{ $th }}; {{ $num }}" class="klinik-hide-sm">Bahan</th>
+                    <th style="{{ $th }}; {{ $num }}" class="klinik-hide-sm">Lab</th><th style="{{ $th }}; {{ $num }}" class="klinik-hide-sm">Basis</th><th style="{{ $th }}" class="klinik-hide-sm">Aturan</th><th style="{{ $th }}; {{ $num }}">Jasa</th>
                 </tr></thead>
-                <tbody>
-                    @forelse ($lines as $line)
-                        <tr style="{{ $line->amount < 0 ? 'color: #b91c1c' : '' }}">
-                            <td style="{{ $td }}; white-space: nowrap">{{ $line->service_date->format('d/m/Y') }}</td>
-                            <td style="{{ $td }}">{{ $line->invoice->patient->name }}<div style="font-size: 12px; color: #71717a">{{ $line->invoice->label() }}</div></td>
-                            <td style="{{ $td }}">{{ $line->invoiceItem->description }}{{ $line->invoiceItem->tooth_number ? ' · '.$line->invoiceItem->tooth_number : '' }}
-                                @if ($line->role === CommissionRole::Assistant)<div style="font-size: 12px; color: #71717a">Asisten</div>@endif
-                                @if ($line->isReversal())<div style="font-size: 12px">Pembalik: {{ $line->reason }}</div>@endif
-                            </td>
-                            <td style="{{ $td }}; {{ $num }}">{{ $m($line->gross_amount) }}</td>
-                            <td style="{{ $td }}; {{ $num }}">{{ $m($line->discount_amount) }}</td>
-                            <td style="{{ $td }}; {{ $num }}">{{ $m($line->material_cost) }}</td>
-                            <td style="{{ $td }}; {{ $num }}">{{ $m($line->lab_cost) }}</td>
-                            <td style="{{ $td }}; {{ $num }}">{{ $m($line->base_amount) }}</td>
-                            <td style="{{ $td }}; font-size: 12px; color: #52525b">{{ $line->rule_snapshot['summary'] ?? '' }}</td>
-                            <td style="{{ $td }}; {{ $num }}; font-weight: 500">{{ $m($line->amount) }}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="10" style="{{ $td }}; color: #71717a">Belum ada jasa di rekap ini.</td></tr>
-                    @endforelse
-                </tbody>
+                @forelse ($lines->chunk($visibleLines) as $chunk)
+                    <tbody @if (! $loop->first) x-show="all" x-cloak @endif>
+                        @foreach ($chunk as $line)
+                            <tr>
+                                <td style="{{ $td }}; white-space: nowrap" class="klinik-hide-sm">{{ $line->service_date->format('d/m/Y') }}</td>
+                                <td style="{{ $td }}">{{ $line->invoice->patient->name }}<div class="klinik-mono" style="font-size: 12px; color: #71717a; white-space: nowrap">{{ $line->invoice->label() }}</div></td>
+                                <td style="{{ $td }}">{{ $line->invoiceItem->description }}@if ($line->invoiceItem->tooth_number) · <span class="klinik-mono">{{ $line->invoiceItem->tooth_number }}</span>@endif
+                                    @if ($line->role === CommissionRole::Assistant)<div style="font-size: 12px; color: #71717a">Asisten</div>@endif
+                                    @if ($line->isReversal())<div style="font-size: 12px; color: #71717a">Pembalik: {{ $line->reason }}</div>@endif
+                                </td>
+                                <td style="{{ $td }}; {{ $num }}" class="klinik-hide-sm">{{ $m($line->gross_amount) }}</td>
+                                <td style="{{ $td }}; {{ $num }}" class="klinik-hide-sm">{{ $m($line->discount_amount) }}</td>
+                                <td style="{{ $td }}; {{ $num }}" class="klinik-hide-sm">{{ $m($line->material_cost) }}</td>
+                                <td style="{{ $td }}; {{ $num }}" class="klinik-hide-sm">{{ $m($line->lab_cost) }}</td>
+                                <td style="{{ $td }}; {{ $num }}" class="klinik-hide-sm">{{ $m($line->base_amount) }}</td>
+                                <td style="{{ $td }}; font-size: 12px; color: #52525b; white-space: nowrap" class="klinik-hide-sm">{{ $line->rule_snapshot['summary'] ?? '' }}</td>
+                                <td style="{{ $td }}; {{ $num }}; font-weight: 500">{{ $m($line->amount) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                @empty
+                    <tbody><tr><td colspan="10" style="{{ $td }}; color: #71717a">Belum ada jasa di rekap ini.</td></tr></tbody>
+                @endforelse
                 <tfoot><tr>
-                    <td colspan="3" style="{{ $td }}; font-weight: 600">Total</td>
-                    <td style="{{ $td }}; {{ $num }}; font-weight: 600">{{ $m((int) $lines->sum('gross_amount')) }}</td>
-                    <td style="{{ $td }}; {{ $num }}; font-weight: 600">{{ $m((int) $lines->sum('discount_amount')) }}</td>
-                    <td style="{{ $td }}; {{ $num }}; font-weight: 600">{{ $m((int) $lines->sum('material_cost')) }}</td>
-                    <td style="{{ $td }}; {{ $num }}; font-weight: 600">{{ $m((int) $lines->sum('lab_cost')) }}</td>
-                    <td style="{{ $td }}; {{ $num }}; font-weight: 600">{{ $m((int) $lines->sum('base_amount')) }}</td>
-                    <td style="{{ $td }}"></td>
+                    <td style="{{ $td }}" class="klinik-hide-sm"></td>
+                    <td colspan="2" style="{{ $td }}; font-weight: 600">Total</td>
+                    <td style="{{ $td }}; {{ $num }}; font-weight: 600" class="klinik-hide-sm">{{ $m((int) $lines->sum('gross_amount')) }}</td>
+                    <td style="{{ $td }}; {{ $num }}; font-weight: 600" class="klinik-hide-sm">{{ $m((int) $lines->sum('discount_amount')) }}</td>
+                    <td style="{{ $td }}; {{ $num }}; font-weight: 600" class="klinik-hide-sm">{{ $m((int) $lines->sum('material_cost')) }}</td>
+                    <td style="{{ $td }}; {{ $num }}; font-weight: 600" class="klinik-hide-sm">{{ $m((int) $lines->sum('lab_cost')) }}</td>
+                    <td style="{{ $td }}; {{ $num }}; font-weight: 600" class="klinik-hide-sm">{{ $m((int) $lines->sum('base_amount')) }}</td>
+                    <td style="{{ $td }}" class="klinik-hide-sm"></td>
                     <td style="{{ $td }}; {{ $num }}; font-weight: 600">{{ $m($payout->commission_total) }}</td>
                 </tr></tfoot>
             </table>
         </div>
+        @if ($lines->count() > $visibleLines)
+            <div style="padding: 10px 16px; border-top: 1px solid #f4f4f5" x-show="! all">
+                <x-filament::button color="gray" size="sm" x-on:click="all = true">Tampilkan semua ({{ $lines->count() }} baris)</x-filament::button>
+            </div>
+        @endif
     </section>
 
-    <div style="display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start">
+    <div style="display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); align-items: start">
         <section style="{{ $card }}">
             <div style="padding: 12px 16px; font-weight: 600; font-size: 14px">Uang hadir & on call</div>
             <table style="width: 100%; border-collapse: collapse">
                 @forelse ($payout->attendances as $attendance)
                     <tr>
-                        <td style="{{ $td }}">{{ $attendance->date->format('d/m/Y') }}</td>
+                        <td style="{{ $td }}; white-space: nowrap">{{ $attendance->date->format('d/m/Y') }}</td>
                         <td style="{{ $td }}">{{ $attendance->type->getLabel() }} · {{ $attendance->branch->name }}</td>
                         <td style="{{ $td }}; {{ $num }}">{{ $m($attendance->amount) }}</td>
                     </tr>

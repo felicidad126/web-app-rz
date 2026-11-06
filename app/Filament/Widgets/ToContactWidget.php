@@ -30,7 +30,7 @@ class ToContactWidget extends Widget
             'rows' => $rows->map(fn (array $row): array => [
                 ['text' => $row['patient']->name, 'sub' => $row['patient']->phone ?? 'No. HP belum ada'],
                 $row['reason'],
-                ['text' => $row['due']?->format('d/m/Y') ?? '—', 'color' => $row['due']?->lt(today()) ? 'danger' : null],
+                ['text' => $row['due']?->format('d/m/Y') ?? '—', 'color' => $row['due']?->lt(today()) ? 'warning' : null],
             ])->all(),
             'empty' => 'Tidak ada yang perlu dihubungi.',
         ];

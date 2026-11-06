@@ -8,6 +8,7 @@ use App\Filament\Resources\Payers\Pages\ManagePayers;
 use App\Filament\Support\NavGroup;
 use App\Models\Payer;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\RestoreAction;
@@ -81,10 +82,10 @@ class PayerResource extends Resource
         return $table
             ->defaultSort('name')
             ->columns([
-                TextColumn::make('code')->label('Kode')->searchable(),
+                TextColumn::make('code')->label('Kode')->fontFamily('mono')->searchable(),
                 TextColumn::make('name')->label('Nama')->searchable()->sortable(),
-                TextColumn::make('type')->label('Jenis')->badge(),
-                TextColumn::make('phone')->label('Telepon')->placeholder('-')->visibleFrom('md'),
+                TextColumn::make('type')->label('Jenis')->badge()->color('gray')->visibleFrom('md'),
+                TextColumn::make('phone')->label('Telepon')->placeholder('—')->visibleFrom('md'),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
             ])
             ->filters([
@@ -93,8 +94,7 @@ class PayerResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make(),
-                RestoreAction::make(),
+                ActionGroup::make([DeleteAction::make(), RestoreAction::make()]),
             ]);
     }
 

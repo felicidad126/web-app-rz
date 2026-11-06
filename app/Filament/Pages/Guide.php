@@ -37,7 +37,7 @@ class Guide extends Page
 
     protected static ?string $navigationLabel = 'Panduan';
 
-    protected static ?string $title = 'Panduan singkat';
+    protected static ?string $title = 'Panduan';
 
     protected static ?string $slug = 'panduan';
 

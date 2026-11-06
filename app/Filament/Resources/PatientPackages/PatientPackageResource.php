@@ -7,9 +7,11 @@ use App\Enums\PatientPackageStatus;
 use App\Filament\Clinic\PatientSelect;
 use App\Filament\Clinic\PractitionerOptions;
 use App\Filament\Concerns\SentenceCaseLabels;
+use App\Filament\Resources\Invoices\Tables\InvoicesTable;
 use App\Filament\Resources\PatientPackages\Pages\CreatePatientPackage;
 use App\Filament\Resources\PatientPackages\Pages\ListPatientPackages;
 use App\Filament\Resources\PatientPackages\Pages\ViewPatientPackage;
+use App\Filament\Support\MoneyInput;
 use App\Filament\Support\NavGroup;
 use App\Models\Installment;
 use App\Models\Package;
@@ -47,7 +49,8 @@ class PatientPackageResource extends Resource
 
     protected static ?string $model = PatientPackage::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;
+    // Beda ikon dengan master "Paket perawatan" (kubus).
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCreditCard;
 
     protected static string|UnitEnum|null $navigationGroup = NavGroup::BILLING;
 
@@ -93,8 +96,8 @@ class PatientPackageResource extends Resource
                     ->columns(2)
                     ->columnSpanFull()
                     ->schema([
-                        TextInput::make('price')->label('Harga paket')->prefix('Rp')->numeric()->minValue(1)->required()->live(onBlur: true),
-                        TextInput::make('down_payment')->label('Uang muka (DP)')->prefix('Rp')->numeric()->minValue(0)->default(0)->required()->live(onBlur: true),
+                        MoneyInput::make('price')->label('Harga paket')->minValue(1)->required()->live(onBlur: true),
+                        MoneyInput::make('down_payment')->label('Uang muka (DP)')->minValue(0)->default(0)->required()->live(onBlur: true),
                         TextInput::make('installment_count')->label('Jumlah cicilan')->numeric()->minValue(0)->maxValue(60)->default(6)->required()->live(onBlur: true)
                             ->helperText('0 = bayar lunas di awal (DP = harga paket).'),
                         TextInput::make('due_day')->label('Jatuh tempo tiap tanggal')->numeric()->minValue(1)->maxValue(28)->default(fn (): int => min(28, today()->day))->required()->live(onBlur: true),
@@ -110,10 +113,10 @@ class PatientPackageResource extends Resource
             ->defaultSort('id', 'desc')
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['patient', 'installments']))
             ->columns([
-                TextColumn::make('package_number')->label('No. paket')->fontFamily('mono')->searchable()
+                TextColumn::make('package_number')->label('No. paket')->fontFamily('mono')->searchable()->visibleFrom('sm')
                     ->description(fn (PatientPackage $record): string => $record->start_date->format('d/m/Y')),
                 TextColumn::make('patient.name')->label('Pasien')->searchable(['name', 'rm_number'])
-                    ->description(fn (PatientPackage $record): string => $record->patient->rm_number),
+                    ->description(fn (PatientPackage $record): HtmlString => InvoicesTable::code($record->patient->rm_number)),
                 TextColumn::make('name')->label('Paket')->visibleFrom('md'),
                 TextColumn::make('price')->label('Harga')->alignEnd()->formatStateUsing(fn (int $state): string => Money::format($state, false))->visibleFrom('lg'),
                 TextColumn::make('remaining')->label('Sisa')->alignEnd()
@@ -121,10 +124,11 @@ class PatientPackageResource extends Resource
                     ->formatStateUsing(fn (int $state): string => Money::format($state, false)),
                 TextColumn::make('next_due')->label('Cicilan berikutnya')
                     ->state(fn (PatientPackage $record): ?string => self::nextDue($record)?->due_date->format('d/m/Y'))
-                    ->description(fn (PatientPackage $record): ?string => self::nextDue($record)?->label())
-                    ->color(fn (PatientPackage $record): ?string => self::nextDue($record)?->isOverdue() ? 'danger' : null)
+                    ->description(fn (PatientPackage $record): ?string => ($next = self::nextDue($record)) ? $next->label().' · '.self::dueStatus($next) : null)
+                    // Oranye = perlu ditagih; merah hanya untuk peringatan medis & kegagalan.
+                    ->color(fn (PatientPackage $record): ?string => ($next = self::nextDue($record)) && ($next->isOverdue() || $next->due_date->isToday()) ? 'warning' : null)
                     ->placeholder('—'),
-                TextColumn::make('status')->label('Status')->badge(),
+                TextColumn::make('status')->label('Status')->badge()->extraAttributes(['class' => 'klinik-status'])->visibleFrom('md'),
             ])
             ->filters([
                 SelectFilter::make('status')->label('Status')->options(PatientPackageStatus::class)->default(PatientPackageStatus::Active->value),
@@ -134,6 +138,16 @@ class PatientPackageResource extends Resource
                         ->whereDate('due_date', '<', today()))),
             ])
             ->recordActions([ViewAction::make()]);
+    }
+
+    /** Kata status jatuh tempo, sama dengan jadwal pembayaran di halaman paket. */
+    public static function dueStatus(Installment $installment): string
+    {
+        return match (true) {
+            $installment->due_date->isToday() => 'jatuh tempo hari ini',
+            $installment->isOverdue() => 'lewat '.(int) $installment->due_date->diffInDays(today()).' hari',
+            default => 'belum jatuh tempo',
+        };
     }
 
     public static function nextDue(PatientPackage $package): ?Installment

@@ -12,8 +12,12 @@
                 </x-filament::badge>
             </x-slot>
 
+            {{-- Yang belum terpenuhi di atas (wajib dulu, lalu disarankan); urutan asli dipertahankan di dalam tiap kelompok. --}}
+            @php
+                $checks = collect($row['checks'])->sortBy(fn (array $c): int => $c['ok'] ? 2 : ($c['level'] === \App\Services\Clinic\BranchReadiness::REQUIRED ? 0 : 1));
+            @endphp
             <ul style="list-style: none; margin: 0; padding: 0">
-                @foreach ($row['checks'] as $check)
+                @foreach ($checks as $check)
                     <li style="display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-top: 1px solid rgba(128,128,128,.15)">
                         <span style="flex: none; width: 22px; height: 22px; margin-top: 1px" aria-hidden="true">
                             @if ($check['ok'])

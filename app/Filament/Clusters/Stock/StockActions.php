@@ -98,7 +98,7 @@ final class StockActions
             ->icon(Heroicon::OutlinedMinusCircle)
             ->color('gray')
             ->authorize(fn (): bool => auth()->user()?->can('Create:StockMovement') ?? false)
-            ->modalDescription('Untuk bahan di luar BOM tindakan (BOM terpotong otomatis saat rekam medis ditandatangani). Diambil dari batch dengan ED terdekat.')
+            ->modalDescription('Untuk bahan di luar daftar bahan tindakan (bahan tindakan terpotong otomatis saat rekam medis ditandatangani). Diambil dari batch dengan ED terdekat.')
             ->modalWidth('4xl')
             ->schema([
                 Repeater::make('lines')->label('Barang')

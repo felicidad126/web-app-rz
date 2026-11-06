@@ -17,6 +17,12 @@ class ListStockMovements extends ListRecords
 
     protected static ?string $title = 'Stok';
 
+    /** Sama dengan tab Barang: judul "Stok" + tab sudah menunjukkan posisi. */
+    public function getBreadcrumbs(): array
+    {
+        return [];
+    }
+
     public function getTabs(): array
     {
         return [

@@ -7,6 +7,7 @@ use App\Filament\Resources\Suppliers\Pages\ManageSuppliers;
 use App\Filament\Support\NavGroup;
 use App\Models\Supplier;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\RestoreAction;
@@ -69,7 +70,9 @@ class SupplierResource extends Resource
             ->defaultSort('name')
             ->columns([
                 TextColumn::make('name')->label('Nama')->searchable()->sortable(),
-                IconColumn::make('is_lab')->label('Lab')->boolean(),
+                TextColumn::make('is_lab')->label('Jenis')->badge()->color('gray')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Lab gigi' : 'Supplier')
+                    ->visibleFrom('md'),
                 TextColumn::make('contact_person')->label('Kontak')->placeholder('—')->visibleFrom('md'),
                 TextColumn::make('phone')->label('Telepon')->placeholder('—')->visibleFrom('md'),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
@@ -80,8 +83,7 @@ class SupplierResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make(),
-                RestoreAction::make(),
+                ActionGroup::make([DeleteAction::make(), RestoreAction::make()]),
             ]);
     }
 

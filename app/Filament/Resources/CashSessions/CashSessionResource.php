@@ -49,11 +49,18 @@ class CashSessionResource extends Resource
         $query = parent::getEloquentQuery()->whereIn('branch_id', BranchContext::available()->pluck('id'));
         $user = auth()->user();
 
-        if ($user instanceof User && ! $user->hasAnyRole(['owner', 'admin', config('filament-shield.super_admin.name')])) {
+        if ($user instanceof User && ! self::seesAllSessions()) {
             $query->where('user_id', $user->id);
         }
 
         return $query;
+    }
+
+    public static function seesAllSessions(): bool
+    {
+        $user = auth()->user();
+
+        return $user instanceof User && $user->hasAnyRole(['owner', 'admin', config('filament-shield.super_admin.name')]);
     }
 
     public static function canCreate(): bool
@@ -69,11 +76,12 @@ class CashSessionResource extends Resource
             ->columns([
                 TextColumn::make('opened_at')->label('Dibuka')->dateTime('d/m/Y H:i')
                     ->description(fn (CashSession $record): string => $record->closed_at ? 'ditutup '.$record->closed_at->format('H:i') : 'masih terbuka'),
-                TextColumn::make('user.name')->label('Kasir'),
-                TextColumn::make('branch.name')->label('Cabang')->visibleFrom('md'),
-                TextColumn::make('opening_cash')->label('Kas awal')->alignEnd()->formatStateUsing(fn (int $state): string => Money::format($state, false))->visibleFrom('lg'),
-                TextColumn::make('expected_cash')->label('Tunai sistem')->alignEnd()->formatStateUsing(fn (?int $state): string => Money::format($state, false))->placeholder('—'),
-                TextColumn::make('counted_cash')->label('Tunai dihitung')->alignEnd()->formatStateUsing(fn (?int $state): string => Money::format($state, false))->placeholder('—'),
+                // Kasir hanya melihat sesinya sendiri, jadi kolom kasir hanya untuk owner/admin.
+                TextColumn::make('user.name')->label('Kasir')->visible(fn (): bool => self::seesAllSessions())->visibleFrom('sm'),
+                TextColumn::make('branch.name')->label('Cabang')->visibleFrom('lg'),
+                TextColumn::make('opening_cash')->label('Kas awal')->alignEnd()->formatStateUsing(fn (int $state): string => Money::format($state, false))->visibleFrom('xl'),
+                TextColumn::make('expected_cash')->label('Tunai sistem')->alignEnd()->formatStateUsing(fn (?int $state): string => Money::format($state, false))->placeholder('—')->visibleFrom('md'),
+                TextColumn::make('counted_cash')->label('Tunai dihitung')->alignEnd()->formatStateUsing(fn (?int $state): string => Money::format($state, false))->placeholder('—')->visibleFrom('md'),
                 TextColumn::make('difference')->label('Selisih')->alignEnd()
                     ->formatStateUsing(fn (?int $state): string => Money::format($state, false))
                     ->color(fn (?int $state): ?string => $state ? 'danger' : null)
@@ -89,6 +97,7 @@ class CashSessionResource extends Resource
                     ->label('Tutup kasir')
                     ->icon(Heroicon::OutlinedLockClosed)
                     ->button()
+                    ->color('gray')
                     ->visible(fn (CashSession $record): bool => $record->isOpen() && $record->user_id === auth()->id())
                     ->url(fn (CashSession $record): string => self::getUrl('close', ['record' => $record])),
                 ViewAction::make(),

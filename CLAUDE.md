@@ -36,6 +36,7 @@ Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL
 - **Migrasi pasien lama** lewat `php artisan patients:migrate-legacy` (uji coba dulu, lalu `--commit`). Laporan tanpa nama/NIK. Jangan pernah menyalin data pasien asli ke repo, tes, atau artifact; tes memakai data fiktif.
 - **Panduan pengguna** di `resources/guides/*.md` (menu Panduan). Perbarui bila alur atau label menu berubah. Cek rollout cabang: `BranchReadiness` (halaman Kesiapan cabang / `clinic:branch-readiness`).
 - **Nomor urut** (RM, invoice, kunjungan, mutasi stok, order lab) wajib lewat `App\Services\NumberSequence`. RM yang diisi manual/migrasi memajukan urutan (`reserveRmNumber`).
+- **Tampilan (Fondasi UI mockup v2, lihat `docs/12-perapian-ui.md`):** satu tombol teal per layar (aksi lain abu-abu); warna = arti (kuning perlu tindakan, hijau selesai/lunas, merah hanya peringatan medis & gagal); kode (No. RM, kunjungan, tagihan, ICD, gigi) pakai `.klinik-mono`/`fontFamily(FontFamily::Mono)`; uang di tabel `Money::format($x, false)` + `alignEnd()`, isian rupiah lewat `MoneyInput`; status janji/kunjungan titik + kata (`.klinik-status`); kolom sekunder `visibleFrom('md')` agar HP tetap terbaca. CSS tambahan hanya di `public/css/klinik.css` (tanpa build aset).
 - **Lazy loading dilarang** di `local` & `testing` (`Model::shouldBeStrict`). Eager-load relasi di tabel dan relation manager.
 - `app/Policies/*` dibuat oleh Shield. Jangan diedit manual; atur hak akses di seeder.
 - **Service worker** (`public/sw.js`) hanya boleh meng-cache aset statis.

@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Services\SatuSehat\LocationRegistrar;
 use App\Services\SatuSehat\SatuSehatException;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Notifications\Notification;
@@ -27,7 +28,7 @@ class EditBranch extends EditRecord
                 ->visible(fn (Branch $record): bool => blank($record->satusehat_location_id))
                 ->authorize(fn (Branch $record): bool => auth()->user()?->can('update', $record) ?? false)
                 ->requiresConfirmation()
-                ->modalDescription('Membuat Location "Poli Gigi" untuk cabang ini di SATUSEHAT, lalu menyimpan ID-nya. Bila klinik sudah punya Location ID dari SATUSEHAT Platform, cukup isi kolomnya saja.')
+                ->modalDescription('Membuat Location "Poli Gigi" untuk cabang ini di SATUSEHAT, lalu menyimpan ID-nya. Bila klinik sudah punya ID lokasi dari SATUSEHAT Platform, cukup isi kolomnya saja.')
                 ->action(function (Branch $record): void {
                     try {
                         $id = app(LocationRegistrar::class)->register($record);
@@ -38,10 +39,12 @@ class EditBranch extends EditRecord
                     }
 
                     $this->refreshFormData(['satusehat_location_id']);
-                    Notification::make()->title('Location terdaftar: '.$id)->success()->send();
+                    Notification::make()->title('Lokasi terdaftar: '.$id)->success()->send();
                 }),
-            DeleteAction::make(),
-            RestoreAction::make(),
+            ActionGroup::make([DeleteAction::make(), RestoreAction::make()])
+                ->label('Lainnya')
+                ->color('gray')
+                ->button(),
         ];
     }
 }

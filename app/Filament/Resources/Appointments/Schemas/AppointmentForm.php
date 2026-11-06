@@ -60,6 +60,9 @@ class AppointmentForm
                 ->required(),
             TimePicker::make('start_time')
                 ->label('Jam mulai')
+                // Format 24 jam seperti di seluruh aplikasi (pemilih bawaan browser bisa menampilkan AM/PM).
+                ->native(false)
+                ->displayFormat('H:i')
                 ->seconds(false)
                 ->minutesStep(5)
                 ->required(),

@@ -37,7 +37,7 @@ class OdontogramConditionResource extends Resource
 
     protected static ?int $navigationSort = 4;
 
-    protected static ?string $navigationLabel = 'Kondisi Odontogram';
+    protected static ?string $navigationLabel = 'Kondisi odontogram';
 
     protected static ?string $modelLabel = 'kondisi odontogram';
 
@@ -93,10 +93,10 @@ class OdontogramConditionResource extends Resource
         return $table
             ->defaultSort('sort')
             ->columns([
-                ColorColumn::make('color')->label(''),
-                TextColumn::make('code')->label('Kode')->weight('bold')->searchable(),
+                ColorColumn::make('color')->label('Warna'),
+                TextColumn::make('code')->label('Kode')->fontFamily('mono')->searchable(),
                 TextColumn::make('name')->label('Nama')->searchable(),
-                TextColumn::make('category')->label('Kategori')->badge(),
+                TextColumn::make('category')->label('Kategori')->badge()->color('gray')->visibleFrom('md'),
                 TextColumn::make('applies_to')->label('Dicatat')->badge()->color('gray')->visibleFrom('md'),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
             ])

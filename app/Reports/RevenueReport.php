@@ -50,7 +50,7 @@ class RevenueReport extends Report
 
         return [
             ['label' => self::groupOptions()[$this->group()] ?? 'Kelompok', 'type' => 'text'],
-            ['label' => 'Jumlah baris', 'type' => 'number'],
+            ['label' => 'Item', 'type' => 'number'],
             ['label' => 'Bruto', 'type' => 'money'],
             ['label' => 'Diskon', 'type' => 'money'],
             ['label' => 'Setelah diskon', 'type' => 'money'],

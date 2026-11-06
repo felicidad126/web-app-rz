@@ -13,12 +13,12 @@
     </div>
     @forelse ($voids as $payment)
         <div style="display: flex; gap: 16px; padding: 10px 16px; border-top: {{ $loop->first ? '0' : '1px solid #f4f4f5' }}; font-size: 14px; flex-wrap: wrap">
-            <span style="font-family: ui-monospace, monospace; font-size: 13px">{{ $payment->invoice->label() }}</span>
+            <span class="klinik-mono">{{ $payment->invoice->label() }}</span>
             <span style="flex: 1; min-width: 200px">{{ $payment->method->getLabel() }} {{ $payment->void_requested_at?->format('H:i') }} · {{ $payment->void_reason }}</span>
             <span style="font-variant-numeric: tabular-nums">{{ \App\Support\Money::format($payment->amount, false) }}</span>
             <span style="color: #52525b">{{ $payment->voider ? 'Disetujui '.$payment->voider->name : 'Menunggu persetujuan' }}</span>
         </div>
     @empty
-        <div style="padding: 12px 16px; color: #52525b; font-size: 14px">Tidak ada.</div>
+        <div style="padding: 12px 16px; color: #52525b; font-size: 14px">Tidak ada void di sesi ini.</div>
     @endforelse
 </section>

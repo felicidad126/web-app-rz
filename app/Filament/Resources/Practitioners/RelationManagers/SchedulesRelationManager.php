@@ -75,13 +75,14 @@ class SchedulesRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('start_time')
                     ->label('Jam')
+                    ->fontFamily('mono')
                     ->formatStateUsing(fn (PractitionerSchedule $record): string => substr($record->start_time, 0, 5).'–'.substr($record->end_time, 0, 5)),
-                TextColumn::make('branch.name')->label('Cabang'),
-                TextColumn::make('chair.name')->label('Kursi')->placeholder('Bebas'),
+                TextColumn::make('branch.name')->label('Cabang')->visibleFrom('md'),
+                TextColumn::make('chair.name')->label('Kursi')->placeholder('Bebas')->visibleFrom('md'),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
             ])
             ->headerActions([
-                CreateAction::make()->label('Tambah jadwal'),
+                CreateAction::make()->label('Tambah jadwal')->color('gray'),
             ])
             ->recordActions([
                 EditAction::make(),

@@ -17,7 +17,7 @@ enum VisitStatus: string implements HasColor, HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::Waiting => 'Menunggu',
+            self::Waiting => 'Datang',
             self::InTreatment => 'Di kursi',
             self::Done => 'Selesai',
             self::Billed => 'Sudah ditagih',

@@ -65,6 +65,12 @@ class StockOverview extends Page implements HasActions, HasSchemas, HasTable
         return auth()->user()?->can('View:Stock') ?? false;
     }
 
+    /** Judul "Stok" + tab sudah menunjukkan posisi; breadcrumb hanya menambah baris. */
+    public function getBreadcrumbs(): array
+    {
+        return [];
+    }
+
     public function getSubheading(): ?string
     {
         $branchId = BranchContext::id();
@@ -128,7 +134,8 @@ class StockOverview extends Page implements HasActions, HasSchemas, HasTable
                     ->state(fn (Item $record): ?string => $this->actionNeeded($record))
                     ->wrap()
                     ->color('warning')
-                    ->placeholder(''),
+                    ->placeholder('')
+                    ->visibleFrom('md'),
             ])
             ->filters([
                 SelectFilter::make('item_category_id')->label('Kategori')->relationship('category', 'name'),

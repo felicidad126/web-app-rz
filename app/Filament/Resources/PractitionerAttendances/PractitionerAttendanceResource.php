@@ -6,6 +6,7 @@ use App\Enums\AttendanceType;
 use App\Filament\Clinic\PractitionerOptions;
 use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\PractitionerAttendances\Pages\ManagePractitionerAttendances;
+use App\Filament\Support\MoneyInput;
 use App\Filament\Support\NavGroup;
 use App\Models\Practitioner;
 use App\Models\PractitionerAttendance;
@@ -73,7 +74,7 @@ class PractitionerAttendanceResource extends Resource
                 Select::make('type')->label('Jenis')->options(AttendanceType::class)->default(AttendanceType::Present)->required()
                     ->live()->afterStateUpdated(fn (Get $get, Set $set) => self::fillAmount($get, $set))
                     ->disabledOn('edit'),
-                TextInput::make('amount')->label('Nominal')->prefix('Rp')->numeric()->minValue(0)->required()
+                MoneyInput::make('amount')->label('Nominal')->minValue(0)->required()
                     ->helperText('Terisi dari tarif dokter; bisa diubah untuk hari tertentu.'),
                 TextInput::make('notes')->label('Catatan')->maxLength(255),
             ]);
@@ -90,10 +91,10 @@ class PractitionerAttendanceResource extends Resource
                 TextColumn::make('date')->label('Tanggal')->date('d/m/Y')->sortable(),
                 TextColumn::make('practitioner.user.name')->label('Dokter')->searchable(),
                 TextColumn::make('branch.name')->label('Cabang')->visibleFrom('md'),
-                TextColumn::make('type')->label('Jenis')->badge()->color('gray'),
+                TextColumn::make('type')->label('Jenis')->badge()->color('gray')->visibleFrom('md'),
                 TextColumn::make('amount')->label('Nominal')->alignEnd()->formatStateUsing($money)
                     ->summarize(Sum::make()->label('')->formatStateUsing($money)),
-                TextColumn::make('payout')->label('Rekap')->placeholder('Belum direkap')
+                TextColumn::make('payout')->label('Rekap')->placeholder('Belum direkap')->visibleFrom('md')
                     ->state(fn (PractitionerAttendance $record): ?string => $record->payout?->periodLabel()),
                 TextColumn::make('notes')->label('Catatan')->placeholder('—')->visibleFrom('lg'),
             ])
@@ -101,7 +102,8 @@ class PractitionerAttendanceResource extends Resource
                 SelectFilter::make('practitioner_id')->label('Dokter')->options(fn (): array => PractitionerOptions::dentists()),
                 SelectFilter::make('type')->label('Jenis')->options(AttendanceType::class),
             ])
-            ->recordActions([EditAction::make()]);
+            // Catatan yang sudah masuk rekap tidak bisa diubah: tombol Ubah disembunyikan.
+            ->recordActions([EditAction::make()->visible(fn (PractitionerAttendance $record): bool => self::canEdit($record))]);
     }
 
     private static function fillAmount(Get $get, Set $set): void

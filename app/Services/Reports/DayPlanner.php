@@ -87,7 +87,7 @@ final class DayPlanner
             }
 
             if (($balances[$id] ?? 0) > 0) {
-                $list[] = ['label' => 'Saldo Rp '.number_format($balances[$id], 0, ',', '.'), 'color' => 'warning'];
+                $list[] = ['label' => 'Saldo terutang Rp '.number_format($balances[$id], 0, ',', '.'), 'color' => 'warning'];
             }
 
             if (isset($recalls[$id])) {
@@ -193,7 +193,7 @@ final class DayPlanner
             ->orderBy('due_date')->limit(15)->get()
             ->each(fn (Installment $i) => $list->push([
                 'patient' => $i->patientPackage->patient,
-                'reason' => 'Cicilan '.$i->label().' · Rp '.number_format($i->amount, 0, ',', '.'),
+                'reason' => $i->label().' · Rp '.number_format($i->amount, 0, ',', '.'),
                 'due' => $i->due_date,
             ]));
 

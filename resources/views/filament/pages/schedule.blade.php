@@ -1,16 +1,11 @@
 @php
     use App\Enums\AppointmentStatus;
+    use App\Filament\Clinic\StatusDot;
     use App\Enums\TreatmentCategory;
     use App\Enums\VisitStatus;
 
-    $dot = fn ($appointment): array => match (true) {
-        $appointment->visit?->status === VisitStatus::InTreatment => ['#7a5af8', 'Di kursi '.$appointment->visit->started_at?->format('H:i')],
-        in_array($appointment->visit?->status, [VisitStatus::Done, VisitStatus::Billed], true) => ['#079455', 'Selesai '.$appointment->visit->finished_at?->format('H:i')],
-        $appointment->status === AppointmentStatus::Arrived => ['#dc6803', 'Datang '.$appointment->visit?->arrived_at?->format('H:i')],
-        $appointment->status === AppointmentStatus::Confirmed => ['#175cd3', 'Dikonfirmasi'],
-        $appointment->status === AppointmentStatus::NoShow => ['#d92d20', 'Tidak datang'],
-        default => ['#a1a1aa', 'Terjadwal'],
-    };
+    $dot = fn ($appointment): array => StatusDot::forAppointment($appointment, withTime: true);
+    $mono = 'var(--font-family-mono), ui-monospace, monospace';
     $minutes = ($endHour - $startHour) * 60;
     $height = $minutes * $scale;
 @endphp
@@ -35,12 +30,20 @@
                 </x-filament::input.wrapper>
             @endif
             <div style="margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: #52525b">
-                @foreach ([['#a1a1aa', 'Terjadwal'], ['#175cd3', 'Dikonfirmasi'], ['#dc6803', 'Datang'], ['#7a5af8', 'Di kursi'], ['#079455', 'Selesai'], ['#d92d20', 'Tidak datang']] as [$color, $label])
+                @foreach (StatusDot::legend() as [$color, $label])
                     <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{ $color }}"></span>{{ $label }}</span>
                 @endforeach
             </div>
         </div>
 
+        {{-- Di layar sempit panel kanan jadi selebar layar, dan Antrean naik ke atas papan agar tidak tertutup papan setinggi ±900 px. --}}
+        <style>
+            @media (max-width: 1023px) {
+                .klinik-schedule-side { display: contents !important; }
+                .klinik-schedule-side > * { flex: 1 1 100%; }
+                .klinik-schedule-queue { order: -1; }
+            }
+        </style>
         <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
             {{-- Papan per kursi --}}
             <section style="flex: 1 1 620px; min-width: 0; background: #fff; border: 1px solid #e4e4e7; border-radius: 8px; overflow-x: auto">
@@ -64,7 +67,7 @@
                     <div style="display: grid; grid-template-columns: 56px repeat({{ max(1, count($columns)) }}, minmax(200px, 1fr)); position: relative">
                         <div style="position: relative; height: {{ $height }}px">
                             @for ($h = $startHour; $h < $endHour; $h++)
-                                <span style="position: absolute; right: 8px; top: {{ max(2, ($h - $startHour) * 60 * $scale - 7) }}px; font: 500 12px ui-monospace, monospace; color: #71717a">{{ sprintf('%02d:00', $h) }}</span>
+                                <span style="position: absolute; right: 8px; top: {{ max(2, ($h - $startHour) * 60 * $scale - 7) }}px; font: 400 12px {{ $mono }}; color: #71717a">{{ sprintf('%02d:00', $h) }}</span>
                             @endfor
                         </div>
                         @foreach ($columns as $column)
@@ -79,20 +82,28 @@
                                         $top = ($appointment->start_at->hour * 60 + $appointment->start_at->minute - $startHour * 60) * $scale;
                                         $cardHeight = max(28, $appointment->start_at->diffInMinutes($appointment->end_at) * $scale - 3);
                                         $isSelected = $selected?->id === $appointment->id;
+                                        // Janji pendek (≤ 20 menit): satu baris, status cukup titik (kata lengkap di tooltip).
+                                        $compact = $cardHeight < 34;
                                     @endphp
                                     <button type="button" wire:click="select({{ $appointment->id }})"
                                         aria-label="{{ $appointment->start_at->format('H:i') }} {{ $appointment->patient->name }}, {{ $statusText }}"
-                                        style="position: absolute; z-index: 2; left: 4px; right: 4px; top: {{ $top }}px; height: {{ $cardHeight }}px; box-sizing: border-box; padding: 3px 8px; overflow: hidden; text-align: left; cursor: pointer;
+                                        title="{{ $appointment->start_at->format('H:i') }} {{ $appointment->patient->name }} · {{ $statusText }}"
+                                        style="position: absolute; z-index: 2; left: 4px; right: 4px; top: {{ $top }}px; height: {{ $cardHeight }}px; box-sizing: border-box; padding: 2px 8px; overflow: hidden; text-align: left; cursor: pointer;
                                                background: {{ $bg }}; border: 1px solid rgba(0,0,0,.06); border-left: 3px solid {{ $accent }}; border-radius: 4px; font-size: 12px; line-height: 1.3; color: #18181b;
                                                {{ $appointment->status === AppointmentStatus::NoShow ? 'opacity: .55;' : '' }}
                                                {{ $isSelected ? 'outline: 2px solid var(--primary-600); outline-offset: 1px;' : '' }}">
-                                        <span style="display: flex; gap: 6px; white-space: nowrap; overflow: hidden">
-                                            <span style="font-family: ui-monospace, monospace; color: #52525b">{{ $appointment->start_at->format('H:i') }}</span>
+                                        <span style="display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden">
+                                            <span style="font-family: {{ $mono }}; color: #52525b">{{ $appointment->start_at->format('H:i') }}</span>
+                                            @if ($compact)
+                                                <span style="width: 7px; height: 7px; border-radius: 50%; background: {{ $dotColor }}; flex: none"></span>
+                                            @endif
                                             <strong style="font-weight: 600; overflow: hidden; text-overflow: ellipsis">{{ $appointment->patient->name }}</strong>
                                         </span>
-                                        <span style="display: flex; align-items: center; gap: 5px; color: #3f3f46">
-                                            <span style="width: 7px; height: 7px; border-radius: 50%; background: {{ $dotColor }}; flex: none"></span>{{ $statusText }}
-                                        </span>
+                                        @unless ($compact)
+                                            <span style="display: flex; align-items: center; gap: 5px; color: #3f3f46; white-space: nowrap; overflow: hidden">
+                                                <span style="width: 7px; height: 7px; border-radius: 50%; background: {{ $dotColor }}; flex: none"></span>{{ $statusText }}
+                                            </span>
+                                        @endunless
                                         @if ($cardHeight >= 52)
                                             <span style="display: block; color: #3f3f46; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ $appointment->reason ?: $appointment->practitioner->user->name }}</span>
                                         @endif
@@ -102,7 +113,7 @@
                         @endforeach
                         @if ($isToday && $nowOffset > 0 && $nowOffset < $height)
                             <div aria-hidden="true" style="position: absolute; left: 48px; right: 0; top: {{ $nowOffset }}px; border-top: 2px solid var(--primary-600); z-index: 1">
-                                <span style="position: absolute; left: -48px; top: -10px; padding: 1px 4px; border-radius: 4px; background: var(--primary-600); color: #fff; font: 500 11px ui-monospace, monospace">{{ now()->format('H:i') }}</span>
+                                <span style="position: absolute; left: -48px; top: -10px; padding: 1px 4px; border-radius: 4px; background: var(--primary-600); color: #fff; font: 500 11px {{ $mono }}">{{ now()->format('H:i') }}</span>
                             </div>
                         @endif
                     </div>
@@ -110,14 +121,14 @@
             </section>
 
             {{-- Panel kanan --}}
-            <div style="flex: 0 1 340px; min-width: 280px; display: flex; flex-direction: column; gap: 16px">
-                <x-filament::section heading="Antrean" :description="count($waiting).' menunggu · '.count($inTreatment).' di kursi'" compact>
+            <div class="klinik-schedule-side" style="flex: 0 1 340px; min-width: 280px; display: flex; flex-direction: column; gap: 16px">
+                <x-filament::section class="klinik-schedule-queue" heading="Antrean" :description="count($waiting).' menunggu · '.count($inTreatment).' di kursi'" compact>
                     <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px">
                         <div style="font-size: 12px; font-weight: 500; color: #71717a">Ruang tunggu</div>
                         @forelse ($waiting as $visit)
                             <div style="display: flex; justify-content: space-between; gap: 8px; align-items: flex-start">
                                 <div>
-                                    <div style="font-weight: 500"><span style="font-family: ui-monospace, monospace; color: #52525b">#{{ $visit->queue_number }}</span> {{ $visit->patient->name }}</div>
+                                    <div style="font-weight: 500"><span style="font-family: {{ $mono }}; color: #52525b">#{{ $visit->queue_number }}</span> {{ $visit->patient->name }}</div>
                                     <div style="font-size: 13px; color: #52525b">{{ $visit->practitioner->user->name }} · datang {{ $visit->arrived_at?->format('H:i') }} · <span style="color: #b54708">{{ $visit->waitingMinutes() }} mnt</span></div>
                                 </div>
                                 {{ ($this->startVisitAction)(['visit' => $visit->id]) }}
@@ -157,7 +168,7 @@
                             <div>
                                 <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap">
                                     <a href="{{ \App\Filament\Resources\Patients\PatientResource::getUrl('view', ['record' => $selected->patient]) }}" style="font-size: 16px; font-weight: 600; color: inherit">{{ $selected->patient->name }}</a>
-                                    <span style="font-family: ui-monospace, monospace; font-size: 13px; color: #52525b">{{ $selected->patient->rm_number }}</span>
+                                    <span style="font-family: {{ $mono }}; font-size: 13px; color: #52525b">{{ $selected->patient->rm_number }}</span>
                                 </div>
                                 <div style="font-size: 13px; color: #52525b">{{ $selected->start_at->format('H:i') }}–{{ $selected->end_at->format('H:i') }} · {{ $selected->chair?->name ?? 'Kursi belum ditentukan' }} · {{ $selected->practitioner->user->name }}</div>
                                 <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; margin-top: 4px"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{ $dotColor }}"></span>{{ $statusText }}</div>
@@ -181,7 +192,7 @@
                                 {{ ($this->noShowAppointmentAction)(['appointment' => $selected->id]) }}
                                 {{ ($this->cancelAppointmentAction)(['appointment' => $selected->id]) }}
                                 @if ($canExamine && $selected->visit && $selected->visit->status === VisitStatus::InTreatment)
-                                    <x-filament::button tag="a" :href="$this->examUrl($selected->visit)" size="sm">Buka pemeriksaan</x-filament::button>
+                                    <x-filament::button tag="a" :href="$this->examUrl($selected->visit)" size="sm" color="gray">Buka pemeriksaan</x-filament::button>
                                 @endif
                             </div>
                         </div>

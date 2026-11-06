@@ -46,7 +46,7 @@ class RecallsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('due_date')->label('Jatuh tempo')->date('d/m/Y'),
                 TextColumn::make('reason')->label('Keperluan'),
-                TextColumn::make('status')->label('Status')->badge(),
+                TextColumn::make('status')->label('Status')->badge()->extraAttributes(['class' => 'klinik-status']),
                 TextColumn::make('last_contacted_at')->label('Terakhir dihubungi')->dateTime('d/m/Y H:i')->placeholder('—'),
             ])
             ->headerActions([CreateAction::make()->label('Tambah recall')])

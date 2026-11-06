@@ -39,6 +39,18 @@ class ViewCashSession extends ViewRecord
         return $session->label();
     }
 
+    public function getSubheading(): ?string
+    {
+        /** @var CashSession $session */
+        $session = $this->getRecord();
+        $session->loadMissing(['branch', 'closer']);
+
+        // Kasir & jam buka sudah ada di judul.
+        return $session->branch->name.' · '.($session->closed_at
+            ? 'ditutup '.$session->closed_at->format('d/m/Y H:i').($session->closer ? ' oleh '.$session->closer->name : '')
+            : 'masih terbuka');
+    }
+
     protected function getHeaderActions(): array
     {
         return [

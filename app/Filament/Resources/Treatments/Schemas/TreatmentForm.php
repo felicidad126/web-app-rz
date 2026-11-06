@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Treatments\Schemas;
 
 use App\Enums\FeeGroup;
 use App\Enums\TreatmentCategory;
+use App\Filament\Support\MoneyInput;
 use App\Models\Icd9cmCode;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -55,13 +56,10 @@ class TreatmentForm
                             ->getOptionLabelFromRecordUsing(fn (Icd9cmCode $record): string => $record->label)
                             ->searchable(['code', 'name', 'name_id'])
                             ->preload(),
-                        TextInput::make('base_price')
+                        MoneyInput::make('base_price')
                             ->label('Tarif dasar')
-                            ->helperText('Bisa di-override per cabang setelah disimpan.')
-                            ->prefix('Rp')
-                            ->numeric()
+                            ->helperText('Bisa diubah per cabang setelah disimpan (tab Tarif per cabang).')
                             ->minValue(0)
-                            ->step(1000)
                             ->required(),
                         TextInput::make('duration_minutes')
                             ->label('Durasi default')

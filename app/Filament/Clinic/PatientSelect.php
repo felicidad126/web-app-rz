@@ -13,6 +13,7 @@ final class PatientSelect
     {
         return Select::make($name)
             ->label('Pasien')
+            ->placeholder('Cari nama, No. RM, No. HP, atau NIK')
             ->searchable()
             ->getSearchResultsUsing(fn (string $search): array => self::search($search))
             ->getOptionLabelUsing(fn ($value): ?string => ($p = Patient::find($value)) ? self::label($p) : null)

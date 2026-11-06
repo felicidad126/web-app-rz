@@ -24,6 +24,9 @@ class MyPerformanceWidget extends StatsOverviewWidget
 
     protected ?string $heading = 'Kinerja saya';
 
+    /** Dua kartu per baris di HP, empat berjajar bila wadahnya cukup lebar. */
+    protected int|array|null $columns = ['default' => 2, '@3xl' => 4, '!@lg' => 4];
+
     public static function canView(): bool
     {
         return static::shieldCanView() && CommissionScope::ownPractitionerId(auth()->user()) !== null;
@@ -51,15 +54,15 @@ class MyPerformanceWidget extends StatsOverviewWidget
                 ->description($dailyTarget > 0 ? 'Target harian '.Money::format($dailyTarget).' · '.Metrics::percent(Metrics::ratio($prodYesterday, $dailyTarget)) : 'Belum ada target')
                 ->color($dailyTarget > 0 ? Kpi::attainmentColor(Metrics::ratio($prodYesterday, $dailyTarget)) : 'gray')
                 ->extraAttributes($tip(Kpi::Production)),
-            Stat::make('Produksi bulan ini', Money::format($prodMonth))
+            Stat::make('Produksi bulan berjalan', Money::format($prodMonth))
                 ->description($targetMonth > 0 ? Metrics::percent($attainment).' dari target s.d. kemarin ('.Money::format($targetMonth).')' : 's.d. kemarin')
                 ->color(Kpi::attainmentColor($attainment))
                 ->extraAttributes($tip(Kpi::ProductionVsTarget)),
-            Stat::make('Estimasi jasa bulan ini', Money::format($commission))
+            Stat::make('Estimasi jasa bulan berjalan', Money::format($commission))
                 ->description('Sebelum potongan; termasuk hari ini')
                 ->extraAttributes($tip(Kpi::Commission)),
             Stat::make('Penerimaan rencana', Metrics::percent($acceptance['ratio']))
-                ->description($acceptance['presented'] > 0 ? Money::format($acceptance['accepted']).' dari '.Money::format($acceptance['presented']) : 'Belum ada rencana diajukan bulan ini')
+                ->description($acceptance['presented'] > 0 ? Money::format($acceptance['accepted']).' dari '.Money::format($acceptance['presented']) : 'Belum ada rencana diajukan bulan berjalan')
                 ->extraAttributes($tip(Kpi::CaseAcceptance)),
         ];
     }

@@ -69,7 +69,8 @@ class AppServiceProvider extends ServiceProvider
             ->defaultDateTimeDisplayFormat('d/m/Y H:i')
             ->defaultNumberLocale('id')
             ->emptyStateIcon(Heroicon::OutlinedInbox)
-            ->filtersTriggerAction(fn (Action $action): Action => $action->badgeColor('gray')));
+            ->filtersTriggerAction(fn (Action $action): Action => $action->badgeColor('gray'))
+            ->filtersResetAction(fn (Action $action): Action => $action->color('gray')));
 
         Schema::configureUsing(fn (Schema $schema): Schema => $schema
             ->defaultDateDisplayFormat('d/m/Y')
@@ -80,7 +81,9 @@ class AppServiceProvider extends ServiceProvider
 
         DeleteAction::configureUsing(fn (DeleteAction $action): DeleteAction => $action
             ->color('gray')
-            ->modalSubmitAction(fn (Action $submit): Action => $submit->color('danger')));
+            ->modalIconColor('danger')
+            // Parameter harus bernama $action: Filament menyuntik tombol konfirmasi lewat nama, bukan tipe.
+            ->modalSubmitAction(fn (Action $action): Action => $action->color('danger')));
 
         IconColumn::configureUsing(fn (IconColumn $column): IconColumn => $column
             ->trueColor('gray')

@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Support\InitialsAvatarProvider;
 use App\Filament\Support\NavGroup;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
@@ -43,7 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ->darkMode(false)
             ->login()
             ->passwordReset()
-            ->profile(isSimple: false)
+            ->profile(EditProfile::class, isSimple: false)
             ->multiFactorAuthentication([
                 AppAuthentication::make()->recoverable(),
                 EmailAuthentication::make(),
@@ -71,8 +72,10 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->plugins([
                 FilamentShieldPlugin::make()
+                    ->gridColumns(['default' => 1, 'lg' => 2])
+                    ->resourceCheckboxListColumns(['default' => 2, 'sm' => 4])
                     ->navigationGroup(NavGroup::SETTINGS)
-                    ->navigationLabel('Peran & Hak Akses')
+                    ->navigationLabel('Peran & hak akses')
                     ->navigationSort(2),
             ])
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => Blade::render('<x-pwa-head /><x-touch-targets /><x-panel-styles />'))

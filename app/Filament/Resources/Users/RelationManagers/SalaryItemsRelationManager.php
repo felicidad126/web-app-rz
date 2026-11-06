@@ -2,12 +2,13 @@
 
 namespace App\Filament\Resources\Users\RelationManagers;
 
+use App\Filament\Support\MoneyInput;
 use App\Models\SalaryComponent;
+use App\Support\Money;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -44,7 +45,7 @@ class SalaryItemsRelationManager extends RelationManager
                 ->live()
                 ->afterStateUpdated(fn ($state, Set $set) => $set('amount', SalaryComponent::find($state)?->default_amount))
                 ->required(),
-            TextInput::make('amount')->label('Nominal per bulan')->prefix('Rp')->numeric()->minValue(0)->required(),
+            MoneyInput::make('amount')->label('Nominal per bulan')->minValue(0)->required(),
         ]);
     }
 
@@ -55,7 +56,7 @@ class SalaryItemsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('component.name')->label('Komponen'),
                 TextColumn::make('component.kind')->label('Jenis')->badge(),
-                TextColumn::make('amount')->label('Nominal')->alignEnd()->money('IDR', locale: 'id'),
+                TextColumn::make('amount')->label('Nominal')->alignEnd()->formatStateUsing(fn ($state): string => Money::format((int) $state, false)),
             ])
             ->headerActions([CreateAction::make()->label('Tambah komponen')])
             ->recordActions([EditAction::make(), DeleteAction::make()]);

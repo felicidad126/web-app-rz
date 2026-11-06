@@ -12,6 +12,12 @@ class EditPatient extends EditRecord
 {
     protected static string $resource = PatientResource::class;
 
+    /** Tabel kepesertaan, kunjungan, dll. hanya di halaman Lihat; halaman Ubah fokus ke form. */
+    public function getRelationManagers(): array
+    {
+        return [];
+    }
+
     protected function getHeaderActions(): array
     {
         return [

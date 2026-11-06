@@ -34,9 +34,9 @@ class ViewInvoice extends ViewRecord
             ->components([
                 View::make('filament.clinic.patient-banner')->viewData(['patient' => $invoice->patient]),
                 Grid::make(['default' => 1, 'lg' => 3])->schema([
-                    Section::make(fn (): string => 'Tagihan '.$invoice->label())
-                        ->description(fn (): string => ($invoice->visit ? 'Kunjungan '.$invoice->visit->visit_number.' · '.$invoice->visit->practitioner->user->name : 'Penjualan langsung')
-                            .' · '.$invoice->status->getLabel())
+                    Section::make('Rincian tagihan')
+                        // Status & total sudah ada di subjudul halaman.
+                        ->description(fn (): string => $invoice->visit ? 'Kunjungan '.$invoice->visit->visit_number.' · '.$invoice->visit->practitioner->user->name : 'Penjualan langsung')
                         ->columnSpan(['lg' => 2])
                         ->schema([View::make('filament.billing.invoice-lines')->viewData(['invoice' => $invoice])]),
                     View::make('filament.billing.checkout-side')->viewData(['invoice' => $invoice])->columnSpan(1),

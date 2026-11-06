@@ -23,6 +23,9 @@ class FrontDeskWidget extends StatsOverviewWidget
 
     protected static ?int $sort = 1;
 
+    /** Dua kartu per baris di HP, empat berjajar bila wadahnya cukup lebar. */
+    protected int|array|null $columns = ['default' => 2, '@3xl' => 4, '!@lg' => 4];
+
     public static function canView(): bool
     {
         return static::shieldCanView() && BranchContext::id() !== null;

@@ -5,9 +5,12 @@ namespace App\Filament\Resources\SalaryComponents;
 use App\Enums\SalaryComponentKind;
 use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\SalaryComponents\Pages\ManageSalaryComponents;
+use App\Filament\Support\MoneyInput;
 use App\Filament\Support\NavGroup;
 use App\Models\SalaryComponent;
+use App\Support\Money;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\RestoreAction;
@@ -50,7 +53,7 @@ class SalaryComponentResource extends Resource
         return $schema->components([
             TextInput::make('name')->label('Nama')->required()->maxLength(80),
             Select::make('kind')->label('Jenis')->options(SalaryComponentKind::class)->required(),
-            TextInput::make('default_amount')->label('Nominal default')->prefix('Rp')->numeric()->minValue(0)->default(0)
+            MoneyInput::make('default_amount')->label('Nominal bawaan')->minValue(0)->default(0)
                 ->helperText('Dipakai bila karyawan belum punya nominal sendiri untuk komponen ini.'),
             TextInput::make('sort')->label('Urutan')->numeric()->minValue(0)->default(0),
             Toggle::make('is_active')->label('Aktif')->default(true),
@@ -63,12 +66,14 @@ class SalaryComponentResource extends Resource
             ->defaultSort('sort')
             ->columns([
                 TextColumn::make('name')->label('Nama')->searchable(),
-                TextColumn::make('kind')->label('Jenis')->badge(),
-                TextColumn::make('default_amount')->label('Nominal default')->alignEnd()->money('IDR', locale: 'id'),
-                IconColumn::make('is_active')->label('Aktif')->boolean(),
+                TextColumn::make('kind')->label('Jenis')->badge()->visibleFrom('md'),
+                TextColumn::make('default_amount')->label('Nominal bawaan')->alignEnd()
+                    ->formatStateUsing(fn ($state): string => (int) $state === 0 ? '—' : Money::format((int) $state, false)),
+                IconColumn::make('is_active')->label('Aktif')->boolean()->visibleFrom('md'),
             ])
             ->filters([TrashedFilter::make()])
-            ->recordActions([EditAction::make(), DeleteAction::make()->label('Arsipkan'), RestoreAction::make()]);
+            // Tabel pengaturan yang jarang diubah: aksi dikumpulkan di menu ⋮ supaya muat di HP.
+            ->recordActions([ActionGroup::make([EditAction::make(), DeleteAction::make()->label('Arsipkan'), RestoreAction::make()])->color('gray')]);
     }
 
     public static function getPages(): array

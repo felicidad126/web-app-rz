@@ -35,11 +35,11 @@ class TopDiagnosesWidget extends Widget
             ->orderByDesc('total')->limit(10)->get();
 
         return [
-            'heading' => 'Top-10 diagnosa bulan ini',
+            'heading' => 'Top-10 diagnosa bulan berjalan',
             'description' => 'ICD-10, semua kunjungan yang tidak dibatalkan',
             'columns' => [['label' => 'Kode'], ['label' => 'Diagnosa'], ['label' => 'Kasus', 'align' => 'end']],
-            'rows' => $rows->map(fn ($r): array => [$r->code, (string) ($r->name ?? '—'), (string) $r->total])->all(),
-            'empty' => 'Belum ada diagnosa bulan ini.',
+            'rows' => $rows->map(fn ($r): array => [['text' => $r->code, 'mono' => true], (string) ($r->name ?? '—'), (string) $r->total])->all(),
+            'empty' => 'Belum ada diagnosa bulan berjalan.',
         ];
     }
 }

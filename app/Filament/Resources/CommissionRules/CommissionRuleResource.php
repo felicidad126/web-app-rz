@@ -10,11 +10,13 @@ use App\Enums\FeeGroup;
 use App\Filament\Clinic\PractitionerOptions;
 use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\CommissionRules\Pages\ManageCommissionRules;
+use App\Filament\Support\MoneyInput;
 use App\Filament\Support\NavGroup;
 use App\Models\CommissionRule;
 use App\Models\Treatment;
 use App\Services\Commission\CommissionEngine;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\RestoreAction;
@@ -64,7 +66,7 @@ class CommissionRuleResource extends Resource
             ->components([
                 TextInput::make('name')->label('Nama aturan')->placeholder('Mis. Konsultasi 100%')->required()->maxLength(255)->columnSpanFull(),
                 Section::make('Berlaku untuk')
-                    ->description('Kosongkan untuk "semua". Bila beberapa aturan cocok, yang dipakai: dokter + tindakan → dokter + jenis jasa → dokter → tindakan → jenis jasa → default.')
+                    ->description('Kosongkan untuk "semua". Bila beberapa aturan cocok, yang dipakai: dokter + tindakan → dokter + jenis jasa → dokter → tindakan → jenis jasa → bawaan.')
                     ->columns(2)
                     ->columnSpanFull()
                     ->components([
@@ -83,7 +85,7 @@ class CommissionRuleResource extends Resource
                         TextInput::make('percent')->label('Persen')->suffix('%')->numeric()->minValue(0)->maxValue(100)
                             ->visible(fn (Get $get): bool => self::isPercent($get('type')))
                             ->required(fn (Get $get): bool => self::isPercent($get('type'))),
-                        TextInput::make('fixed_amount')->label('Nominal per tindakan')->prefix('Rp')->numeric()->minValue(0)
+                        MoneyInput::make('fixed_amount')->label('Nominal per tindakan')->minValue(0)
                             ->visible(fn (Get $get): bool => ! self::isPercent($get('type')))
                             ->required(fn (Get $get): bool => ! self::isPercent($get('type'))),
                         Select::make('base')->label('Basis')->options(CommissionBase::class)->default(CommissionBase::Net)
@@ -101,27 +103,28 @@ class CommissionRuleResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->description('Perubahan aturan hanya berlaku untuk tagihan yang terbit sesudahnya; aturan di-snapshot per baris tindakan.')
+            ->description('Perubahan aturan hanya berlaku untuk tagihan yang terbit sesudahnya; aturan yang dipakai disimpan di tiap baris tindakan.')
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['practitioner.user', 'treatment']))
             ->defaultSort('role')
             ->columns([
                 TextColumn::make('name')->label('Aturan')->searchable()->wrap()
                     ->description(fn (CommissionRule $record): string => self::scopeLabel($record)),
-                TextColumn::make('role')->label('Peran')->badge()->color('gray'),
+                TextColumn::make('role')->label('Peran')->badge()->color('gray')->visibleFrom('md'),
                 TextColumn::make('summary')->label('Perhitungan')->state(fn (CommissionRule $record): string => $record->summary())->wrap(),
-                TextColumn::make('recognition')->label('Diakui')->visibleFrom('lg'),
-                IconColumn::make('is_active')->label('Aktif')->boolean(),
+                // Kapan jasa diakui sama untuk semua aturan (keputusan owner); cukup di form.
+                IconColumn::make('is_active')->label('Aktif')->boolean()->visibleFrom('md'),
             ])
             ->filters([
                 SelectFilter::make('role')->label('Peran')->options(CommissionRole::class),
                 SelectFilter::make('fee_group')->label('Jenis jasa')->options(FeeGroup::class),
                 TrashedFilter::make(),
             ])
-            ->recordActions([
+            // Aksi dikumpulkan di menu ⋮ supaya kolom Perhitungan muat di HP.
+            ->recordActions([ActionGroup::make([
                 EditAction::make(),
                 DeleteAction::make()->label('Arsipkan'),
                 RestoreAction::make(),
-            ]);
+            ])->color('gray')]);
     }
 
     public static function scopeLabel(CommissionRule $rule): string
@@ -133,7 +136,7 @@ class CommissionRuleResource extends Resource
         ]);
 
         return match (CommissionEngine::scope($rule)) {
-            'default' => 'Default (semua tindakan, semua dokter)',
+            'default' => 'Bawaan (semua tindakan, semua dokter)',
             default => implode(' · ', $parts),
         };
     }

@@ -76,9 +76,10 @@ class StockMovementResource extends Resource
                     ->description(fn (StockMovement $record): string => $record->movement_date->format('d/m/Y')),
                 TextColumn::make('type')->label('Jenis')->badge(),
                 TextColumn::make('detail')->label('Keterangan')->wrap()
-                    ->state(fn (StockMovement $record): string => self::detail($record)),
-                TextColumn::make('lines_count')->label('Baris')->alignCenter()->visibleFrom('lg'),
-                TextColumn::make('total_cost')->label('Nilai')->alignEnd()
+                    ->state(fn (StockMovement $record): string => self::detail($record))
+                    ->visibleFrom('md'),
+                TextColumn::make('lines_count')->label('Baris')->alignEnd()->visibleFrom('lg'),
+                TextColumn::make('total_cost')->label('Nilai')->alignEnd()->visibleFrom('sm')
                     ->formatStateUsing(fn (int $state): string => Money::format($state, false))
                     ->color(fn (int $state): ?string => $state < 0 ? 'gray' : null),
                 TextColumn::make('status')->label('Status')->badge(),

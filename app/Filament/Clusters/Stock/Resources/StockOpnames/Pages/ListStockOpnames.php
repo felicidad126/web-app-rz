@@ -12,10 +12,17 @@ class ListStockOpnames extends ListRecords
 
     protected static ?string $title = 'Stok';
 
+    /** Sama dengan tab Barang: judul "Stok" + tab sudah menunjukkan posisi. */
+    public function getBreadcrumbs(): array
+    {
+        return [];
+    }
+
     protected ?string $subheading = 'Opname pertama di tiap cabang menjadi saldo awal stok. Selisih hitung tercatat setelah disetujui admin klinik.';
 
     protected function getHeaderActions(): array
     {
-        return [StockActions::branchSwitcher(), StockActions::startOpname()];
+        // Di tab Opname, memulai opname adalah aksi utama.
+        return [StockActions::branchSwitcher(), StockActions::startOpname()->color('primary')];
     }
 }

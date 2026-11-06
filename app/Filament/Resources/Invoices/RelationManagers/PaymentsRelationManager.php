@@ -44,10 +44,10 @@ class PaymentsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('transaction.paid_at')->label('Waktu')->dateTime('d/m/Y H:i'),
                 TextColumn::make('method')->label('Metode')->badge()->color('gray'),
-                TextColumn::make('reference_no')->label('Referensi')->placeholder('—'),
+                TextColumn::make('reference_no')->label('Referensi')->placeholder('—')->visibleFrom('md'),
                 TextColumn::make('amount')->label('Jumlah')->alignEnd()->formatStateUsing(fn (int $state): string => Money::format($state, false)),
                 TextColumn::make('transaction.receiver.name')->label('Kasir')->visibleFrom('md'),
-                TextColumn::make('status')->label('Status')->badge()
+                TextColumn::make('status')->label('Status')->badge()->extraAttributes(['class' => 'klinik-status'])
                     ->description(fn (Payment $record): ?string => $record->void_reason ? 'Alasan: '.$record->void_reason : null),
             ])
             ->recordActions([

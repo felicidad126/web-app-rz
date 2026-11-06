@@ -28,9 +28,11 @@ class PatientForm
                     ->components([
                         TextInput::make('rm_number')
                             ->label('No. Rekam Medis')
-                            ->placeholder('Dibuat otomatis saat disimpan')
+                            ->extraInputAttributes(['class' => 'klinik-mono'])
                             ->disabled()
-                            ->dehydrated(false),
+                            ->dehydrated(false)
+                            // Saat registrasi No. RM dibuat otomatis; isian kosong tidak perlu ditampilkan.
+                            ->hiddenOn('create'),
                         TextInput::make('name')
                             ->label('Nama lengkap')
                             ->required()
@@ -74,7 +76,7 @@ class PatientForm
                             ->rows(2)
                             ->columnSpanFull(),
                     ]),
-                Section::make('Riwayat Medis Penting')
+                Section::make('Riwayat medis penting')
                     ->description('Ditampilkan sebagai peringatan untuk dokter.')
                     ->columns(2)
                     ->columnSpanFull()
@@ -88,7 +90,7 @@ class PatientForm
                             ->placeholder('Mis. hipertensi, diabetes, kelainan jantung')
                             ->rows(2),
                     ]),
-                Section::make('Kontak Darurat')
+                Section::make('Kontak darurat')
                     ->columns(3)
                     ->columnSpanFull()
                     ->collapsible()
@@ -118,10 +120,12 @@ class PatientForm
                             ->default(fn (): ?int => auth()->user()?->branches()->value('branches.id'))
                             ->preload(),
                         TextInput::make('satusehat_ihs_id')
-                            ->label('IHS Number (SATUSEHAT)')
+                            ->label('No. IHS SATUSEHAT')
                             ->helperText('Dicari otomatis dari NIK saat kunjungan dikirim, atau lewat tombol "Cari IHS SATUSEHAT" di halaman pasien.')
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->hiddenOn('create'),
                         Checkbox::make('consent_data_at')
+                            ->columnSpanFull()
                             ->label('Pasien menyetujui pemrosesan data pribadi (UU PDP)')
                             // State dari DB berupa tanggal persetujuan; di form baru berupa false. Jangan pakai filled(): filled(false) === true.
                             ->formatStateUsing(fn ($state): bool => $state !== null && $state !== false && $state !== '')

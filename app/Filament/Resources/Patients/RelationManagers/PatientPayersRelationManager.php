@@ -18,7 +18,7 @@ class PatientPayersRelationManager extends RelationManager
 {
     protected static string $relationship = 'patientPayers';
 
-    protected static ?string $title = 'Kepesertaan Penjamin';
+    protected static ?string $title = 'Kepesertaan penjamin';
 
     protected static ?string $modelLabel = 'kepesertaan';
 

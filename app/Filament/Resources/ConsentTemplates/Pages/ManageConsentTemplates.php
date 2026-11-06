@@ -12,6 +12,6 @@ class ManageConsentTemplates extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('Tambah template')];
+        return [CreateAction::make()->label('Buat template')];
     }
 }

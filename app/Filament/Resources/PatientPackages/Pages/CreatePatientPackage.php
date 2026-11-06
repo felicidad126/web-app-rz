@@ -6,6 +6,7 @@ use App\Filament\Resources\PatientPackages\PatientPackageResource;
 use App\Models\Package;
 use App\Models\Patient;
 use App\Services\Billing\PackageSales;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Support\Exceptions\Halt;
@@ -18,6 +19,8 @@ class CreatePatientPackage extends CreateRecord
 
     protected static ?string $title = 'Jual paket';
 
+    protected static bool $canCreateAnother = false;
+
     protected function handleRecordCreation(array $data): Model
     {
         try {
@@ -27,6 +30,11 @@ class CreatePatientPackage extends CreateRecord
 
             throw new Halt;
         }
+    }
+
+    protected function getCreateFormAction(): Action
+    {
+        return parent::getCreateFormAction()->label('Jual paket');
     }
 
     protected function getRedirectUrl(): string

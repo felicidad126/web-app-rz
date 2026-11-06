@@ -46,7 +46,7 @@ class ChairsRelationManager extends RelationManager
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
             ])
             ->headerActions([
-                CreateAction::make()->label('Tambah kursi'),
+                CreateAction::make()->label('Tambah kursi')->color('gray'),
             ])
             ->recordActions([
                 EditAction::make(),

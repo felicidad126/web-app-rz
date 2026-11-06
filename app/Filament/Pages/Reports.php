@@ -72,13 +72,14 @@ class Reports extends Page implements HasSchemas
         $class = fn (Get $get): ?string => ReportRegistry::find((string) $get('report'));
 
         return $schema->statePath('filters')->components([
-            Grid::make(['default' => 1, 'sm' => 2, 'lg' => 6])->schema([
-                Select::make('report')->label('Laporan')->options(fn (): array => ReportRegistry::options($this->user()))->required()->live()->columnSpan(['lg' => 2]),
+            // HP: laporan selebar layar, lalu filter dua-dua (Dari/Sampai berdampingan). Desktop: satu baris.
+            Grid::make(['default' => 2, 'lg' => 7])->schema([
+                Select::make('report')->label('Laporan')->options(fn (): array => ReportRegistry::options($this->user()))->required()->live()->columnSpan(['default' => 2, 'lg' => 2]),
                 DatePicker::make('from')->label('Dari')->native(false)->displayFormat('d/m/Y')->live()
                     ->visible(fn (Get $get): bool => ($c = $class($get)) === null || $c::usesPeriod()),
                 DatePicker::make('to')->label('Sampai')->native(false)->displayFormat('d/m/Y')->live()
                     ->visible(fn (Get $get): bool => ($c = $class($get)) === null || $c::usesPeriod()),
-                Select::make('branch')->label('Cabang')->options(fn (): array => BranchContext::options())->placeholder('Semua cabang')->live()
+                Select::make('branch')->label('Cabang')->options(fn (): array => BranchContext::options())->placeholder('Semua')->live()
                     ->visible(fn (): bool => count(BranchContext::options()) > 1),
                 Select::make('practitioner')->label('Dokter')->options(fn (): array => PractitionerOptions::all())->placeholder('Semua')->live()
                     ->visible(fn (Get $get): bool => $class($get) !== null && $class($get)::supportsPractitioner() && ! $class($get)::ownOnly($this->user()) && $get('group') !== 'method'),

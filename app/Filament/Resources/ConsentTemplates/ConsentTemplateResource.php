@@ -60,9 +60,9 @@ class ConsentTemplateResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->label('Nama')->searchable(),
+                TextColumn::make('name')->label('Nama')->searchable()->wrap(),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
-                TextColumn::make('updated_at')->label('Diubah')->dateTime('d/m/Y'),
+                TextColumn::make('updated_at')->label('Diubah')->date('d/m/Y')->visibleFrom('md'),
             ])
             ->recordActions([EditAction::make()]);
     }

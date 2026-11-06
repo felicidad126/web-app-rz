@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Appointments\Tables;
 
 use App\Enums\AppointmentStatus;
 use App\Enums\TreatmentCategory;
+use App\Filament\Clinic\CodeText;
 use App\Filament\Clinic\PractitionerOptions;
 use App\Filament\Resources\Appointments\AppointmentActions;
 use App\Models\Appointment;
@@ -16,6 +17,8 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\HtmlString;
 
 class AppointmentsTable
 {
@@ -25,6 +28,8 @@ class AppointmentsTable
             ->defaultSort('start_at')
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['patient', 'practitioner.user', 'chair', 'branch']))
             ->searchPlaceholder('Cari nama / No. RM pasien')
+            ->emptyStateHeading('Tidak ada janji temu')
+            ->emptyStateDescription('Ubah tanggal atau cabang di filter, atau buat janji baru.')
             ->columns([
                 TextColumn::make('start_at')
                     ->label('Waktu')
@@ -33,25 +38,26 @@ class AppointmentsTable
                     ->sortable(),
                 TextColumn::make('patient.name')
                     ->label('Pasien')
-                    ->description(fn (Appointment $record): string => $record->patient->rm_number)
+                    ->description(fn (Appointment $record): HtmlString => CodeText::code($record->patient->rm_number))
                     ->searchable(['name', 'rm_number']),
-                TextColumn::make('practitioner.user.name')->label('Dokter'),
-                TextColumn::make('chair.name')->label('Kursi')->placeholder('—'),
+                TextColumn::make('practitioner.user.name')->label('Dokter')->visibleFrom('md'),
+                TextColumn::make('chair.name')->label('Kursi')->placeholder('—')->visibleFrom('md'),
                 TextColumn::make('category')->label('Jenis')->badge()->color('gray')->placeholder('—')->visibleFrom('lg'),
                 TextColumn::make('reason')->label('Rencana')->limit(30)->placeholder('—')->visibleFrom('xl'),
-                TextColumn::make('status')->label('Status')->badge(),
+                TextColumn::make('status')->label('Status')->badge()->extraAttributes(['class' => 'klinik-status']),
                 TextColumn::make('branch.name')->label('Cabang')->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Filter::make('date')
                     ->label('Tanggal')
                     ->schema([
-                        DatePicker::make('from')->label('Dari')->native(false)->displayFormat('d/m/Y')->default(today()),
+                        DatePicker::make('from')->label('Dari')->native(false)->displayFormat('d/m/Y')->default(today()->toDateString()),
                         DatePicker::make('until')->label('Sampai')->native(false)->displayFormat('d/m/Y'),
                     ])
+                    // Nilai bawaan filter bisa "2026-11-06 00:00:00"; bandingkan tanggal saja (di SQLite string berjam membuat hari ini terlewat).
                     ->query(fn (Builder $query, array $data): Builder => $query
-                        ->when($data['from'] ?? null, fn (Builder $q, $date) => $q->whereDate('start_at', '>=', $date))
-                        ->when($data['until'] ?? null, fn (Builder $q, $date) => $q->whereDate('start_at', '<=', $date)))
+                        ->when($data['from'] ?? null, fn (Builder $q, $date) => $q->whereDate('start_at', '>=', Carbon::parse($date)->toDateString()))
+                        ->when($data['until'] ?? null, fn (Builder $q, $date) => $q->whereDate('start_at', '<=', Carbon::parse($date)->toDateString())))
                     ->indicateUsing(fn (array $data): ?string => ($data['from'] ?? null) ? 'Mulai '.date('d/m/Y', strtotime($data['from'])) : null),
                 SelectFilter::make('status')->label('Status')->options(AppointmentStatus::class)->multiple(),
                 SelectFilter::make('practitioner_id')->label('Dokter')->options(fn (): array => PractitionerOptions::dentists()),

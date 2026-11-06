@@ -11,6 +11,7 @@ use App\Support\Money;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
@@ -40,7 +41,20 @@ class EditPayslip extends EditRecord
 
     public function form(Schema $schema): Schema
     {
-        return parent::form($schema)->disabled(! $this->canEditLines());
+        if ($this->canEditLines()) {
+            return parent::form($schema);
+        }
+
+        // Slip final/dibayar (atau tanpa izin ubah): tabel baca saja dengan rupiah terformat, bukan form nonaktif.
+        $payslip = $this->payslip();
+        $payslip->loadMissing('lines');
+
+        return $schema->components([View::make('filament.payroll.payslip-lines')->viewData(['payslip' => $payslip])]);
+    }
+
+    public function getBreadcrumb(): string
+    {
+        return $this->canEditLines() ? 'Ubah' : 'Lihat';
     }
 
     protected function afterSave(): void

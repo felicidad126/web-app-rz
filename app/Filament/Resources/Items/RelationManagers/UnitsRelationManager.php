@@ -19,7 +19,7 @@ class UnitsRelationManager extends RelationManager
 {
     protected static string $relationship = 'units';
 
-    protected static ?string $title = 'Konversi Satuan';
+    protected static ?string $title = 'Konversi satuan';
 
     protected static ?string $modelLabel = 'konversi satuan';
 
@@ -60,7 +60,7 @@ class UnitsRelationManager extends RelationManager
                     ->formatStateUsing(fn (ItemUnit $record): string => '1 '.$record->unit->name.' = '.rtrim(rtrim(number_format((float) $record->factor_to_base, 4, ',', '.'), '0'), ',').' '.$item->baseUnit->name),
             ])
             ->headerActions([
-                CreateAction::make()->label('Tambah konversi'),
+                CreateAction::make()->label('Tambah konversi')->color('gray'),
             ])
             ->recordActions([
                 EditAction::make(),

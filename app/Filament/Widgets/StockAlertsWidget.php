@@ -24,6 +24,14 @@ class StockAlertsWidget extends StatsOverviewWidget
 
     protected ?string $heading = 'Stok & lab';
 
+    /** Dua kartu per baris di HP; di layar lebar semua kartu (3–5) dalam satu baris. */
+    protected function getColumns(): int|array|null
+    {
+        $count = count($this->getCachedStats());
+
+        return ['default' => 2, '@3xl' => min(3, $count), '@5xl' => $count, '!@lg' => $count];
+    }
+
     public static function canView(): bool
     {
         return (auth()->user()?->can('View:Stock') ?? false) && BranchContext::id() !== null;
@@ -75,8 +83,12 @@ class StockAlertsWidget extends StatsOverviewWidget
             $soon = (clone $lab)->whereBetween('due_at', [today()->toDateString(), today()->addDays(3)->toDateString()])->count();
 
             $stats[] = Stat::make('Order lab terlambat', $late)
-                ->description($soon > 0 ? $soon.' jatuh tempo ≤ 3 hari' : 'Belum diterima dari lab')
-                ->color($late > 0 ? 'danger' : ($soon > 0 ? 'warning' : 'gray'))
+                ->description(match (true) {
+                    $late > 0 => $late.' lewat jatuh tempo'.($soon > 0 ? ' · '.$soon.' jatuh tempo ≤ 3 hari' : ''),
+                    $soon > 0 => $soon.' jatuh tempo ≤ 3 hari',
+                    default => 'Belum diterima dari lab',
+                })
+                ->color($late > 0 || $soon > 0 ? 'warning' : 'gray')
                 ->url(LabOrderResource::getUrl('index'));
         }
 

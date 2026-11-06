@@ -15,7 +15,7 @@
 
     <x-filament::section heading="Riwayat catatan" :description="count($entries).' catatan terakhir'">
         <div style="overflow-x: auto">
-            <table style="width: 100%; border-collapse: collapse; font-size: 14px">
+            <table style="width: 100%; min-width: 680px; border-collapse: collapse; font-size: 14px">
                 <thead>
                     <tr style="text-align: left; color: #71717a; font-size: 12px">
                         <th style="padding: 6px 8px; font-weight: 500">Tanggal</th>
@@ -31,11 +31,17 @@
                     @forelse ($entries as $entry)
                         <tr style="border-top: 1px solid #f4f4f5">
                             <td style="padding: 8px; white-space: nowrap">{{ $entry->created_at->format('d/m/Y') }}</td>
-                            <td style="padding: 8px; font-family: ui-monospace, monospace">{{ $entry->tooth_number }}</td>
-                            <td style="padding: 8px">{{ $entry->surface?->value ?? 'Seluruh gigi' }}</td>
-                            <td style="padding: 8px">{{ $entry->condition_code }} · {{ $entry->condition->name }}</td>
-                            <td style="padding: 8px"><x-filament::badge :color="$entry->entry_type->getColor()">{{ $entry->entry_type->getLabel() }}</x-filament::badge></td>
-                            <td style="padding: 8px; font-family: ui-monospace, monospace; font-size: 13px">{{ $entry->visit?->visit_number ?? 'Kondisi awal' }}</td>
+                            <td class="klinik-mono" style="padding: 8px">{{ $entry->tooth_number }}</td>
+                            <td style="padding: 8px; white-space: nowrap">{{ $entry->surface?->value ?? 'Seluruh gigi' }}</td>
+                            <td style="padding: 8px"><span class="klinik-mono">{{ $entry->condition_code }}</span> · {{ $entry->condition->name }}</td>
+                            <td style="padding: 8px; white-space: nowrap"><x-filament::badge :color="$entry->entry_type->getColor()">{{ $entry->entry_type->getLabel() }}</x-filament::badge></td>
+                            <td style="padding: 8px; white-space: nowrap">
+                                @if ($entry->visit)
+                                    <span class="klinik-mono">{{ $entry->visit->visit_number }}</span>
+                                @else
+                                    <span style="color: #52525b">Kondisi awal</span>
+                                @endif
+                            </td>
                             <td style="padding: 8px; color: #52525b">{{ $entry->creator?->name }}</td>
                         </tr>
                     @empty

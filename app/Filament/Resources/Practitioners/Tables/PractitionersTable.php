@@ -22,21 +22,22 @@ class PractitionersTable
         return $table
             ->columns([
                 TextColumn::make('user.name')->label('Nama')->description(fn (Practitioner $record): ?string => $record->specialty)->searchable()->sortable(),
-                TextColumn::make('type')->label('Jenis')->badge(),
-                TextColumn::make('sip_number')->label('No. SIP')->placeholder('-')->visibleFrom('md'),
+                TextColumn::make('type')->label('Jenis')->badge()->color('gray'),
+                TextColumn::make('sip_number')->label('No. SIP')->fontFamily('mono')->placeholder('—')->visibleFrom('md'),
                 TextColumn::make('sip_expired_at')
                     ->label('SIP berlaku')
                     ->date('d/m/Y')
                     ->sortable()
-                    ->placeholder('-')
-                    ->badge()
-                    ->color(fn (Practitioner $record): string => match (true) {
-                        $record->sip_expired_at === null => 'gray',
+                    ->placeholder('—')
+                    // Warna hanya bila perlu perhatian: kedaluwarsa (merah) atau segera habis (oranye).
+                    ->color(fn (Practitioner $record): ?string => match (true) {
+                        $record->sip_expired_at === null => null,
                         $record->isSipExpired() => 'danger',
                         $record->sip_expired_at->lte(now()->addDays($warningDays)) => 'warning',
-                        default => 'success',
-                    }),
-                TextColumn::make('satusehat_ihs_id')->label('IHS ID')->placeholder('Belum')->toggleable(isToggledHiddenByDefault: true),
+                        default => null,
+                    })
+                    ->weight(fn (Practitioner $record): ?string => $record->sip_expired_at?->lte(now()->addDays($warningDays)) ? 'medium' : null),
+                TextColumn::make('satusehat_ihs_id')->label('ID IHS')->fontFamily('mono')->placeholder('Belum')->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('type')->label('Jenis')->options(PractitionerType::class),

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Packages;
 
 use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Packages\Pages\ManagePackages;
+use App\Filament\Support\MoneyInput;
 use App\Filament\Support\NavGroup;
 use App\Models\Package;
 use App\Models\Treatment;
@@ -53,7 +54,7 @@ class PackageResource extends Resource
             ->components([
                 TextInput::make('code')->label('Kode')->required()->maxLength(20)->unique(ignoreRecord: true),
                 TextInput::make('name')->label('Nama paket')->required()->maxLength(255),
-                TextInput::make('price')->label('Harga')->prefix('Rp')->numeric()->minValue(0)->required(),
+                MoneyInput::make('price')->label('Harga')->minValue(0)->required(),
                 TextInput::make('validity_days')->label('Masa berlaku')->suffix('hari')->numeric()->minValue(1)->helperText('Kosongkan bila tidak kedaluwarsa.'),
                 Textarea::make('description')->label('Termasuk / tidak termasuk')->rows(2)->columnSpanFull(),
                 Repeater::make('items')
@@ -83,8 +84,8 @@ class PackageResource extends Resource
                 TextColumn::make('name')->label('Nama')->searchable()
                     ->description(fn (Package $record): string => $record->items->map(fn ($i): string => $i->treatment->name.' ×'.$i->quota)->implode(', ')),
                 TextColumn::make('price')->label('Harga')->alignEnd()->formatStateUsing(fn (int $state): string => Money::format($state, false)),
-                TextColumn::make('validity_days')->label('Berlaku')->suffix(' hari')->placeholder('—'),
-                IconColumn::make('is_active')->label('Aktif')->boolean(),
+                TextColumn::make('validity_days')->label('Berlaku')->alignEnd()->suffix(' hari')->placeholder('—')->visibleFrom('md'),
+                IconColumn::make('is_active')->label('Aktif')->boolean()->visibleFrom('md'),
             ])
             ->filters([TernaryFilter::make('is_active')->label('Aktif')])
             ->recordActions([EditAction::make()]);

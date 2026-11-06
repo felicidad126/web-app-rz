@@ -67,8 +67,8 @@ class StockOpnameResource extends Resource
             ->columns([
                 TextColumn::make('number')->label('No.')->fontFamily('mono')
                     ->description(fn (StockOpname $record): string => $record->started_at->format('d/m/Y H:i')),
-                TextColumn::make('branch.name')->label('Cabang'),
-                TextColumn::make('lines_count')->label('Baris')->alignCenter(),
+                TextColumn::make('branch.name')->label('Cabang')->visibleFrom('md'),
+                TextColumn::make('lines_count')->label('Baris')->alignEnd()->visibleFrom('md'),
                 TextColumn::make('creator.name')->label('Dihitung oleh')->visibleFrom('md'),
                 TextColumn::make('status')->label('Status')->badge()
                     ->description(fn (StockOpname $record): ?string => $record->rejected_reason && $record->isCounting() ? 'Dikembalikan: '.$record->rejected_reason : null),
