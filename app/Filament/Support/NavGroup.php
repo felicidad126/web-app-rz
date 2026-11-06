@@ -27,9 +27,11 @@ final class NavGroup
 
     public const SETTINGS = 'Pengaturan & Akses';
 
+    public const HELP = 'Bantuan';
+
     /** @return list<string> */
     public static function ordered(): array
     {
-        return [self::DAILY, self::REPORTS, self::PATIENTS, self::CLINICAL, self::BILLING, self::PAYROLL, self::OPERATIONS, self::CLINICAL_MASTER, self::INVENTORY, self::ORGANIZATION, self::SETTINGS];
+        return [self::DAILY, self::REPORTS, self::PATIENTS, self::CLINICAL, self::BILLING, self::PAYROLL, self::OPERATIONS, self::CLINICAL_MASTER, self::INVENTORY, self::ORGANIZATION, self::SETTINGS, self::HELP];
     }
 }

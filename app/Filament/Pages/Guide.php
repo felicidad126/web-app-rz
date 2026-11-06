@@ -2,11 +2,13 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Support\NavGroup;
 use App\Models\User;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Str;
+use UnitEnum;
 
 /**
  * Panduan singkat per peran untuk pelatihan & rollout (Fase 7). Isi dari resources/guides/*.md agar mudah diubah
@@ -29,7 +31,9 @@ class Guide extends Page
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQuestionMarkCircle;
 
-    protected static ?int $navigationSort = 1000;
+    protected static string|UnitEnum|null $navigationGroup = NavGroup::HELP;
+
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $navigationLabel = 'Panduan';
 

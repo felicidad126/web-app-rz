@@ -1,0 +1,23 @@
+/*
+ * Fondasi UI (mockup v2) di atas tema bawaan Filament. Hanya mengatur tipografi & kepadatan;
+ * warna lewat ->colors() di AdminPanelProvider. File statis, jadi tidak perlu build aset.
+ *
+ * - Judul halaman 22/600, judul panel 14–16/600, label kolom tabel 12/500 abu-abu.
+ * - Angka rata kanan memakai angka tabular agar mudah dipindai.
+ */
+
+/* Judul halaman */
+.fi-header-heading { font-size: 1.375rem; line-height: 1.875rem; font-weight: 600; letter-spacing: -0.01em; }
+.fi-header-subheading { font-size: 0.875rem; line-height: 1.375rem; }
+
+/* Tabel: label kolom kecil & tenang, angka tabular */
+.fi-ta-header-cell { font-size: 0.75rem; font-weight: 500; color: var(--gray-500); padding-block: 0.625rem; }
+.fi-ta-header-cell .fi-ta-header-cell-sort-btn { font-weight: 500; }
+.fi-ta-table, .fi-in-entry, .fi-wi-stats-overview-stat-value, .fi-wi-table { font-variant-numeric: tabular-nums; }
+.dark .fi-ta-header-cell { color: var(--gray-400); }
+
+/* Kartu statistik: angka tegas tapi tidak berlebihan */
+.fi-wi-stats-overview-stat-value { font-size: 1.75rem; line-height: 2.125rem; font-weight: 600; }
+
+/* Judul grup navigasi lebih kecil, mirip label kolom */
+.fi-sidebar-group-label { font-size: 0.75rem; letter-spacing: 0.02em; }
