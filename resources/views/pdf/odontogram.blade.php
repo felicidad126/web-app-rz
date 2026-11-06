@@ -17,14 +17,16 @@
     <h1>Odontogram</h1>
     <div class="muted">{{ $patient->name }} · {{ $patient->rm_number }} · {{ $patient->birth_date->format('d/m/Y') }} · dicetak {{ now()->format('d/m/Y H:i') }}</div>
 
-    <div style="margin: 14px 0">@include('clinic.odontogram-grid', ['teeth' => $teeth])</div>
+    <div style="margin: 14px 0; text-align: center"><img src="data:image/svg+xml;base64,{{ $svg }}" style="width: 100%; max-width: 180mm"></div>
 
-    <div class="muted">Hitam: kondisi saat ini · Merah: rencana. Permukaan: M mesial, O oklusal/insisal, D distal, V bukal/labial, L lingual/palatal.</div>
+    <div class="muted">Warna permukaan = kode kondisi (lihat riwayat) · bingkai putus-putus merah: rencana · ✕ hilang · V sisa akar · bingkai tebal: mahkota/jembatan/implan. Permukaan: M mesial, O oklusal/insisal, D distal, V bukal/labial, L lingual/palatal.</div>
     <p><strong>DMF-T</strong>: D {{ $indices['D'] }} · M {{ $indices['M'] }} · F {{ $indices['F'] }} = {{ $indices['total'] }}
         @if ($indices['total_primary'] > 0)
             &nbsp; · &nbsp;<strong>def-t</strong>: d {{ $indices['d'] }} · e {{ $indices['e'] }} · f {{ $indices['f'] }} = {{ $indices['total_primary'] }}
         @endif
     </p>
+
+    @include('clinic.oral-exam-summary', ['exam' => $exam, 'style' => 'font-size: 9pt; margin: 8px 0'])
 
     <table class="list">
         <thead><tr><th>Tanggal</th><th>Gigi</th><th>Permukaan</th><th>Kode</th><th>Jenis</th><th>Kunjungan</th><th>Catatan</th></tr></thead>

@@ -1,18 +1,17 @@
 <x-filament-panels::page>
     @include('filament.clinic.patient-banner', ['patient' => $patient])
 
-    <x-filament::section heading="Status terkini" description="Hitam: kondisi saat ini · Merah: rencana yang belum dikerjakan. Gigi susu ditampilkan lebih pucat.">
-        <div style="overflow-x: auto">
-            @include('clinic.odontogram-grid', ['teeth' => $teeth])
-        </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 14px; font-size: 14px">
-            <span><strong>DMF-T</strong>: D {{ $indices['D'] }} · M {{ $indices['M'] }} · F {{ $indices['F'] }} = <strong>{{ $indices['total'] }}</strong></span>
-            @if ($indices['total_primary'] > 0)
-                <span><strong>def-t</strong>: d {{ $indices['d'] }} · e {{ $indices['e'] }} · f {{ $indices['f'] }} = <strong>{{ $indices['total_primary'] }}</strong></span>
-            @endif
-            <span style="color: #52525b; font-size: 13px">Dihitung otomatis dari kode car/rrx (D), mis (M), dan restorasi (F). Cocokkan dengan dokter klinik.</span>
-        </div>
-    </x-filament::section>
+    @include('clinic.odontogram-chart', ['chart' => $chart, 'editable' => $editable, 'withVisit' => false])
+    <p style="font-size: 12px; color: #52525b; margin: -8px 0 0">
+        Catatan dari halaman ini adalah <strong>kondisi awal</strong> (tanpa kunjungan). Catatan saat pemeriksaan dibuat di tab Odontogram kunjungan.
+        DMF-T dihitung otomatis dari kode car/rrx (D), mis (M), dan restorasi (F).
+    </p>
+
+    @if ($exam)
+        <x-filament::section>
+            @include('clinic.oral-exam-summary', ['exam' => $exam, 'style' => 'font-size: 14px'])
+        </x-filament::section>
+    @endif
 
     <x-filament::section heading="Riwayat catatan" :description="count($entries).' catatan terakhir'">
         <div style="overflow-x: auto">

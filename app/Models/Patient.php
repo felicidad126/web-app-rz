@@ -47,6 +47,8 @@ class Patient extends Model
         static::creating(function (Patient $patient): void {
             if (blank($patient->rm_number)) {
                 $patient->rm_number = NumberSequence::nextRmNumber();
+            } else {
+                NumberSequence::reserveRmNumber($patient->rm_number);
             }
 
             if ($patient->created_by === null && auth()->check()) {
@@ -77,6 +79,12 @@ class Patient extends Model
     public function patientPayers(): HasMany
     {
         return $this->hasMany(PatientPayer::class);
+    }
+
+    /** @return HasMany<OralExamination, $this> */
+    public function oralExaminations(): HasMany
+    {
+        return $this->hasMany(OralExamination::class);
     }
 
     /** @return HasMany<Visit, $this> */

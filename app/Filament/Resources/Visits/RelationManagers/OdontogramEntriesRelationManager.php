@@ -5,9 +5,11 @@ namespace App\Filament\Resources\Visits\RelationManagers;
 use App\Enums\OdontogramEntryType;
 use App\Enums\OdontogramScope;
 use App\Enums\ToothSurface;
+use App\Filament\Clinic\Concerns\EditsOdontogramChart;
 use App\Filament\Resources\Patients\PatientResource;
 use App\Models\OdontogramCondition;
 use App\Models\OdontogramEntry;
+use App\Models\Patient;
 use App\Models\Visit;
 use App\Support\Teeth;
 use Closure;
@@ -22,10 +24,13 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 
 class OdontogramEntriesRelationManager extends ClinicalRelationManager
 {
+    use EditsOdontogramChart;
+
     protected static string $relationship = 'odontogramEntries';
 
     protected static ?string $title = 'Odontogram';
@@ -84,10 +89,28 @@ class OdontogramEntriesRelationManager extends ClinicalRelationManager
         return $code ? OdontogramCondition::where('code', $code)->value('applies_to') : null;
     }
 
+    protected function odontogramPatient(): Patient
+    {
+        return Patient::query()->findOrFail($this->getOwnerRecord()->getAttribute('patient_id'));
+    }
+
+    protected function odontogramVisit(): ?Visit
+    {
+        /** @var Visit $visit */
+        $visit = $this->getOwnerRecord();
+
+        return $visit;
+    }
+
     public function table(Table $table): Table
     {
         return $table
-            ->description('Catatan baru tidak menimpa riwayat. Status terkini per gigi dihitung dari catatan terakhir.')
+            ->header(fn (): View => view('clinic.odontogram-chart', [
+                'chart' => $this->odontogramChartData(),
+                'editable' => ! $this->isReadOnly(),
+                'withVisit' => true,
+            ]))
+            ->description('Catatan baru tidak menimpa riwayat. Status terkini per gigi dihitung dari catatan terakhir. Bisa juga dicatat lewat tombol "Tambah catatan".')
             ->defaultSort('id', 'desc')
             ->modifyQueryUsing(fn (Builder $query) => $query->with('condition'))
             ->columns([

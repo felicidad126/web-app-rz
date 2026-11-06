@@ -105,6 +105,13 @@ dataset('akses', [
     ['kasir', '/laporan', 200],
     ['kasir', '/jasa-dokter', 403],
     ['kasir', '/briefing-pagi', 403],
+    // Fase 7: kesiapan cabang (owner/admin), panduan untuk semua peran.
+    ['owner', '/kesiapan-cabang', 200],
+    ['admin', '/kesiapan-cabang', 200],
+    ['dokter', '/kesiapan-cabang', 403],
+    ['kasir', '/kesiapan-cabang', 403],
+    ['kasir', '/panduan', 200],
+    ['perawat', '/panduan', 200],
 ]);
 
 it('membatasi halaman sesuai matriks akses', function (string $role, string $url, int $status) {

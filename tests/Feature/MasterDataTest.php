@@ -71,6 +71,9 @@ it('membaca format tanggal dan jenis kelamin dari CSV sistem lama', function (st
     ['17/05/1990', '1990-05-17'],
     ['17-05-1990', '1990-05-17'],
     ['1990-05-17', '1990-05-17'],
+    ['17 Mei 1990', '1990-05-17'],
+    ['Kamis,03-Juli-2025', '2025-07-03'],
+    ['bukan tanggal', 'bukan tanggal'],
     ['', null],
 ]);
 

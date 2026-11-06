@@ -614,12 +614,12 @@ erDiagram
 - **DoD:** rekap komisi bulan pertama cocok dengan perhitungan manual klinik.
 
 ### Fase 7: Polish, Odontogram Visual & Rollout (Minggu 15–16)
-- [ ] Komponen **odontogram SVG interaktif** (Alpine.js) di atas data yang sudah ada.
-- [ ] DMF-T otomatis + form OHI-S.
-- [ ] Optimasi tampilan mobile/tablet, uji Android (Chrome) & iOS (Safari).
-- [ ] Migrasi data pasien lama (jika ada).
-- [ ] Pelatihan per role + panduan singkat.
-- [ ] Rollout ke cabang lain.
+- [x] Komponen **odontogram SVG interaktif** (Alpine.js) di atas data yang sudah ada.
+- [x] DMF-T otomatis + form OHI-S.
+- [x] Optimasi tampilan mobile/tablet, uji Android (Chrome) & iOS (Safari). *(Uji Safari di iPhone/iPad asli menunggu klinik, lihat `docs/11` §4.)*
+- [x] Migrasi data pasien lama (jika ada). *(Perintah + uji coba dengan workbook klinik; migrasi final menunggu berkas final.)*
+- [x] Pelatihan per role + panduan singkat. *(Menu Panduan + rencana sesi; pelaksanaan pelatihan menunggu jadwal klinik.)*
+- [ ] Rollout ke cabang lain. *(Alat siap: halaman Kesiapan cabang; pelaksanaan di klinik.)*
 - **DoD:** semua cabang aktif, dan tidak ada bug kritis selama 2 minggu.
 
 ### Backlog (setelah MVP)

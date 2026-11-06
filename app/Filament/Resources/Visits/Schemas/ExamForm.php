@@ -4,20 +4,28 @@ namespace App\Filament\Resources\Visits\Schemas;
 
 use App\Enums\DiagnosisType;
 use App\Enums\ItemType;
+use App\Enums\Occlusion;
+use App\Enums\Palate;
+use App\Enums\TorusMandibularis;
+use App\Enums\TorusPalatinus;
 use App\Enums\TreatmentPlanItemStatus;
 use App\Enums\TreatmentPlanStatus;
 use App\Filament\Clinic\PractitionerOptions;
 use App\Filament\Clinic\SurfacesField;
 use App\Models\Icd10Code;
 use App\Models\Item;
+use App\Models\Patient;
 use App\Models\Treatment;
 use App\Models\TreatmentPlanItem;
 use App\Models\Visit;
+use App\Services\Clinic\OdontogramChart;
+use App\Services\Clinic\OralHygiene;
 use App\Support\Teeth;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
@@ -25,6 +33,7 @@ use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontWeight;
 
 /**
  * Form pemeriksaan satu kunjungan: SOAP, tanda vital, diagnosis ICD-10, tindakan ICD-9-CM, resep.
@@ -77,6 +86,7 @@ class ExamForm
                                     ]),
                             ]),
                     ]),
+                self::oralExamination($visit),
                 Section::make('Tindakan (ICD-9-CM)')
                     ->description('Tarif dikunci (snapshot) saat tindakan disimpan.')
                     ->schema([
@@ -161,6 +171,77 @@ class ExamForm
     }
 
     /** @return array<string, string> */
+    /** Pemeriksaan intraoral & OHI-S (Fase 7). Hanya dibuat bila ada isian. */
+    public static function oralExamination(Visit $visit): Group
+    {
+        $score = fn (string $tooth, string $kind, string $label): ToggleButtons => ToggleButtons::make("ohis_scores.{$tooth}.{$kind}")
+            ->label($label)
+            ->options(['0' => '0', '1' => '1', '2' => '2', '3' => '3'])
+            ->inline()
+            ->grouped()
+            ->live();
+
+        $teeth = collect(OralHygiene::INDEX_TEETH)->map(fn (string $surface, int|string $tooth): Group => Group::make([
+            Text::make($tooth.' · '.$surface)->weight(FontWeight::SemiBold),
+            $score((string) $tooth, 'debris', 'Debris'),
+            $score((string) $tooth, 'calculus', 'Kalkulus'),
+        ]))->values()->all();
+
+        return Group::make()
+            ->relationship('oralExamination', condition: fn (?array $state): bool => self::hasOralExamData($state))
+            ->schema([
+                Section::make('Pemeriksaan intraoral & OHI-S')
+                    ->description('Isi bila diperiksa. OHI-S (Greene & Vermillion) dihitung otomatis dari skor 0–3 enam gigi indeks; gigi indeks yang hilang dikosongkan.')
+                    ->collapsible()
+                    ->schema([
+                        Grid::make(['default' => 2, 'md' => 3, 'xl' => 6])->schema([
+                            Select::make('occlusion')->label('Oklusi')->placeholder('—')->options(Occlusion::class),
+                            Select::make('torus_palatinus')->label('Torus palatinus')->placeholder('—')->options(TorusPalatinus::class),
+                            Select::make('torus_mandibularis')->label('Torus mandibularis')->placeholder('—')->options(TorusMandibularis::class),
+                            Select::make('palate')->label('Palatum')->placeholder('—')->options(Palate::class),
+                            TextInput::make('diastema')->label('Diastema')->placeholder('Tidak ada')->maxLength(255),
+                            TextInput::make('anomaly')->label('Gigi anomali')->placeholder('Tidak ada')->maxLength(255),
+                        ]),
+                        Grid::make(['default' => 1, 'sm' => 2, 'lg' => 3])->schema($teeth),
+                        Text::make(fn (Get $get): string => self::ohisSummary($get('ohis_scores')))->weight(FontWeight::SemiBold),
+                        Text::make(fn (): string => self::dmftSummary($visit))->color('gray'),
+                    ]),
+            ]);
+    }
+
+    /** @param array<string, mixed>|null $state */
+    public static function hasOralExamData(?array $state): bool
+    {
+        if ($state === null) {
+            return false;
+        }
+
+        $scores = collect($state['ohis_scores'] ?? [])->flatten()->filter(fn ($v): bool => $v !== null && $v !== '');
+
+        return $scores->isNotEmpty() || collect($state)->except('ohis_scores')->filter(fn ($v): bool => filled($v))->isNotEmpty();
+    }
+
+    /** @param array<int|string, array<string, mixed>>|null $scores */
+    public static function ohisSummary(?array $scores): string
+    {
+        $r = OralHygiene::calculate($scores);
+
+        if ($r['ohis'] === null) {
+            return 'OHI-S: belum diskor.';
+        }
+
+        return 'DI-S '.OralHygiene::format($r['debris_index']).' · CI-S '.OralHygiene::format($r['calculus_index'])
+            .' · OHI-S '.OralHygiene::format($r['ohis']).' ('.$r['category'].')';
+    }
+
+    public static function dmftSummary(Visit $visit): string
+    {
+        $i = (new OdontogramChart(Patient::query()->findOrFail($visit->patient_id)))->indices();
+
+        return 'DMF-T dari odontogram: D '.$i['D'].' · M '.$i['M'].' · F '.$i['F'].' = '.$i['total']
+            .($i['total_primary'] > 0 ? ' · def-t '.$i['total_primary'] : '');
+    }
+
     public static function searchIcd10(string $search): array
     {
         return Icd10Code::query()

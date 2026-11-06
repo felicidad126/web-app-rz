@@ -112,6 +112,12 @@ class Visit extends Model
         return $this->hasOne(MedicalRecord::class);
     }
 
+    /** @return HasOne<OralExamination, $this> */
+    public function oralExamination(): HasOne
+    {
+        return $this->hasOne(OralExamination::class);
+    }
+
     /** @return HasMany<VisitProcedure, $this> */
     public function procedures(): HasMany
     {

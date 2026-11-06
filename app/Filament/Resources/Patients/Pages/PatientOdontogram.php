@@ -3,11 +3,13 @@
 namespace App\Filament\Resources\Patients\Pages;
 
 use App\Enums\OdontogramScope;
+use App\Filament\Clinic\Concerns\EditsOdontogramChart;
 use App\Filament\Resources\Patients\PatientResource;
 use App\Filament\Resources\Visits\RelationManagers\OdontogramEntriesRelationManager;
 use App\Models\OdontogramCondition;
 use App\Models\OdontogramEntry;
 use App\Models\Patient;
+use App\Models\Visit;
 use App\Services\Clinic\OdontogramChart;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -22,6 +24,7 @@ use Illuminate\Contracts\Support\Htmlable;
  */
 class PatientOdontogram extends Page
 {
+    use EditsOdontogramChart;
     use InteractsWithRecord;
 
     protected static string $resource = PatientResource::class;
@@ -56,10 +59,26 @@ class PatientOdontogram extends Page
 
         return [
             'patient' => $patient,
-            'teeth' => $chart->teeth(),
+            'chart' => $this->odontogramChartData(),
+            'editable' => $this->canEditOdontogramChart(),
             'indices' => $chart->indices(),
+            'exam' => $patient->oralExaminations()->latest('id')->first(),
             'entries' => $patient->odontogramEntries()->with(['condition', 'visit', 'creator'])->latest('id')->limit(100)->get(),
         ];
+    }
+
+    protected function odontogramPatient(): Patient
+    {
+        /** @var Patient $patient */
+        $patient = $this->getRecord();
+
+        return $patient;
+    }
+
+    /** Catatan dari halaman pasien adalah kondisi awal (tanpa kunjungan). */
+    protected function odontogramVisit(): ?Visit
+    {
+        return null;
     }
 
     protected function getHeaderActions(): array

@@ -78,6 +78,41 @@ final class NumberSequence
         return 'LAB-'.$period.'-'.str_pad((string) self::next('lab', $period), 4, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * Majukan urutan minimal ke $number (tidak pernah mundur). Dipakai saat nomor diisi dari data lama.
+     */
+    public static function advanceTo(string $key, int $number, string $scope = ''): void
+    {
+        DB::transaction(function () use ($key, $scope, $number): void {
+            DB::table('number_sequences')->insertOrIgnore([
+                'key' => $key,
+                'scope' => $scope,
+                'last_number' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::table('number_sequences')
+                ->where('key', $key)
+                ->where('scope', $scope)
+                ->where('last_number', '<', $number)
+                ->update(['last_number' => $number, 'updated_at' => now()]);
+        });
+    }
+
+    /**
+     * No. RM yang diisi manual/migrasi dengan pola awalan + angka (mis. MR000123) memajukan urutan RM,
+     * agar pasien baru tidak mendapat nomor yang sudah terpakai.
+     */
+    public static function reserveRmNumber(string $rm): void
+    {
+        $prefix = preg_quote((string) config('clinic.rm_number.prefix'), '/');
+
+        if (preg_match('/^'.$prefix.'(\d+)$/', $rm, $m)) {
+            self::advanceTo('rm', (int) $m[1]);
+        }
+    }
+
     public static function nextRmNumber(): string
     {
         $number = self::next('rm');

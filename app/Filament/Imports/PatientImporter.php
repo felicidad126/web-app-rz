@@ -2,18 +2,18 @@
 
 namespace App\Filament\Imports;
 
-use App\Enums\Gender;
 use App\Filament\Imports\Concerns\IndonesianImportNotification;
 use App\Models\Patient;
-use Carbon\Carbon;
+use App\Services\Patients\LegacyValue;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
-use Throwable;
 
 /**
  * Import pasien dari sistem lama (CSV).
  *
  * Jika kolom no_rm diisi, nomor RM lama dipertahankan dan baris dengan nomor RM yang sama akan di-update.
+ * Untuk berkas Excel klinik yang berantakan (NIK rusak, umur tanpa tanggal lahir, baris lanjutan) pakai perintah
+ * `php artisan patients:migrate-legacy` yang punya mode uji coba dan laporan masalah.
  */
 class PatientImporter extends Importer
 {
@@ -29,7 +29,8 @@ class PatientImporter extends Importer
             ImportColumn::make('rm_number')
                 ->label('No. RM')
                 ->helperText('Opsional. Kosongkan agar dibuat otomatis.')
-                ->guess(['no_rm', 'rm', 'nomor_rm'])
+                ->guess(['no_rm', 'rm', 'nomor_rm', 'nomor_mr'])
+                ->castStateUsing(fn (?string $state): ?string => LegacyValue::rm($state))
                 ->rules(['nullable', 'max:30']),
             ImportColumn::make('name')
                 ->label('Nama')
@@ -46,7 +47,7 @@ class PatientImporter extends Importer
                 ->guess(['tempat_lahir']),
             ImportColumn::make('birth_date')
                 ->label('Tanggal lahir')
-                ->helperText('Format dd/mm/yyyy atau yyyy-mm-dd.')
+                ->helperText('Format dd/mm/yyyy, yyyy-mm-dd, atau "17 Mei 1990".')
                 ->guess(['tanggal_lahir', 'tgl_lahir'])
                 ->requiredMapping()
                 ->castStateUsing(fn (?string $state): ?string => self::parseDate($state))
@@ -61,6 +62,7 @@ class PatientImporter extends Importer
             ImportColumn::make('phone')
                 ->label('No. HP')
                 ->guess(['hp', 'no_hp', 'telepon', 'telp'])
+                ->castStateUsing(fn (?string $state): ?string => LegacyValue::phone($state)[0] ?? (blank($state) ? null : $state))
                 ->rules(['nullable', 'max:30']),
             ImportColumn::make('email')
                 ->rules(['nullable', 'email', 'max:255']),
@@ -88,33 +90,18 @@ class PatientImporter extends Importer
         return new Patient;
     }
 
+    /** Tanggal bebas format (lihat LegacyValue::date); bila tidak terbaca, nilai asli dikembalikan agar ditolak validasi. */
     public static function parseDate(?string $state): ?string
     {
         if (blank($state)) {
             return null;
         }
 
-        foreach (['d/m/Y', 'd-m-Y', 'Y-m-d', 'd/m/y'] as $format) {
-            try {
-                $date = Carbon::createFromFormat('!'.$format, trim($state));
-
-                if ($date instanceof Carbon && $date->format($format) === trim($state)) {
-                    return $date->toDateString();
-                }
-            } catch (Throwable) {
-                // coba format berikutnya
-            }
-        }
-
-        return $state;
+        return LegacyValue::date($state)?->toDateString() ?? $state;
     }
 
     public static function parseGender(?string $state): ?string
     {
-        return match (strtolower(trim((string) $state))) {
-            'l', 'lk', 'laki-laki', 'laki laki', 'pria', 'male', 'm' => Gender::Male->value,
-            'p', 'pr', 'perempuan', 'wanita', 'female', 'f', 'w' => Gender::Female->value,
-            default => $state,
-        };
+        return LegacyValue::gender($state)->value ?? $state;
     }
 }

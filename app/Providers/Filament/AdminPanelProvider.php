@@ -67,7 +67,7 @@ class AdminPanelProvider extends PanelProvider
                     ->navigationLabel('Peran & Hak Akses')
                     ->navigationSort(2),
             ])
-            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => Blade::render('<x-pwa-head />'))
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => Blade::render('<x-pwa-head /><x-touch-targets />'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

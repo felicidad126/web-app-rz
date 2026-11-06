@@ -3,7 +3,7 @@
 Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL, Redis.
 
 - **Acuan desain:** `docs/02-dental-pms-planning-v2.md` (scope, skema DB, roadmap).
-- **Status terakhir:** `docs/10-fase-6-implementasi.md` (Fase 1: `docs/03-…`, Fase 2: `docs/05-…`, Fase 3: `docs/06-…`, Fase 4: `docs/07-…`, Fase 5: `docs/09-…`). Review konsep stok & jasa dokter dari klinik: `docs/08-review-konsep-stok-dan-jasa-dokter.md`.
+- **Status terakhir:** `docs/11-fase-7-implementasi.md` (Fase 1: `docs/03-…`, Fase 2: `docs/05-…`, Fase 3: `docs/06-…`, Fase 4: `docs/07-…`, Fase 5: `docs/09-…`, Fase 6: `docs/10-…`). Review konsep stok & jasa dokter dari klinik: `docs/08-review-konsep-stok-dan-jasa-dokter.md`.
 
 ## Perintah
 
@@ -32,7 +32,10 @@ Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL
 - **Stok:** semua perubahan stok lewat `App\Services\Stock\StockLedger` (opname lewat `StockOpnames`); jangan mengubah `item_batches.qty_on_hand` langsung. Jumlah dalam satuan dasar, harga pokok per satuan dasar (bigint). Mutasi tercatat tidak bisa diubah; koreksi lewat pembatalan atau opname. Pemusnahan & opname butuh `Approve:Stock` (penyetuju ≠ pengaju).
 - **Jasa dokter:** hanya lewat `App\Services\Commission\CommissionEngine` (aturan di-snapshot saat tagihan terbit; entri jasa tidak diubah, koreksi lewat entri pembalik) dan `CommissionPayouts` (`Manage:Commission`). Dokter tanpa `ViewAll:Commission` hanya melihat miliknya (`CommissionScope`).
 - **KPI & laporan:** definisi KPI hanya di `App\Enums\Kpi`; angka harian lewat `App\Services\Reports\DailyMetrics`/`Metrics` (hari lampau dari snapshot `daily_metrics`, jangan diubah tanpa `--force`). Laporan baru = kelas di `app/Reports` + `ReportRegistry`; izin dicek di `canView()` dan berlaku sama untuk unduhan. Laba hanya `View:ProfitReports`.
-- **Nomor urut** (RM, invoice, kunjungan, mutasi stok, order lab) wajib lewat `App\Services\NumberSequence`.
+- **Odontogram & OHI-S:** catatan dari peta lewat trait `EditsOdontogramChart` (satu baris per permukaan, kode seluruh gigi tanpa permukaan; catatan lama tidak ditimpa). Data peta/SVG hanya di `App\Services\Clinic\OdontogramVisual`, rumus OHI-S hanya di `App\Services\Clinic\OralHygiene`. Pemeriksaan intraoral terkunci bersama rekam medis.
+- **Migrasi pasien lama** lewat `php artisan patients:migrate-legacy` (uji coba dulu, lalu `--commit`). Laporan tanpa nama/NIK. Jangan pernah menyalin data pasien asli ke repo, tes, atau artifact; tes memakai data fiktif.
+- **Panduan pengguna** di `resources/guides/*.md` (menu Panduan). Perbarui bila alur atau label menu berubah. Cek rollout cabang: `BranchReadiness` (halaman Kesiapan cabang / `clinic:branch-readiness`).
+- **Nomor urut** (RM, invoice, kunjungan, mutasi stok, order lab) wajib lewat `App\Services\NumberSequence`. RM yang diisi manual/migrasi memajukan urutan (`reserveRmNumber`).
 - **Lazy loading dilarang** di `local` & `testing` (`Model::shouldBeStrict`). Eager-load relasi di tabel dan relation manager.
 - `app/Policies/*` dibuat oleh Shield. Jangan diedit manual; atur hak akses di seeder.
 - **Service worker** (`public/sw.js`) hanya boleh meng-cache aset statis.

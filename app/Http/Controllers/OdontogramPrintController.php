@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Patient;
 use App\Services\Clinic\OdontogramChart;
+use App\Services\Clinic\OdontogramVisual;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 
@@ -22,7 +23,9 @@ class OdontogramPrintController extends Controller
         return Pdf::loadView('pdf.odontogram', [
             'patient' => $patient,
             'teeth' => $chart->teeth(),
+            'svg' => base64_encode((new OdontogramVisual($chart))->svg()),
             'indices' => $chart->indices(),
+            'exam' => $patient->oralExaminations()->latest('id')->first(),
             'entries' => $patient->odontogramEntries()->with(['condition', 'visit'])->latest('id')->limit(80)->get(),
         ])->setPaper('a4')->stream('odontogram-'.$patient->rm_number.'.pdf');
     }

@@ -55,6 +55,12 @@ final class OdontogramChart
         return $result;
     }
 
+    /** @return Collection<int, OdontogramEntry> semua entri satu gigi, terlama dulu */
+    public function entriesFor(string $tooth): Collection
+    {
+        return $this->entries->filter(fn (OdontogramEntry $e): bool => $e->tooth_number === $tooth)->values();
+    }
+
     /** @return array{D: int, M: int, F: int, total: int, d: int, e: int, f: int, total_primary: int} */
     public function indices(): array
     {

@@ -9,6 +9,7 @@ use App\Enums\CommissionRole;
 use App\Enums\CommissionType;
 use App\Enums\ItemType;
 use App\Enums\LabWorkType;
+use App\Enums\OdontogramEntryType;
 use App\Enums\PayerType;
 use App\Enums\PractitionerType;
 use App\Enums\RecallStatus;
@@ -32,6 +33,7 @@ use App\Models\CommissionRule;
 use App\Models\Item;
 use App\Models\ItemBatch;
 use App\Models\ItemCategory;
+use App\Models\OdontogramEntry;
 use App\Models\Package;
 use App\Models\Patient;
 use App\Models\PatientPackage;
@@ -649,6 +651,20 @@ class DemoSeeder extends Seeder
             $plan->items()->create(['treatment_id' => $tko->id, 'tooth_number' => '36', 'surfaces' => 'O', 'phase' => 1, 'sequence' => 1, 'price_estimate' => 400_000]);
             $plan->items()->create(['treatment_id' => $tko->id, 'tooth_number' => '37', 'surfaces' => 'MO', 'phase' => 1, 'sequence' => 2, 'price_estimate' => 400_000]);
             $plan->items()->create(['treatment_id' => $cbd->id, 'tooth_number' => '18', 'phase' => 2, 'sequence' => 3, 'price_estimate' => 300_000]);
+        }
+
+        // Odontogram kondisi awal (tanpa kunjungan) untuk pasien yang sedang menunggu, agar odontogram visual terisi.
+        if (OdontogramEntry::where('patient_id', $patients[1]->id)->doesntExist()) {
+            $existing = OdontogramEntryType::Existing;
+            $planned = OdontogramEntryType::Planned;
+
+            foreach ([
+                ['16', 'O', 'amf', $existing], ['46', null, 'mis', $existing], ['26', null, 'poc', $existing], ['11', 'V', 'cof', $existing],
+                ['36', 'O', 'car', $existing], ['37', 'M', 'car', $existing], ['37', 'O', 'car', $existing], ['18', null, 'pre', $existing],
+                ['36', 'O', 'cof', $planned], ['37', 'M', 'cof', $planned], ['37', 'O', 'cof', $planned], ['18', null, 'mis', $planned],
+            ] as [$tooth, $surface, $code, $type]) {
+                OdontogramEntry::create(['patient_id' => $patients[1]->id, 'tooth_number' => $tooth, 'surface' => $surface, 'condition_code' => $code, 'entry_type' => $type]);
+            }
         }
 
         $scaling = Treatment::where('code', 'SCL')->first();

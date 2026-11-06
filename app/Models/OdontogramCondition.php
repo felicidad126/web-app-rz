@@ -8,7 +8,20 @@ use App\Models\Concerns\LogsAudit;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-/** Master kode kondisi odontogram (bisa dikonfigurasi, bukan enum). */
+/**
+ * Master kode kondisi odontogram (bisa dikonfigurasi, bukan enum).
+ *
+ * @property int $id
+ * @property string $code
+ * @property string $name
+ * @property OdontogramCategory $category
+ * @property OdontogramScope $applies_to
+ * @property string|null $color
+ * @property string|null $symbol
+ * @property string|null $description
+ * @property int $sort
+ * @property bool $is_active
+ */
 #[Fillable(['code', 'name', 'category', 'applies_to', 'color', 'symbol', 'description', 'sort', 'is_active'])]
 class OdontogramCondition extends Model
 {

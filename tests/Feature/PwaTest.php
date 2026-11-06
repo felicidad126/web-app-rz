@@ -17,7 +17,9 @@ it('memasang manifest dan service worker di halaman panel', function () {
     $this->get('/login')
         ->assertOk()
         ->assertSee('manifest.webmanifest', false)
-        ->assertSee('serviceWorker.register', false);
+        ->assertSee('serviceWorker.register', false)
+        // Area ketuk aksi tabel diperbesar khusus layar sentuh.
+        ->assertSee('@media (pointer: coarse)', false);
 });
 
 it('service worker tidak meng-cache halaman berisi data', function () {
