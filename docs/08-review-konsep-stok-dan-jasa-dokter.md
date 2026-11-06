@@ -30,7 +30,7 @@
 
 | # | Kebutuhan | Kenapa | Di skema aplikasi |
 |---|---|---|---|
-| 1 | **Cabang** pada batch & transaksi | Stok Kemang dan Depok terpisah; ada transfer antar cabang | `item_batches.branch_id`, `stock_mutations.branch_id` |
+| 1 | **Cabang** pada batch & transaksi | Stok tiap cabang terpisah; ada transfer antar cabang | `item_batches.branch_id`, `stock_mutations.branch_id` |
 | 2 | **Konversi satuan** | Di sheet expired: "1 kotak = 20 ampul × 2 ml", "kotak 50 ampul". Beli per kotak, pakai per ampul. | Sudah ada sejak Fase 1: `item_units.factor_to_base`; semua jumlah disimpan dalam satuan dasar |
 | 3 | **Harga beli per batch** | HPP per tindakan, margin, dan komisi berbasis "neto − bahan" | `item_batches.cost_price` |
 | 4 | **Sumber pemakaian** | Pemakaian otomatis dari BOM tindakan & resep; HPP per kunjungan | `stock_mutations.source_type/source_id` (kunjungan, penerimaan, opname, transfer) |
@@ -90,7 +90,7 @@
 ## 5. Sheet BHP & BHP expired
 
 - **"BAP Daftar Barang" / "BAP Catatan Stok"** (Mei 2023): kartu stok lama per barang. Satuan bercampur di dalam angka ("50 pcs", "2 bungkus", "2 PASANG"), dan beberapa nama tab berbeda dengan nama barang (mis. tab "Sarung scaler" berisi "Alice dental occlusal bite"). **Tidak bisa dijadikan saldo awal.** Saldo awal sebaiknya dari **stok opname pertama** di aplikasi (DoD Fase 5).
-- **"Bahan Expired"** (59 baris, status per 27-10-2026). Transkripsinya rapi: ED yang hanya bulan dinormalisasi ke akhir bulan, dan isi kemasan dicatat. Hampir semua sudah kedaluwarsa, termasuk anestesi (Pehacain ED Juni 2026, Scandonest 2024). Ini alasan kuat untuk:
+- **"Bahan Expired"** (59 baris, status per 27-10-2026). Transkripsinya rapi: ED yang hanya bulan dinormalisasi ke akhir bulan, dan isi kemasan dicatat. 54 bahan sudah kedaluwarsa (ED 2023: 5, 2024: 28, 2025: 18, 2026: 3) dan 5 tanpa tanggal ED, termasuk anestesi (Pehacain ED Juni 2026, Scandonest 2024). Ini alasan kuat untuk:
   - **alert ED ≤ 30 hari** dan FEFO di Fase 5 (sudah direncanakan)
   - **alur pemusnahan + cetak BAP**, untuk dimasukkan sebagai satu transaksi "kedaluwarsa" saat stok awal diinput
   - **aturan "bulan saja → akhir bulan"** dipakai juga di form penerimaan barang
