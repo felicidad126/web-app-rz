@@ -131,6 +131,30 @@ Yang dilakukan script:
 
 Jika Tailscale belum siap, script memberi peringatan dan melanjutkan dengan akses via IP. Jalankan ulang script setelah diperbaiki; kunci dan data tidak berubah.
 
+#### 3.0.2 Server RAM kecil (1–3 GB) & swap
+
+Script menyesuaikan diri dengan RAM server, tanpa perlu ditanya:
+
+| RAM | Swap | MySQL | PHP-FPM |
+|---|---|---|---|
+| ≤ 1,5 GB | 2 GB (`/swapfile`) | buffer pool 128 MB, performance_schema mati | `ondemand`, maks. (RAM − 700 MB) ÷ 60 MB proses, mis. 1 GB → 5 |
+| 1,5–3 GB | 2 GB | buffer pool 256 MB, performance_schema mati | `ondemand`, maks. 12 proses |
+| 3–4 GB | 2 GB | bawaan | bawaan |
+| ≥ 4 GB | tidak dibuat | bawaan | bawaan |
+
+- **Swap** dibuat sebelum memasang paket, karena `apt` dan `composer install` sempat butuh RAM besar. Swap hanya dibuat bila belum ada swap dan ruang disk masih cukup (ukuran swap + 2 GB), lalu didaftarkan di `/etc/fstab`. `vm.swappiness=10`: swap hanya dipakai saat lonjakan.
+- **MySQL**: `/etc/mysql/mysql.conf.d/zz-dental-pms.cnf`, dibuat ulang setiap provision. Bila RAM ditambah (> 3 GB), jalankan ulang script dan file ini dihapus otomatis.
+- **PHP-FPM**: pool `www` diubah ke `pm = ondemand` (proses PHP berhenti setelah 10 detik menganggur) dengan batas proses dihitung dari RAM (±60 MB per proses, sisa ±700 MB untuk OS, MySQL, Redis, dan worker). Setelan ini tetap aman bila RAM kemudian ditambah.
+- Perkiraan pemakaian di server 2 GB: ±1,0–1,3 GB (diukur di data demo: satu permintaan halaman 20–28 MB memori PHP, MySQL hemat ±200 MB).
+
+Atur manual bila perlu (mode non-interaktif):
+- `SWAP_SIZE=0`: jangan membuat swap. `SWAP_SIZE=4G`: ukuran lain.
+- `LOW_MEMORY=y` atau `LOW_MEMORY=n`: paksa setelan hemat RAM aktif atau mati.
+
+Di container (Docker/LXC) swap biasanya tidak bisa diaktifkan; script memberi peringatan lalu lanjut.
+
+Diuji di container Ubuntu 26.04 (MySQL 8.4, PHP 8.5): setelan hemat RAM terbaca MySQL (buffer pool 256 MB, performance_schema mati, memori MySQL ±225 MB dari ±390 MB), konfigurasi PHP-FPM lolos `php-fpm -t`, login 200; dijalankan ulang dalam mode otomatis di mesin 16 GB, setelan MySQL dilepas kembali.
+
 Langkah 3.1–3.5 di bawah adalah rincian manual dari apa yang dilakukan script.
 
 ### 3.1 Pertama kali

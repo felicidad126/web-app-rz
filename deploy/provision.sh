@@ -15,6 +15,8 @@
 #   TAILSCALE_HTTPS=y|n   (tanpa domain: HTTPS via https://<nama-vm>.<tailnet>.ts.net)
 #   REPO_URL=...  REPO_BRANCH=...  APP_DIR=/var/www/dental-pms  ENABLE_UFW=y|n
 #   OWNER_NAME=...  OWNER_EMAIL=...  OWNER_PASSWORD=...
+#   SWAP_SIZE=auto|0|2G     (auto: buat swap 2 GB bila RAM < 4 GB dan belum ada swap; 0 = jangan buat)
+#   LOW_MEMORY=auto|y|n     (auto: setelan hemat RAM untuk MySQL & PHP-FPM bila RAM <= 3 GB)
 #
 set -Eeuo pipefail
 
@@ -114,6 +116,40 @@ env_set() { # env_set KEY VALUE  (ganti jika ada, tambah jika belum)
 
 random_secret() { openssl rand -hex "$(( ${1:-32} / 2 ))"; }
 
+mem_total_mb() { awk '/^MemTotal:/ {print int($2 / 1024)}' /proc/meminfo; }
+swap_total_mb() { awk '/^SwapTotal:/ {print int($2 / 1024)}' /proc/meminfo; }
+
+size_to_mb() { # size_to_mb 2G|512M|1024 -> MB
+    local v="${1^^}" mb
+    case "$v" in
+        *G) mb=$(( ${v%G} * 1024 )) ;;
+        *M) mb="${v%M}" ;;
+        *) mb="$v" ;;
+    esac
+    [[ "$mb" =~ ^[0-9]+$ ]] || die "Ukuran tidak dikenali: $1 (contoh: 2G, 1024M)"
+    echo "$mb"
+}
+
+try_swapon() { # try_swapon FILE MB [dd]  -> 0 bila swap aktif
+    local file="$1" mb="$2" method="${3:-fallocate}"
+    rm -f "$file"
+    if [[ "$method" == "dd" ]] || ! fallocate -l "${mb}M" "$file" 2>/dev/null; then
+        dd if=/dev/zero of="$file" bs=1M count="$mb" status=none || return 1
+    fi
+    chmod 600 "$file"
+    mkswap "$file" >/dev/null 2>&1 && swapon "$file" 2>/dev/null
+}
+
+fpm_pool_set() { # fpm_pool_set FILE KEY VALUE  (ganti baris aktif/terkomentar, tambah jika belum ada)
+    local file="$1" key="$2" value="$3" re
+    re=$(printf '%s' "$key" | sed 's/[.]/\\./g')
+    if grep -qE "^[;[:space:]]*${re}[[:space:]]*=" "$file"; then
+        sed -i -E "s|^[;[:space:]]*${re}[[:space:]]*=.*|${key} = ${value}|" "$file"
+    else
+        printf '%s = %s\n' "$key" "$value" >> "$file"
+    fi
+}
+
 # Nama *.ts.net mesin ini yang boleh diberi sertifikat HTTPS oleh Tailscale.
 # Kosong jika Tailscale tidak terpasang, belum login, atau "HTTPS Certificates" belum aktif.
 ts_cert_domain() {
@@ -185,6 +221,48 @@ ask ENABLE_UFW "Aktifkan firewall UFW (SSH, HTTP, HTTPS)? (y/n)" "y"
 if [[ "$DEMO_DATA" =~ ^[Yy] ]]; then APP_ENV_VALUE="staging"; else APP_ENV_VALUE="production"; fi
 
 # ---------------------------------------------------------------------------
+# 0b. Memori & swap (sebelum apt/composer, yang butuh RAM besar sesaat)
+# ---------------------------------------------------------------------------
+step "Memeriksa memori & swap"
+MEM_MB=$(mem_total_mb)
+LOW_MEMORY="${LOW_MEMORY:-auto}"
+if [[ "$LOW_MEMORY" == "auto" ]]; then
+    if (( MEM_MB <= 3072 )); then LOW_MEMORY="y"; else LOW_MEMORY="n"; fi
+fi
+SWAP_SIZE="${SWAP_SIZE:-auto}"
+if [[ "$SWAP_SIZE" == "auto" ]]; then
+    if (( MEM_MB < 4096 )); then SWAP_SIZE="2G"; else SWAP_SIZE="0"; fi
+fi
+SWAP_MB=$(size_to_mb "$SWAP_SIZE")
+SWAP_NOTE="tidak dibuat"
+
+if (( $(swap_total_mb) > 0 )); then
+    SWAP_NOTE="sudah ada $(swap_total_mb) MB"
+    ok "RAM ${MEM_MB} MB, swap sudah ada ($(swap_total_mb) MB)"
+elif (( SWAP_MB == 0 )); then
+    ok "RAM ${MEM_MB} MB, swap tidak dibuat (SWAP_SIZE=0 atau RAM >= 4 GB)"
+else
+    free_mb=$(df -Pm / | awk 'NR == 2 {print $4}')
+    if (( free_mb < SWAP_MB + 2048 )); then
+        warn "Ruang disk kosong ${free_mb} MB, tidak cukup untuk swap ${SWAP_MB} MB + cadangan 2 GB. Swap dilewati."
+    elif try_swapon /swapfile "$SWAP_MB" || try_swapon /swapfile "$SWAP_MB" dd; then
+        grep -qE '^[[:space:]]*/swapfile[[:space:]]' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
+        SWAP_NOTE="${SWAP_MB} MB (/swapfile)"
+        ok "Swap ${SWAP_MB} MB dibuat di /swapfile dan aktif setelah reboot"
+    else
+        rm -f /swapfile
+        warn "Swap tidak bisa diaktifkan di lingkungan ini (container/sistem file tidak mendukung). Dilewati."
+    fi
+fi
+# Swap hanya untuk lonjakan sesaat (composer, backup): utamakan RAM.
+cat > /etc/sysctl.d/99-dental-pms.conf <<'SYSCTL'
+# Dental PMS (provision.sh): pakai swap seperlunya saja.
+vm.swappiness = 10
+vm.vfs_cache_pressure = 50
+SYSCTL
+sysctl -q -p /etc/sysctl.d/99-dental-pms.conf >/dev/null 2>&1 || true
+
+# ---------------------------------------------------------------------------
 # 1. Paket sistem
 # ---------------------------------------------------------------------------
 step "Memasang paket sistem (PHP, MySQL, Redis, Nginx, Supervisor)"
@@ -214,6 +292,61 @@ expose_php = Off
 INI
 
 for s in mysql redis-server "$FPM_SERVICE" nginx supervisor cron; do svc enable "$s"; done
+
+# ---------------------------------------------------------------------------
+# 1b. Setelan hemat RAM (MySQL & PHP-FPM) untuk server <= 3 GB
+# ---------------------------------------------------------------------------
+MYSQL_TUNING="/etc/mysql/mysql.conf.d/zz-dental-pms.cnf"
+FPM_POOL="/etc/php/${PHP_VERSION}/fpm/pool.d/www.conf"
+if [[ "$LOW_MEMORY" =~ ^[Yy] ]]; then
+    step "Menyesuaikan MySQL & PHP-FPM untuk RAM ${MEM_MB} MB"
+    if (( MEM_MB <= 1536 )); then BUFFER_POOL="128M"; else BUFFER_POOL="256M"; fi
+    # Sisakan ±700 MB untuk OS, MySQL, Redis & queue worker; satu proses PHP ±60 MB.
+    FPM_CHILDREN=$(( (MEM_MB - 700) / 60 ))
+    (( FPM_CHILDREN < 4 )) && FPM_CHILDREN=4
+    (( FPM_CHILDREN > 12 )) && FPM_CHILDREN=12
+
+    install -d /etc/mysql/mysql.conf.d
+    tuning_new=$(mktemp)
+    cat > "$tuning_new" <<MYCNF
+# Dental PMS (provision.sh): setelan MySQL untuk server RAM kecil (${MEM_MB} MB).
+# Dibuat ulang setiap provision; terhapus otomatis bila RAM > 3 GB atau LOW_MEMORY=n.
+[mysqld]
+performance_schema = OFF
+innodb_buffer_pool_size = ${BUFFER_POOL}
+innodb_log_buffer_size = 8M
+max_connections = 40
+thread_cache_size = 8
+table_open_cache = 400
+tmp_table_size = 16M
+max_heap_table_size = 16M
+key_buffer_size = 8M
+MYCNF
+    if ! cmp -s "$tuning_new" "$MYSQL_TUNING"; then
+        install -m 644 "$tuning_new" "$MYSQL_TUNING"
+        svc restart mysql
+        ok "MySQL: buffer pool ${BUFFER_POOL}, performance_schema mati (±200 MB lebih hemat)"
+    else
+        ok "MySQL: setelan hemat RAM sudah terpasang (buffer pool ${BUFFER_POOL})"
+    fi
+    rm -f "$tuning_new"
+
+    if [[ -f "$FPM_POOL" ]]; then
+        # ondemand: proses PHP hanya hidup saat ada permintaan, lalu berhenti setelah 10 detik menganggur.
+        fpm_pool_set "$FPM_POOL" pm ondemand
+        fpm_pool_set "$FPM_POOL" pm.max_children "$FPM_CHILDREN"
+        fpm_pool_set "$FPM_POOL" pm.process_idle_timeout 10s
+        fpm_pool_set "$FPM_POOL" pm.max_requests 500
+        ok "PHP-FPM: ondemand, maksimal ${FPM_CHILDREN} proses"
+    else
+        warn "Pool PHP-FPM ${FPM_POOL} tidak ditemukan; setelan PHP-FPM dilewati."
+    fi
+elif [[ -f "$MYSQL_TUNING" ]]; then
+    rm -f "$MYSQL_TUNING"
+    svc restart mysql
+    ok "RAM ${MEM_MB} MB: setelan hemat RAM MySQL dilepas (kembali ke bawaan)"
+fi
+
 svc restart "$FPM_SERVICE"
 ok "Layanan aktif"
 
@@ -565,6 +698,7 @@ echo "    Buka        : $(env_get APP_URL)"
 echo "    Kredensial  : ${CREDENTIALS_FILE}  (sudo cat ${CREDENTIALS_FILE})"
 [[ "$APP_ENV_VALUE" == "staging" ]] && echo "    Akun demo   : owner@demo.test dkk. Password ada di file kredensial. MFA diatur saat login pertama."
 echo "    Update kode : sudo bash ${APP_DIR}/deploy/update.sh"
+echo "    Memori      : RAM ${MEM_MB} MB · swap ${SWAP_NOTE}$([[ "$LOW_MEMORY" =~ ^[Yy] ]] && echo " · setelan hemat RAM aktif (MySQL ${BUFFER_POOL}, PHP-FPM maks ${FPM_CHILDREN} proses)")"
 echo
 echo "    Langkah berikutnya (lihat docs/04-setup-deploy-backup.md):"
 echo "    - Isi MAIL_* (SMTP) di ${APP_DIR}/.env agar email MFA, reset password & notifikasi backup terkirim."

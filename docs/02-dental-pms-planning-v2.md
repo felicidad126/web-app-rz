@@ -636,7 +636,7 @@ erDiagram
 
 | Komponen | Spesifikasi | Estimasi biaya |
 |---|---|---|
-| VPS | **2 vCPU, 4GB RAM** (MySQL + Redis + queue + PHP-FPM), region Indonesia | ~Rp100.000–250.000/bulan (estimasi v1) |
+| VPS | **2 vCPU, 4GB RAM** (MySQL + Redis + queue + PHP-FPM), region Indonesia. 2 GB cukup untuk demo atau 1–2 cabang: `provision.sh` memasang swap & setelan hemat RAM (docs/04 §3.0.2) | ~Rp100.000–250.000/bulan (estimasi v1) |
 | Domain & SSL | `.com`/`.id` + Let's Encrypt (**HTTPS wajib untuk PWA**) | ~Rp150.000–250.000/tahun (estimasi v1) |
 | Backup | `spatie/laravel-backup` terenkripsi, setiap malam, ke object storage S3-compatible (sebaiknya region Indonesia). Retensi: 7 harian, 4 mingguan, 12 bulanan. **Bukan Google Drive pribadi.** | Tergantung penyedia |
 | Lingkungan | `production` + `staging` (terhubung ke sandbox SATUSEHAT) | Staging bisa di VPS yang sama atau VPS kecil terpisah |
