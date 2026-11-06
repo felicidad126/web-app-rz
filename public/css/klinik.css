@@ -21,3 +21,34 @@
 
 /* Judul grup navigasi lebih kecil, mirip label kolom */
 .fi-sidebar-group-label { font-size: 0.75rem; letter-spacing: 0.02em; }
+
+/* Baris tabel ±44 px di desktop (mouse); layar sentuh tetap longgar untuk jari. */
+@media (pointer: fine) {
+  .fi-ta-text:not(.fi-inline), .fi-ta-icon:not(.fi-inline) { padding-block: 0.625rem; }
+}
+.fi-ta-text-description { font-size: 0.8125rem; line-height: 1.125rem; }
+.fi-ta-placeholder { color: var(--gray-500); }
+.fi-ta-text-summary { color: var(--gray-950); font-weight: 600; }
+.dark .fi-ta-text-summary { color: var(--gray-50); }
+
+/* Toolbar tabel tanpa aksi tidak menyisakan pita kosong di HP. */
+.fi-ta-header-toolbar > .fi-ta-actions:not(:has(*)) { display: none; }
+
+/* Kode (No. RM, No. kunjungan, ICD, nomor gigi, nomor tagihan) memakai huruf mono. */
+.klinik-mono { font-family: var(--font-family-mono), ui-monospace, monospace; font-size: 0.8125rem; letter-spacing: 0; }
+
+/* Status janji/kunjungan: titik + kata (bukan label berwarna), warna titik dari warna status. */
+.klinik-status .fi-badge { background: none; box-shadow: none; --tw-ring-color: transparent; padding-inline: 0; color: var(--gray-800); gap: 0.375rem; font-weight: 500; }
+.klinik-status .fi-badge::before { content: ""; flex: none; width: 0.5rem; height: 0.5rem; border-radius: 9999px; background: var(--color-600, var(--gray-400)); }
+.klinik-status .fi-badge.fi-color-gray::before { background: var(--gray-400); }
+.dark .klinik-status .fi-badge { color: var(--gray-200); }
+
+/* Sembunyikan kolom tabel buatan sendiri (Blade) di layar sempit. */
+@media (max-width: 47.99rem) { .klinik-hide-sm { display: none !important; } }
+.klinik-nowrap { white-space: nowrap; }
+
+/* Kartu statistik di HP: dua kolom, lebih ringkas. */
+@media (max-width: 40rem) {
+  .fi-wi-stats-overview-stat { padding: 0.75rem 0.875rem; }
+  .fi-wi-stats-overview-stat-value { font-size: 1.375rem; line-height: 1.75rem; }
+}

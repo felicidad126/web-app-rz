@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Patients;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Patients\Pages\CreatePatient;
 use App\Filament\Resources\Patients\Pages\EditPatient;
 use App\Filament\Resources\Patients\Pages\ListPatients;
@@ -30,6 +31,8 @@ use UnitEnum;
 
 class PatientResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Patient::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;

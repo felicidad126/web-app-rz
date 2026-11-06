@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Visits;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Filament\Resources\Visits\Pages\ExamineVisit;
 use App\Filament\Resources\Visits\Pages\ListVisits;
@@ -21,6 +22,8 @@ use UnitEnum;
 
 class VisitResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Visit::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQueueList;

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Payers;
 
 use App\Enums\PayerType;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Payers\Pages\ManagePayers;
 use App\Filament\Support\NavGroup;
 use App\Models\Payer;
@@ -28,6 +29,8 @@ use UnitEnum;
 
 class PayerResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Payer::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldCheck;

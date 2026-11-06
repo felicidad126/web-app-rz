@@ -22,8 +22,8 @@ enum SalaryComponentKind: string implements HasColor, HasLabel
     public function getColor(): string
     {
         return match ($this) {
-            self::Earning => 'success',
-            self::Deduction => 'danger',
+            self::Earning => 'gray',
+            self::Deduction => 'gray',
         };
     }
 }

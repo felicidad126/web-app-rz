@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Units;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Units\Pages\ManageUnits;
 use App\Filament\Support\NavGroup;
 use App\Models\Unit;
@@ -18,6 +19,8 @@ use UnitEnum;
 
 class UnitResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Unit::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedScale;

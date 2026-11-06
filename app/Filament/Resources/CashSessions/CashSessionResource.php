@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\CashSessions;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\CashSessions\Pages\CloseCashSession;
 use App\Filament\Resources\CashSessions\Pages\ListCashSessions;
 use App\Filament\Resources\CashSessions\Pages\ViewCashSession;
@@ -24,6 +25,8 @@ use UnitEnum;
 
 class CashSessionResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = CashSession::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedLockClosed;

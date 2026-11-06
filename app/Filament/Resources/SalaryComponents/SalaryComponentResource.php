@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\SalaryComponents;
 
 use App\Enums\SalaryComponentKind;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\SalaryComponents\Pages\ManageSalaryComponents;
 use App\Filament\Support\NavGroup;
 use App\Models\SalaryComponent;
@@ -26,6 +27,8 @@ use UnitEnum;
 
 class SalaryComponentResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = SalaryComponent::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Payslips;
 
 use App\Enums\PayoutStatus;
 use App\Enums\SalaryComponentKind;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Payslips\Pages\EditPayslip;
 use App\Filament\Resources\Payslips\Pages\ListPayslips;
 use App\Filament\Support\NavGroup;
@@ -30,6 +31,8 @@ use UnitEnum;
 
 class PayslipResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Payslip::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCurrencyDollar;

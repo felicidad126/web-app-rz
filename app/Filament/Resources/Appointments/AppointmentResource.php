@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Appointments;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Appointments\Pages\CreateAppointment;
 use App\Filament\Resources\Appointments\Pages\EditAppointment;
 use App\Filament\Resources\Appointments\Pages\ListAppointments;
@@ -20,6 +21,8 @@ use UnitEnum;
 
 class AppointmentResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Appointment::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Packages;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Packages\Pages\ManagePackages;
 use App\Filament\Support\NavGroup;
 use App\Models\Package;
@@ -27,6 +28,8 @@ use UnitEnum;
 /** Master paket perawatan (mis. ortodonti): harga dan kuota tindakan. */
 class PackageResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Package::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;

@@ -24,7 +24,7 @@ final class InitialsAvatarProvider implements AvatarProvider
             ->join('');
 
         $svg = sprintf(
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#0d9488"/><text x="50%%" y="50%%" dy=".35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="26" font-weight="600" fill="#ffffff">%s</text></svg>',
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#0d6e63"/><text x="50%%" y="50%%" dy=".35em" text-anchor="middle" font-family="system-ui,sans-serif" font-size="26" font-weight="600" fill="#ffffff">%s</text></svg>',
             e($initials ?: '?'),
         );
 

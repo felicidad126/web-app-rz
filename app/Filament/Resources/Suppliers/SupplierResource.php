@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Suppliers;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Suppliers\Pages\ManageSuppliers;
 use App\Filament\Support\NavGroup;
 use App\Models\Supplier;
@@ -26,6 +27,8 @@ use UnitEnum;
 
 class SupplierResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Supplier::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTruck;

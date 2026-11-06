@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Commissions;
 use App\Enums\CommissionRole;
 use App\Enums\CommissionStatus;
 use App\Filament\Clinic\PractitionerOptions;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Commissions\Pages\ListCommissions;
 use App\Filament\Support\NavGroup;
 use App\Models\Commission;
@@ -26,6 +27,8 @@ use UnitEnum;
 /** Rincian entri jasa per tindakan (hanya baca). Koreksi lewat void/refund tagihan. */
 class CommissionResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Commission::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedListBullet;

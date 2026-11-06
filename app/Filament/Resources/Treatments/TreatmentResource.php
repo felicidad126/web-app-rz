@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Treatments;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Treatments\Pages\CreateTreatment;
 use App\Filament\Resources\Treatments\Pages\EditTreatment;
 use App\Filament\Resources\Treatments\Pages\ListTreatments;
@@ -22,6 +23,8 @@ use UnitEnum;
 
 class TreatmentResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Treatment::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;

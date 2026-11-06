@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Recalls;
 
 use App\Enums\RecallStatus;
 use App\Filament\Clinic\PatientSelect;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Filament\Resources\Recalls\Pages\ManageRecalls;
 use App\Filament\Support\NavGroup;
@@ -30,6 +31,8 @@ use UnitEnum;
 
 class RecallResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Recall::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBellAlert;

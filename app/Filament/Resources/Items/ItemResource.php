@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Items;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Items\Pages\CreateItem;
 use App\Filament\Resources\Items\Pages\EditItem;
 use App\Filament\Resources\Items\Pages\ListItems;
@@ -23,6 +24,8 @@ use UnitEnum;
 
 class ItemResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Item::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBeaker;

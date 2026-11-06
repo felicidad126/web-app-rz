@@ -25,12 +25,7 @@ enum FeeGroup: string implements HasColor, HasLabel
 
     public function getColor(): string
     {
-        return match ($this) {
-            self::Consultation => 'info',
-            self::General => 'gray',
-            self::LabWork => 'warning',
-            self::Orthodontic => 'violet',
-        };
+        return 'gray';
     }
 
     /** Jenis jasa awal dari kategori klinis tindakan. */

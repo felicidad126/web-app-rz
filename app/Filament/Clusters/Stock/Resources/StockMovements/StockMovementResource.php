@@ -7,6 +7,7 @@ use App\Enums\StockMovementType;
 use App\Filament\Clusters\Stock\Resources\StockMovements\Pages\ListStockMovements;
 use App\Filament\Clusters\Stock\Resources\StockMovements\Pages\ViewStockMovement;
 use App\Filament\Clusters\Stock\StockCluster;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Models\StockMovement;
 use App\Support\BranchContext;
 use App\Support\Money;
@@ -23,6 +24,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class StockMovementResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = StockMovement::class;
 
     protected static ?string $cluster = StockCluster::class;

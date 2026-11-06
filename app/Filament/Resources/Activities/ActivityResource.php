@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Activities;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Activities\Pages\ListActivities;
 use App\Filament\Support\NavGroup;
 use App\Models\User;
@@ -22,6 +23,8 @@ use UnitEnum;
 /** Audit log (read-only): perubahan data dan akses data pasien. */
 class ActivityResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Activity::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFingerPrint;

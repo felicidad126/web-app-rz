@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ItemCategories;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\ItemCategories\Pages\ManageItemCategories;
 use App\Filament\Support\NavGroup;
 use App\Models\ItemCategory;
@@ -24,6 +25,8 @@ use UnitEnum;
 
 class ItemCategoryResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = ItemCategory::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;

@@ -8,6 +8,7 @@ use App\Enums\CommissionRole;
 use App\Enums\CommissionType;
 use App\Enums\FeeGroup;
 use App\Filament\Clinic\PractitionerOptions;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\CommissionRules\Pages\ManageCommissionRules;
 use App\Filament\Support\NavGroup;
 use App\Models\CommissionRule;
@@ -38,6 +39,8 @@ use UnitEnum;
 /** Aturan jasa dokter/asisten (Planning §5.7). Aturan yang paling spesifik yang dipakai. */
 class CommissionRuleResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = CommissionRule::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAdjustmentsHorizontal;

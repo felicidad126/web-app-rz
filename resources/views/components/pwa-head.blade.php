@@ -1,6 +1,6 @@
 {{-- PWA: manifest, ikon, dan registrasi service worker (lihat public/sw.js). --}}
 <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
-<meta name="theme-color" content="#0d9488">
+<meta name="theme-color" content="#0d6e63">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Targets;
 
 use App\Filament\Clinic\PractitionerOptions;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Targets\Pages\ManageTargets;
 use App\Filament\Support\NavGroup;
 use App\Models\Target;
@@ -28,6 +29,8 @@ use UnitEnum;
 /** Target produksi bulanan per cabang, atau per dokter di cabang. */
 class TargetResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Target::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFlag;

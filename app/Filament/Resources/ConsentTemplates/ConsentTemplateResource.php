@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ConsentTemplates;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\ConsentTemplates\Pages\ManageConsentTemplates;
 use App\Filament\Support\NavGroup;
 use App\Models\ConsentTemplate;
@@ -20,6 +21,8 @@ use UnitEnum;
 
 class ConsentTemplateResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = ConsentTemplate::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCheck;

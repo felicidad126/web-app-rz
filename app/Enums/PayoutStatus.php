@@ -25,7 +25,7 @@ enum PayoutStatus: string implements HasColor, HasLabel
     {
         return match ($this) {
             self::Draft => 'gray',
-            self::Final => 'info',
+            self::Final => 'warning',
             self::Paid => 'success',
         };
     }

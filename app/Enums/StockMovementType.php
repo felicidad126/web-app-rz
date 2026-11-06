@@ -36,13 +36,13 @@ enum StockMovementType: string implements HasColor, HasLabel
     public function getColor(): string
     {
         return match ($this) {
-            self::Receipt => 'success',
+            self::Receipt => 'gray',
             self::Usage => 'gray',
             self::Dispensing => 'gray',
             self::Sale => 'gray',
-            self::TransferOut => 'info',
-            self::TransferIn => 'info',
-            self::Disposal => 'danger',
+            self::TransferOut => 'gray',
+            self::TransferIn => 'gray',
+            self::Disposal => 'gray',
             self::Adjustment => 'warning',
             self::Reversal => 'warning',
         };

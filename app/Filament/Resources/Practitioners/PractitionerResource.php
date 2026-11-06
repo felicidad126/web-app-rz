@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Practitioners;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Practitioners\Pages\CreatePractitioner;
 use App\Filament\Resources\Practitioners\Pages\EditPractitioner;
 use App\Filament\Resources\Practitioners\Pages\ListPractitioners;
@@ -24,6 +25,8 @@ use UnitEnum;
 
 class PractitionerResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Practitioner::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedIdentification;

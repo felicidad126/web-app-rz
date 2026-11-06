@@ -30,9 +30,9 @@ enum InvoiceStatus: string implements HasColor, HasLabel
         return match ($this) {
             self::Draft => 'gray',
             self::Issued => 'warning',
-            self::Partial => 'info',
+            self::Partial => 'warning',
             self::Paid => 'success',
-            self::Void => 'danger',
+            self::Void => 'gray',
         };
     }
 }

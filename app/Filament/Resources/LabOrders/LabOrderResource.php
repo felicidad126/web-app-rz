@@ -6,6 +6,7 @@ use App\Enums\LabOrderStatus;
 use App\Enums\LabWorkType;
 use App\Filament\Clinic\PatientSelect;
 use App\Filament\Clinic\PractitionerOptions;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\LabOrders\Pages\CreateLabOrder;
 use App\Filament\Resources\LabOrders\Pages\EditLabOrder;
 use App\Filament\Resources\LabOrders\Pages\ListLabOrders;
@@ -44,6 +45,8 @@ use UnitEnum;
 
 class LabOrderResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = LabOrder::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;

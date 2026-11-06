@@ -4,6 +4,7 @@ namespace App\Filament\Resources\OdontogramConditions;
 
 use App\Enums\OdontogramCategory;
 use App\Enums\OdontogramScope;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\OdontogramConditions\Pages\ManageOdontogramConditions;
 use App\Filament\Support\NavGroup;
 use App\Models\OdontogramCondition;
@@ -26,6 +27,8 @@ use UnitEnum;
 
 class OdontogramConditionResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = OdontogramCondition::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSwatch;

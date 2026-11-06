@@ -4,6 +4,7 @@ namespace App\Filament\Resources\PractitionerAttendances;
 
 use App\Enums\AttendanceType;
 use App\Filament\Clinic\PractitionerOptions;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\PractitionerAttendances\Pages\ManagePractitionerAttendances;
 use App\Filament\Support\NavGroup;
 use App\Models\Practitioner;
@@ -32,6 +33,8 @@ use UnitEnum;
 /** Kehadiran dokter yang dibayar: uang hadir & on call (keputusan owner 6 Nov 2026). */
 class PractitionerAttendanceResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = PractitionerAttendance::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;

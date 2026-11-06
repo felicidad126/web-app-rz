@@ -7,6 +7,7 @@ use App\Filament\Support\NavGroup;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
+use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -56,8 +57,9 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::Zinc,
                 'violet' => Color::Violet,
             ])
-            ->font('IBM Plex Sans')
-            ->monoFont('IBM Plex Mono')
+            // Font di-host sendiri (public/fonts/plex): tanpa CDN pihak ketiga, ikut tersimpan oleh service worker.
+            ->font('IBM Plex Sans', url: asset('fonts/plex/plex.css'), provider: LocalFontProvider::class)
+            ->monoFont('IBM Plex Mono', url: asset('fonts/plex/plex.css'), provider: LocalFontProvider::class)
             ->navigationGroups(NavGroup::ordered())
             ->sidebarCollapsibleOnDesktop()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')

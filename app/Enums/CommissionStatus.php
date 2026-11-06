@@ -27,9 +27,9 @@ enum CommissionStatus: string implements HasColor, HasLabel
     {
         return match ($this) {
             self::Pending => 'warning',
-            self::Earned => 'info',
+            self::Earned => 'gray',
             self::Paid => 'success',
-            self::Cancelled => 'danger',
+            self::Cancelled => 'gray',
         };
     }
 }

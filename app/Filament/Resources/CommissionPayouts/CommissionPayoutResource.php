@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\CommissionPayouts;
 
 use App\Enums\PayoutStatus;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\CommissionPayouts\Pages\ListCommissionPayouts;
 use App\Filament\Resources\CommissionPayouts\Pages\ViewCommissionPayout;
 use App\Filament\Support\NavGroup;
@@ -24,6 +25,8 @@ use UnitEnum;
 /** Rekap jasa dokter per bulan (mockup "Komisi dokter"). */
 class CommissionPayoutResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = CommissionPayout::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;

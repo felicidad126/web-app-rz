@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Invoices;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Invoices\Pages\EditInvoice;
 use App\Filament\Resources\Invoices\Pages\ListInvoices;
 use App\Filament\Resources\Invoices\Pages\ViewInvoice;
@@ -24,6 +25,8 @@ use UnitEnum;
 
 class InvoiceResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Invoice::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;

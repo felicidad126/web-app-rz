@@ -4,6 +4,10 @@
         $patient->allergies ? 'Alergi: '.$patient->allergies : null,
         $patient->systemic_diseases ?: null,
     ])->filter();
+    // Konteks pasien (Fondasi UI): penjamin & saldo terutang selalu di posisi yang sama.
+    $patient->loadMissing('defaultPayer');
+    $outstanding = $patient->outstandingBalance();
+    $deposit = $patient->depositBalance();
 @endphp
 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px; padding: 12px 16px; background: #fff; border: 1px solid #e4e4e7; border-radius: 8px">
     <div style="display: flex; align-items: flex-start; gap: 12px; flex: 1 1 360px; min-width: 0">
@@ -13,7 +17,7 @@
         <div style="min-width: 0">
             <div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px">
                 <span style="font-size: 16px; font-weight: 600">{{ $patient->name }}</span>
-                <span style="font: 500 13px ui-monospace, monospace; color: #52525b">{{ $patient->rm_number }}</span>
+                <span class="klinik-mono" style="font-weight: 500; color: #52525b">{{ $patient->rm_number }}</span>
                 <span style="font-size: 13px; color: #52525b">{{ $patient->gender->getLabel() }} · {{ $patient->age }} th ({{ $patient->birth_date->format('d/m/Y') }}){{ $patient->phone ? ' · '.$patient->phone : '' }}</span>
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 2px 16px; font-size: 13px; margin-top: 2px">
@@ -25,7 +29,17 @@
             </div>
         </div>
     </div>
-    @if ($patient->blood_type)
-        <div style="font-size: 13px"><div style="color: #52525b">Gol. darah</div><div style="font-weight: 500">{{ $patient->blood_type->getLabel() }}</div></div>
-    @endif
+    <div style="display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 13px">
+        <div><div style="color: #52525b">Penjamin</div><div style="font-weight: 500">{{ $patient->defaultPayer?->name ?? 'Umum' }}</div></div>
+        @if ($patient->blood_type)
+            <div><div style="color: #52525b">Gol. darah</div><div style="font-weight: 500">{{ $patient->blood_type->getLabel() }}</div></div>
+        @endif
+        <div style="text-align: right">
+            <div style="color: #52525b">Saldo terutang</div>
+            <div style="font-weight: 600; font-variant-numeric: tabular-nums; color: {{ $outstanding > 0 ? '#b54708' : '#18181b' }}">{{ $outstanding > 0 ? \App\Support\Money::format($outstanding) : 'Tidak ada' }}</div>
+        </div>
+        @if ($deposit > 0)
+            <div style="text-align: right"><div style="color: #52525b">Deposit</div><div style="font-weight: 500; font-variant-numeric: tabular-nums">{{ \App\Support\Money::format($deposit) }}</div></div>
+        @endif
+    </div>
 </div>

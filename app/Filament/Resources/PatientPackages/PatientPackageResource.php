@@ -6,6 +6,7 @@ use App\Enums\InstallmentStatus;
 use App\Enums\PatientPackageStatus;
 use App\Filament\Clinic\PatientSelect;
 use App\Filament\Clinic\PractitionerOptions;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\PatientPackages\Pages\CreatePatientPackage;
 use App\Filament\Resources\PatientPackages\Pages\ListPatientPackages;
 use App\Filament\Resources\PatientPackages\Pages\ViewPatientPackage;
@@ -42,6 +43,8 @@ use UnitEnum;
 /** Paket & cicilan pasien (mockup "Paket & cicilan"). */
 class PatientPackageResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = PatientPackage::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;

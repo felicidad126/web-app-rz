@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Icd9cmCodes;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Icd9cmCodes\Pages\ManageIcd9cmCodes;
 use App\Filament\Support\CodeListSchema;
 use App\Filament\Support\NavGroup;
@@ -15,6 +16,8 @@ use UnitEnum;
 
 class Icd9cmCodeResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Icd9cmCode::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCheck;

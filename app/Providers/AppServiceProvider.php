@@ -5,11 +5,19 @@ namespace App\Providers;
 use App\Models\User;
 use App\Policies\ActivityPolicy;
 use App\Services\SatuSehat\SatuSehatClient;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Table;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Number;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Activitylog\Models\Activity;
@@ -37,11 +45,47 @@ class AppServiceProvider extends ServiceProvider
             Gate::policy(Activity::class, ActivityPolicy::class);
         }
 
+        $this->configureFilamentDefaults();
+
         Event::listen(Login::class, function (Login $event): void {
             if ($event->user instanceof User) {
                 $event->user->forceFill(['last_login_at' => now()])->saveQuietly();
             }
         });
+    }
+
+    /**
+     * Bawaan tampilan panel (Fondasi UI mockup v2):
+     * - format tanggal & angka Indonesia di tabel dan infolist;
+     * - teal hanya untuk aksi utama: tombol Ubah/Hapus di baris & kepala halaman netral, merah hanya di konfirmasi hapus;
+     * - nilai ya/tidak abu-abu (bukan hijau/merah), ikon tabel kosong bukan tanda silang.
+     */
+    private function configureFilamentDefaults(): void
+    {
+        Number::useLocale('id');
+
+        Table::configureUsing(fn (Table $table): Table => $table
+            ->defaultDateDisplayFormat('d/m/Y')
+            ->defaultDateTimeDisplayFormat('d/m/Y H:i')
+            ->defaultNumberLocale('id')
+            ->emptyStateIcon(Heroicon::OutlinedInbox)
+            ->filtersTriggerAction(fn (Action $action): Action => $action->badgeColor('gray')));
+
+        Schema::configureUsing(fn (Schema $schema): Schema => $schema
+            ->defaultDateDisplayFormat('d/m/Y')
+            ->defaultDateTimeDisplayFormat('d/m/Y H:i')
+            ->defaultNumberLocale('id'));
+
+        EditAction::configureUsing(fn (EditAction $action): EditAction => $action->color('gray'));
+
+        DeleteAction::configureUsing(fn (DeleteAction $action): DeleteAction => $action
+            ->color('gray')
+            ->modalSubmitAction(fn (Action $submit): Action => $submit->color('danger')));
+
+        IconColumn::configureUsing(fn (IconColumn $column): IconColumn => $column
+            ->trueColor('gray')
+            ->falseColor('gray')
+            ->falseIcon(Heroicon::OutlinedMinus));
     }
 
     /**

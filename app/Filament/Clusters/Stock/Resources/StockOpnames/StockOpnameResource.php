@@ -7,6 +7,7 @@ use App\Filament\Clusters\Stock\Resources\StockOpnames\Pages\CountStockOpname;
 use App\Filament\Clusters\Stock\Resources\StockOpnames\Pages\ListStockOpnames;
 use App\Filament\Clusters\Stock\Resources\StockOpnames\Pages\ViewStockOpname;
 use App\Filament\Clusters\Stock\StockCluster;
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Models\StockOpname;
 use App\Support\BranchContext;
 use BackedEnum;
@@ -21,6 +22,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class StockOpnameResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = StockOpname::class;
 
     protected static ?string $cluster = StockCluster::class;

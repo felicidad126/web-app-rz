@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Branches;
 
+use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Branches\Pages\CreateBranch;
 use App\Filament\Resources\Branches\Pages\EditBranch;
 use App\Filament\Resources\Branches\Pages\ListBranches;
@@ -21,6 +22,8 @@ use UnitEnum;
 
 class BranchResource extends Resource
 {
+    use SentenceCaseLabels;
+
     protected static ?string $model = Branch::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
