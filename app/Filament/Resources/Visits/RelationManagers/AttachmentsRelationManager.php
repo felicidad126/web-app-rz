@@ -59,7 +59,7 @@ class AttachmentsRelationManager extends ClinicalRelationManager
             ->columns(self::columns())
             ->headerActions([
                 CreateAction::make()
-                    ->label('Unggah lampiran')
+                    ->label('Upload lampiran')
                     ->mutateDataUsing(fn (array $data): array => [
                         ...$data,
                         'patient_id' => $this->getOwnerRecord()->getAttribute('patient_id'),
@@ -80,7 +80,7 @@ class AttachmentsRelationManager extends ClinicalRelationManager
             TextColumn::make('type')->label('Jenis')->badge(),
             TextColumn::make('original_name')->label('File')->limit(40),
             TextColumn::make('notes')->label('Keterangan')->placeholder('—')->limit(40),
-            TextColumn::make('uploader.name')->label('Diunggah oleh')->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('uploader.name')->label('Diupload oleh')->toggleable(isToggledHiddenByDefault: true),
         ];
     }
 

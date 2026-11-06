@@ -16,6 +16,19 @@ Semua halaman panel (79 halaman, 6 peran, desktop & HP) difoto, diaudit per segm
 6. **Target sentuh ≥ 44 px di tablet/HP**, desktop boleh lebih padat (baris ±44 px).
 7. **Status janji/kunjungan = titik + kata**: Terjadwal, Dikonfirmasi, Datang, Di kursi, Selesai, Tidak datang.
 8. **Kosakata seragam:** Briefing pagi, Tidak datang, Datang langsung, Penerimaan rencana, Bulan berjalan, Saldo terutang. Judul memakai huruf kalimat ("Order lab", bukan "Order Lab").
+9. **Bahasa:** Bahasa Indonesia, tetapi istilah yang di klinik lazim dipakai dalam bahasa Inggris tidak dipaksakan diterjemahkan (keputusan 7 Nov 2026):
+
+   | Bukan | Pakai |
+   |---|---|
+   | Dasbor | Dashboard |
+   | Kata sandi | Password |
+   | Masuk / Keluar (akun) | Login / Logout |
+   | Atur ulang | Reset |
+   | Unggah / Unduh | Upload / Download |
+   | Impor / Ekspor | Import / Export |
+   | Autentikasi dua faktor (2FA) | MFA (verifikasi dua langkah) |
+
+   Terjemahan bawaan Filament ditimpa di `lang/vendor/<paket>/id/` (hanya kunci yang berubah). Label lain yang sudah wajar dalam Bahasa Indonesia (Pasien, Kunjungan, Tagihan, Simpan, Ubah, Hapus, Laporan…) tetap. "Masuk/Keluar" untuk stok & kas (barang masuk, kas keluar) juga tetap.
 
 ---
 
@@ -73,7 +86,7 @@ Semua halaman panel (79 halaman, 6 peran, desktop & HP) difoto, diaudit per segm
 ### Master, Stok, Organisasi, Pengaturan
 - **Master (Cabang, Nakes, Penjamin, Tindakan, ICD, Kondisi odontogram, Obat & bahan, Supplier):** kode mono, badge jenis abu-abu, angka & harga rata kanan tanpa "Rp", tabel Tindakan muat di 1440 px, ICD menampilkan nama Indonesia, hapus/pulihkan di menu "Lainnya", tombol tambah relasi abu-abu, isian rupiah memakai `MoneyInput`.
 - **Stok:** chip aktif gelap (bukan teal); "Mulai opname" jadi aksi utama di tab Opname; detail opname/mutasi tanpa baris kuning dan muat di HP.
-- **Pengguna & Audit log:** label Indonesia ("Kata sandi", "Alamat email"); Reset MFA di menu; nilai audit diterjemahkan (Dibuat/Diubah/Dilihat, Pasien/Kunjungan/…).
+- **Pengguna & Audit log:** label Indonesia ("Alamat email", "Password"); Reset MFA di menu; nilai audit diterjemahkan (Dibuat/Diubah/Dilihat, Pasien/Kunjungan/…).
 - **SATUSEHAT, Kesiapan cabang, Panduan, Profil:** teks banner sesuai hak akses; butir yang belum terpenuhi di atas; lebar teks panduan dibatasi; profil dalam kartu "Akun" dua kolom.
 
 ### Belum dikerjakan (sengaja)

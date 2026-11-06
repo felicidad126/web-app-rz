@@ -12,7 +12,7 @@ trait IndonesianImportNotification
         $body = 'Import selesai: '.Number::format($import->successful_rows).' baris berhasil.';
 
         if ($failedRowsCount = $import->getFailedRowsCount()) {
-            $body .= ' '.Number::format($failedRowsCount).' baris gagal (unduh file gagal untuk melihat alasannya).';
+            $body .= ' '.Number::format($failedRowsCount).' baris gagal (download file gagal untuk melihat alasannya).';
         }
 
         return $body;

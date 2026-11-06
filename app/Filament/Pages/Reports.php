@@ -92,9 +92,9 @@ class Reports extends Page implements HasSchemas
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('excel')->label('Unduh Excel')->icon(Heroicon::OutlinedArrowDownTray)->color('gray')
+            Action::make('excel')->label('Download Excel')->icon(Heroicon::OutlinedArrowDownTray)->color('gray')
                 ->url(fn (): string => route('reports.export', [...$this->filters, 'format' => 'xlsx'])),
-            Action::make('pdf')->label('Unduh PDF')->icon(Heroicon::OutlinedDocumentArrowDown)->color('gray')
+            Action::make('pdf')->label('Download PDF')->icon(Heroicon::OutlinedDocumentArrowDown)->color('gray')
                 ->url(fn (): string => route('reports.export', [...$this->filters, 'format' => 'pdf']), shouldOpenInNewTab: true),
         ];
     }

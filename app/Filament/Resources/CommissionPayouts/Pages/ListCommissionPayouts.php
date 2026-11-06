@@ -29,7 +29,7 @@ class ListCommissionPayouts extends ListRecords
 
         return [
             Action::make('excel')
-                ->label('Unduh Excel')
+                ->label('Download Excel')
                 ->icon(Heroicon::OutlinedArrowDownTray)
                 ->color('gray')
                 ->schema([Select::make('period')->label('Periode')->options(CommissionPayoutResource::periodOptions())->default($defaultPeriod)->required()])

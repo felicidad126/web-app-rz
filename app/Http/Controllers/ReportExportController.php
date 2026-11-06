@@ -22,7 +22,7 @@ class ReportExportController extends Controller
         abort_if($report === null, 403);
 
         activity('access')->causedBy($user)->event('exported')
-            ->withProperties(['report' => $report::key(), 'format' => $request->string('format')->toString()])->log('Mengunduh laporan '.$report::label());
+            ->withProperties(['report' => $report::key(), 'format' => $request->string('format')->toString()])->log('Download laporan '.$report::label());
 
         $columns = $report->columns();
         $rows = $report->rows();

@@ -17,7 +17,7 @@ Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL
 
 ## Aturan
 
-- **Label UI Bahasa Indonesia.** Kode, nama tabel, dan kolom dalam bahasa Inggris.
+- **Label UI Bahasa Indonesia**, kecuali istilah yang lazim dipakai dalam bahasa Inggris: Dashboard, Password, Login/Logout, Reset, Upload/Download, Import/Export, MFA (daftar di `docs/12-perapian-ui.md`; terjemahan Filament ditimpa di `lang/vendor/`). Kode, nama tabel, dan kolom dalam bahasa Inggris.
 - **Tidak ada hapus permanen** data klinis, transaksi, atau master. Pakai soft delete atau status void. Jangan menambah `forceDelete` ke policy atau permission.
 - **NIK** hanya lewat trait `HasEncryptedNik`:
   - cast `encrypted` + kolom `nik_hash`

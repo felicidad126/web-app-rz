@@ -37,7 +37,7 @@ class UserForm
                             ->tel()
                             ->maxLength(30),
                         TextInput::make('password')
-                            ->label(fn (string $operation): string => $operation === 'edit' ? 'Kata sandi baru' : 'Kata sandi')
+                            ->label(fn (string $operation): string => $operation === 'edit' ? 'Password baru' : 'Password')
                             ->password()
                             ->revealable()
                             ->rule(Password::min(10)->letters()->numbers())

@@ -52,7 +52,7 @@ class ActivityResource extends Resource
         'deleted' => 'Dihapus',
         'restored' => 'Dipulihkan',
         'viewed' => 'Dilihat',
-        'exported' => 'Diunduh',
+        'exported' => 'Didownload',
         'signed' => 'Ditandatangani',
         'marked_sent' => 'Ditandai terkirim',
         'mfa_reset' => 'Reset MFA',

@@ -29,7 +29,7 @@ class ListPayslips extends ListRecords
 
         return [
             Action::make('excel')
-                ->label('Unduh rekap Excel')
+                ->label('Download rekap Excel')
                 ->icon(Heroicon::OutlinedArrowDownTray)
                 ->color('gray')
                 ->schema([$period()])

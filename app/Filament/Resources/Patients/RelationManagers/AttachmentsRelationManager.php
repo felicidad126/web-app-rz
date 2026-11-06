@@ -42,7 +42,7 @@ class AttachmentsRelationManager extends RelationManager
                 TextColumn::make('visit.visit_number')->label('Kunjungan')->placeholder('—'),
             ])
             ->headerActions([
-                CreateAction::make()->label('Unggah lampiran')->mutateDataUsing(fn (array $data): array => [...$data, 'disk' => 'local']),
+                CreateAction::make()->label('Upload lampiran')->mutateDataUsing(fn (array $data): array => [...$data, 'disk' => 'local']),
             ])
             ->recordActions([VisitAttachments::openAction()]);
     }
