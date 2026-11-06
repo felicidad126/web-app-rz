@@ -54,6 +54,15 @@ class PractitionerForm
                             ->displayFormat('d/m/Y')
                             ->helperText('Sistem akan memberi peringatan '.config('clinic.sip_expiry_warning_days').' hari sebelum kedaluwarsa.'),
                     ]),
+                Section::make('Uang hadir & on call')
+                    ->description('Dipakai saat mencatat kehadiran dokter; masuk ke rekap jasa bulanan.')
+                    ->columns(2)
+                    ->columnSpanFull()
+                    ->visible(fn (): bool => auth()->user()?->can('Manage:Commission') ?? false)
+                    ->components([
+                        TextInput::make('attendance_fee')->label('Uang hadir per hari')->prefix('Rp')->numeric()->minValue(0)->default(0),
+                        TextInput::make('on_call_fee')->label('Uang on call per hari')->prefix('Rp')->numeric()->minValue(0)->default(0),
+                    ]),
                 Section::make('SATUSEHAT')
                     ->columnSpanFull()
                     ->components([

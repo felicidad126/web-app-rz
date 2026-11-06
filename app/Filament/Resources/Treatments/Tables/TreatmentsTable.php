@@ -24,6 +24,7 @@ class TreatmentsTable
                 TextColumn::make('code')->label('Kode')->weight('bold')->searchable()->sortable(),
                 TextColumn::make('name')->label('Tindakan')->searchable()->sortable()->wrap(),
                 TextColumn::make('category')->label('Kategori')->badge()->visibleFrom('md'),
+                TextColumn::make('fee_group')->label('Jenis jasa')->badge()->visibleFrom('lg'),
                 TextColumn::make('icd9cm_code')->label('ICD-9-CM')->placeholder('-')->searchable()->visibleFrom('md'),
                 TextColumn::make('base_price')->label('Tarif dasar')->money('IDR', locale: 'id')->sortable(),
                 TextColumn::make('duration_minutes')->label('Durasi')->suffix(' mnt')->visibleFrom('lg'),

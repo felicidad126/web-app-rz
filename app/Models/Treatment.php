@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\FeeGroup;
 use App\Enums\TreatmentCategory;
 use App\Models\Concerns\LogsAudit;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -16,10 +17,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @property int $id
  * @property TreatmentCategory $category
+ * @property FeeGroup $fee_group
  * @property int $base_price
  * @property int $duration_minutes
  */
-#[Fillable(['code', 'name', 'category', 'icd9cm_code', 'base_price', 'duration_minutes', 'recall_months', 'description', 'is_active'])]
+#[Fillable(['code', 'name', 'category', 'fee_group', 'icd9cm_code', 'base_price', 'duration_minutes', 'recall_months', 'description', 'is_active'])]
 class Treatment extends Model
 {
     use HasFactory;
@@ -30,6 +32,16 @@ class Treatment extends Model
     public function icd9cm(): BelongsTo
     {
         return $this->belongsTo(Icd9cmCode::class, 'icd9cm_code', 'code');
+    }
+
+    protected static function booted(): void
+    {
+        // Jenis jasa awal mengikuti kategori klinis bila tidak diisi (mis. dari importer atau seeder).
+        static::creating(function (Treatment $treatment): void {
+            if (! array_key_exists('fee_group', $treatment->getAttributes()) && $treatment->getAttribute('category') instanceof TreatmentCategory) {
+                $treatment->fee_group = FeeGroup::fromCategory($treatment->category);
+            }
+        });
     }
 
     /** @return HasMany<TreatmentBranchPrice, $this> */
@@ -62,6 +74,7 @@ class Treatment extends Model
     {
         return [
             'category' => TreatmentCategory::class,
+            'fee_group' => FeeGroup::class,
             'base_price' => 'integer',
             'duration_minutes' => 'integer',
             'recall_months' => 'integer',

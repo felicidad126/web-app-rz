@@ -23,8 +23,10 @@ use Illuminate\Support\Carbon;
  * @property string|null $nik
  * @property string|null $nik_hash
  * @property Carbon|null $sip_expired_at
+ * @property int $attendance_fee
+ * @property int $on_call_fee
  */
-#[Fillable(['user_id', 'type', 'specialty', 'nik', 'str_number', 'sip_number', 'sip_expired_at', 'satusehat_ihs_id'])]
+#[Fillable(['user_id', 'type', 'specialty', 'nik', 'str_number', 'sip_number', 'sip_expired_at', 'satusehat_ihs_id', 'attendance_fee', 'on_call_fee'])]
 class Practitioner extends Model
 {
     use HasEncryptedNik;
@@ -101,6 +103,8 @@ class Practitioner extends Model
             'type' => PractitionerType::class,
             'nik' => 'encrypted',
             'sip_expired_at' => 'date',
+            'attendance_fee' => 'integer',
+            'on_call_fee' => 'integer',
         ];
     }
 }

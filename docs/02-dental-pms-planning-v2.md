@@ -601,14 +601,16 @@ erDiagram
 - [x] Test otomatis untuk FEFO & konversi satuan.
 - **DoD:** stok sistem sama dengan stok fisik setelah opname pertama.
 
-### Fase 6: Komisi, Laporan & Dashboard (Minggu 13–14)
-- [ ] Aturan komisi + perhitungan saat lunas + reversal + rekap & slip PDF.
-- [ ] Gaji staf (komponen manual) + slip PDF + rekap Excel.
-- [ ] Job snapshot `daily_metrics` + target per dokter/cabang.
-- [ ] Dashboard per role + halaman **Morning Huddle** + tooltip definisi KPI.
-- [ ] Laporan omzet, arus kas, laba kotor, piutang, komisi, stok, kunjungan, top diagnosa (PDF/Excel).
-- [ ] Ringkasan harian ke email owner.
-- [ ] Test otomatis untuk aturan komisi (semua basis) dan definisi KPI.
+### Fase 6: Komisi, Laporan & Dashboard (Minggu 13–14) — ✅ kode selesai, ⏳ cocokkan rekap bulan pertama
+> Detail hasil, keputusan owner, verifikasi, dan penyimpangan: [10-fase-6-implementasi.md](./10-fase-6-implementasi.md).
+
+- [x] Aturan komisi + perhitungan (diakui saat tindakan dikerjakan sesuai keputusan owner; "saat lunas" tetap tersedia) + reversal + rekap & slip PDF.
+- [x] Gaji staf (komponen manual) + slip PDF + rekap Excel.
+- [x] Job snapshot `daily_metrics` + target per dokter/cabang.
+- [x] Dashboard per role + halaman **Morning Huddle** + tooltip definisi KPI.
+- [x] Laporan omzet, arus kas, laba kotor, piutang, komisi, stok, kunjungan, top diagnosa (PDF/Excel).
+- [x] Ringkasan harian ke email owner.
+- [x] Test otomatis untuk aturan komisi (semua basis) dan definisi KPI.
 - **DoD:** rekap komisi bulan pertama cocok dengan perhitungan manual klinik.
 
 ### Fase 7: Polish, Odontogram Visual & Rollout (Minggu 15–16)

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Treatments\Schemas;
 
+use App\Enums\FeeGroup;
 use App\Enums\TreatmentCategory;
 use App\Models\Icd9cmCode;
 use Filament\Forms\Components\Select;
@@ -9,6 +10,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 class TreatmentForm
@@ -33,6 +35,18 @@ class TreatmentForm
                         Select::make('category')
                             ->label('Kategori')
                             ->options(TreatmentCategory::class)
+                            ->live()
+                            ->afterStateUpdated(function ($state, Set $set, string $operation): void {
+                                if ($operation === 'create' && $state !== null) {
+                                    $set('fee_group', FeeGroup::fromCategory($state instanceof TreatmentCategory ? $state : TreatmentCategory::from($state)));
+                                }
+                            })
+                            ->required(),
+                        Select::make('fee_group')
+                            ->label('Jenis jasa')
+                            ->helperText('Kelompok bagi hasil dokter (menentukan aturan jasa yang berlaku).')
+                            ->options(FeeGroup::class)
+                            ->default(FeeGroup::General)
                             ->required(),
                         Select::make('icd9cm_code')
                             ->label('Kode ICD-9-CM')

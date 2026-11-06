@@ -21,3 +21,7 @@ Schedule::command('queue:prune-failed --hours=720')->daily();
 
 // Fase 4: kirim ulang kiriman SATUSEHAT yang gagal karena gangguan (masalah data menunggu perbaikan staf).
 Schedule::command('satusehat:retry')->hourlyAt(17)->onOneServer()->withoutOverlapping();
+
+// Fase 6: snapshot KPI harian (angka kemarin dibekukan) dan ringkasan harian untuk owner.
+Schedule::command('metrics:snapshot')->dailyAt('00:30')->onOneServer()->withoutOverlapping();
+Schedule::command('reports:daily-summary')->dailyAt('21:00')->onOneServer();

@@ -8,6 +8,7 @@ use App\Enums\RefundStatus;
 use App\Models\Concerns\LogsAudit;
 use App\Models\Concerns\RecordsAuthor;
 use App\Services\Billing\PackageSales;
+use App\Services\Commission\CommissionEngine;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use LogicException;
+use Throwable;
 
 /**
  * Tagihan pasien. Draf bisa diubah; setelah diterbitkan baris & angka terkunci (koreksi lewat void).
@@ -125,6 +127,12 @@ class Invoice extends Model
         return $this->hasMany(Refund::class);
     }
 
+    /** @return HasMany<Commission, $this> */
+    public function commissions(): HasMany
+    {
+        return $this->hasMany(Commission::class);
+    }
+
     /** @return HasMany<Installment, $this> */
     public function installments(): HasMany
     {
@@ -201,6 +209,13 @@ class Invoice extends Model
         foreach ($this->installments()->with('patientPackage')->get() as $installment) {
             $installment->syncFromInvoice($this);
             PackageSales::completeIfDone($installment->patientPackage);
+        }
+
+        // Fase 6: jasa dengan pengakuan "saat lunas" mengikuti status bayar.
+        try {
+            CommissionEngine::syncRecognition($this);
+        } catch (Throwable $e) {
+            report($e);
         }
     }
 

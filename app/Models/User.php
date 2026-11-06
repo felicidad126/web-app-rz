@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -50,6 +51,12 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     public function branches(): BelongsToMany
     {
         return $this->belongsToMany(Branch::class);
+    }
+
+    /** @return HasMany<EmployeeSalaryItem, $this> */
+    public function salaryItems(): HasMany
+    {
+        return $this->hasMany(EmployeeSalaryItem::class);
     }
 
     /** @return HasOne<Practitioner, $this> */

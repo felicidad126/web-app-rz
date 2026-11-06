@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Peran & hak akses sesuai matriks akses Planning v2 (Bagian 4.3), lingkup Fase 1–5.
+ * Peran & hak akses sesuai matriks akses Planning v2 (Bagian 4.3), lingkup Fase 1–6.
  *
  * Format permission mengikuti Filament Shield: "{Aksi}:{Model}", mis. "ViewAny:Patient".
  * Seeder ini idempoten: aman dijalankan ulang setelah menambah resource.
@@ -42,6 +42,10 @@ class RolePermissionSeeder extends Seeder
         // Kasir & billing: kasir mengajukan void/refund, owner menyetujui (Approve:Billing). Deposit tanpa resource sendiri.
         $billingRead = [...self::grant(['Invoice', 'CashSession', 'PatientPackage'], self::R), 'View:Deposit'];
 
+        // Fase 6: laporan, briefing pagi, dan widget dashboard (Planning §5.8). Laba hanya owner.
+        $reportsAll = ['View:Reports', 'View:FinancialReports', 'View:MorningHuddle'];
+        $ownerWidgets = ['View:BranchPerformanceWidget', 'View:ProductionTrendWidget', 'View:DoctorPerformanceWidget', 'View:UnscheduledPlansWidget', 'View:OverdueBalancesWidget'];
+
         $owner = [
             ...self::grant([...self::ORGANIZATION, ...self::MASTER, 'ConsentTemplate', 'Patient', 'Role', 'Package'], self::CRUD),
             ...self::grant(['Activity', 'Appointment', 'Visit', 'TreatmentPlan', 'Recall'], self::R),
@@ -54,6 +58,20 @@ class RolePermissionSeeder extends Seeder
             'View:Stock',
             'Approve:Stock',
             'View:SipExpiryWidget',
+            'View:CashReport',
+            // Jasa dokter & gaji: owner mengatur aturan, membuat & membayar rekap, mengelola gaji (Planning §4.3).
+            ...self::grant(['CommissionRule', 'SalaryComponent', 'Target'], self::CRUD),
+            ...self::grant(['Commission', 'CommissionPayout', 'Payslip'], self::CRU),
+            ...self::grant(['PractitionerAttendance'], self::CRUD),
+            'Manage:Commission',
+            'ViewAll:Commission',
+            'Manage:Payroll',
+            // Laporan & dashboard: semua laporan termasuk laba.
+            ...$reportsAll,
+            'View:ProfitReports',
+            ...$ownerWidgets,
+            'View:TopTreatmentsWidget',
+            'View:TopDiagnosesWidget',
         ];
 
         $admin = [
@@ -68,6 +86,17 @@ class RolePermissionSeeder extends Seeder
             'View:Stock',
             'Approve:Stock',
             'View:SipExpiryWidget',
+            'View:CashReport',
+            // Jasa & gaji: admin melihat (R) dan mencatat kehadiran dokter harian.
+            ...self::grant(['CommissionRule', 'Commission', 'CommissionPayout', 'SalaryComponent', 'Payslip', 'Target'], self::R),
+            ...self::grant(['PractitionerAttendance'], self::CRU),
+            'ViewAll:Commission',
+            // Laporan keuangan tanpa laba.
+            ...$reportsAll,
+            ...$ownerWidgets,
+            'View:TopDiagnosesWidget',
+            'View:FrontDeskWidget',
+            'View:ToContactWidget',
         ];
 
         $clinical = [
@@ -83,12 +112,16 @@ class RolePermissionSeeder extends Seeder
             'dokter' => [
                 ...$clinical, ...self::grant(['Appointment', 'Package', 'PatientPackage', 'StockMovement'], self::R), ...self::grant(['Visit'], self::RU),
                 ...self::grant(['LabOrder'], self::CRU), 'View:Stock', ...$signRecord,
+                // Jasa miliknya saja (query dibatasi bila tidak punya ViewAll:Commission); laporan miliknya.
+                ...self::grant(['Commission', 'CommissionPayout'], self::R),
+                'View:Reports', 'View:MorningHuddle', 'View:MyDayWidget', 'View:MyPerformanceWidget',
             ],
             // Perawat: mengisi draf rekam medis, tidak menandatangani.
             // Perawat juga mencatat penerimaan, pemakaian, pengajuan pemusnahan, dan menghitung opname (tanpa menyetujui).
             'perawat' => [
                 ...$clinical, ...self::grant(['Appointment', 'Visit'], self::RU), ...$writeRecord, 'View:SatuSehat',
                 ...self::grant(['StockMovement', 'StockOpname', 'LabOrder'], self::CRU), 'View:Stock',
+                'View:MorningHuddle', 'View:TopDiagnosesWidget',
             ],
             // Resepsionis mendaftarkan & mengubah data pasien, tetapi tidak menghapus (retensi rekam medis).
             'resepsionis' => [
@@ -100,6 +133,7 @@ class RolePermissionSeeder extends Seeder
                 'Resend:SatuSehat',
                 // Resepsionis memantau order lab (barang datang, jadwal pasang).
                 ...self::grant(['LabOrder'], self::RU),
+                'View:MorningHuddle', 'View:FrontDeskWidget', 'View:ToContactWidget',
             ],
             // Kasir: tagihan, pembayaran, sesi kasir, paket pasien, deposit. Tidak menghapus apa pun.
             'kasir' => [
@@ -108,6 +142,8 @@ class RolePermissionSeeder extends Seeder
                 'View:Deposit',
                 'TopUp:Deposit',
                 'View:Stock',
+                // Kas harian: laporan arus kas & widget kasir.
+                'View:Reports', 'View:CashReport', 'View:CashierTodayWidget',
             ],
         ];
     }

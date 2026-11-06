@@ -34,6 +34,7 @@ use LogicException;
  * @property string $tax_rate
  * @property int $tax
  * @property int $net_amount
+ * @property int $package_value
  * @property int|null $practitioner_id
  * @property int|null $assistant_id
  * @property int $material_cost
@@ -44,7 +45,7 @@ use LogicException;
 #[Fillable([
     'invoice_id', 'item_type', 'visit_procedure_id', 'treatment_id', 'item_id', 'unit_id', 'prescription_item_id',
     'patient_package_id', 'installment_id', 'description', 'tooth_number', 'surfaces', 'qty', 'unit_price',
-    'item_discount', 'item_discount_percent', 'allocated_invoice_discount', 'tax_rate', 'tax', 'net_amount',
+    'item_discount', 'item_discount_percent', 'allocated_invoice_discount', 'tax_rate', 'tax', 'net_amount', 'package_value',
     'practitioner_id', 'assistant_id', 'material_cost', 'lab_cost', 'commission_rule_snapshot', 'sort',
 ])]
 class InvoiceItem extends Model
@@ -54,7 +55,7 @@ class InvoiceItem extends Model
     /** @var array<string, mixed> */
     protected $attributes = [
         'qty' => 1, 'unit_price' => 0, 'item_discount' => 0, 'allocated_invoice_discount' => 0, 'tax_rate' => 0,
-        'tax' => 0, 'net_amount' => 0, 'material_cost' => 0, 'lab_cost' => 0, 'sort' => 0,
+        'tax' => 0, 'net_amount' => 0, 'package_value' => 0, 'material_cost' => 0, 'lab_cost' => 0, 'sort' => 0,
     ];
 
     protected static function booted(): void
@@ -151,6 +152,7 @@ class InvoiceItem extends Model
             'tax_rate' => 'decimal:2',
             'tax' => 'integer',
             'net_amount' => 'integer',
+            'package_value' => 'integer',
             'material_cost' => 'integer',
             'lab_cost' => 'integer',
             'commission_rule_snapshot' => 'array',

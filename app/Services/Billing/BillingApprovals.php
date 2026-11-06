@@ -19,6 +19,7 @@ use App\Models\Refund;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Models\Visit;
+use App\Services\Commission\CommissionEngine;
 use App\Services\Stock\StockLedger;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -117,6 +118,9 @@ final class BillingApprovals
             self::ensureNoMoney($invoice);
 
             $invoice->forceFill(['status' => InvoiceStatus::Void, 'voided_by' => $approver->id, 'voided_at' => now()])->save();
+
+            // Fase 6: jasa dokter dari tagihan ini dibatalkan / dibalik.
+            CommissionEngine::reverseInvoice($invoice, 'Void tagihan '.$invoice->label().': '.$invoice->void_reason);
 
             PackageUsage::query()->whereIn('invoice_item_id', $invoice->items()->select('id'))->whereNull('voided_at')->update(['voided_at' => now()]);
 
@@ -250,6 +254,9 @@ final class BillingApprovals
             }
 
             $refund->invoice?->syncPaymentStatus();
+
+            // Fase 6: jasa dokter dibalik sebanding dengan porsi refund.
+            CommissionEngine::reverseForRefund($refund);
         });
     }
 

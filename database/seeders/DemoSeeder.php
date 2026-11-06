@@ -3,6 +3,10 @@
 namespace Database\Seeders;
 
 use App\Enums\AppointmentStatus;
+use App\Enums\CommissionBase;
+use App\Enums\CommissionRecognition;
+use App\Enums\CommissionRole;
+use App\Enums\CommissionType;
 use App\Enums\ItemType;
 use App\Enums\LabWorkType;
 use App\Enums\PayerType;
@@ -10,16 +14,12 @@ use App\Enums\PractitionerType;
 use App\Enums\RecallStatus;
 use App\Enums\StockReason;
 use App\Enums\TreatmentCategory;
+use App\Enums\TreatmentPlanItemStatus;
 use App\Enums\TreatmentPlanStatus;
 use App\Enums\VisitStatus;
 use App\Models\Appointment;
 use App\Models\Branch;
-use App\Models\Item;
-use App\Models\ItemBatch;
-use App\Models\ItemCategory;
-use App\Models\Package;
-use App\Models\Patient;
-use App\Models\PatientPackage;
+use App\Models\CommissionPayout;
 /**
  * Data demo untuk lingkungan lokal/staging. JANGAN dijalankan di produksi.
  *
@@ -28,11 +28,21 @@ use App\Models\PatientPackage;
  * Semua akun demo memakai password dari config('clinic.demo_password') (default "password")
  * dan wajib mengatur MFA saat login pertama.
  */
+use App\Models\CommissionRule;
+use App\Models\Item;
+use App\Models\ItemBatch;
+use App\Models\ItemCategory;
+use App\Models\Package;
+use App\Models\Patient;
+use App\Models\PatientPackage;
 use App\Models\Payer;
+use App\Models\Payslip;
 use App\Models\Practitioner;
 use App\Models\Recall;
+use App\Models\SalaryComponent;
 use App\Models\StockOpname;
 use App\Models\Supplier;
+use App\Models\Target;
 use App\Models\Treatment;
 use App\Models\TreatmentPlan;
 use App\Models\Unit;
@@ -43,7 +53,12 @@ use App\Services\Billing\InvoiceBuilder;
 use App\Services\Billing\PackageSales;
 use App\Services\Billing\PaymentRecorder;
 use App\Services\Clinic\VisitFlow;
+use App\Services\Commission\Attendances;
+use App\Services\Commission\CommissionPayouts;
 use App\Services\Lab\LabOrders;
+use App\Services\Payroll\Payslips;
+use App\Services\Reports\DailyMetrics;
+use App\Services\Reports\Targets;
 use App\Services\Stock\StockLedger;
 use App\Services\Stock\StockOpnames;
 use Illuminate\Database\Seeder;
@@ -165,6 +180,195 @@ class DemoSeeder extends Seeder
 
         $this->seedBilling($kemang);
         $this->seedStock($kemang, $depok);
+        $this->seedPerformance($kemang, $depok);
+    }
+
+    /**
+     * Fase 6: riwayat ±4 minggu (kunjungan selesai, tagihan, pembayaran, sebagian belum lunas, tidak datang),
+     * rencana perawatan, target, uang hadir, aturan jasa asisten, rekap jasa & slip gaji bulan lalu, lalu snapshot KPI.
+     * Dibuat sekali (penanda: kunjungan selesai dalam 28 hari terakhir); urutan acak tetap (seed 2026) agar angka stabil.
+     */
+    private function seedPerformance(Branch $kemang, Branch $depok): void
+    {
+        $owner = User::where('email', 'owner@demo.test')->firstOrFail();
+        $kasir = User::where('email', 'kasir@demo.test')->firstOrFail();
+        $budi = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter@demo.test'))->firstOrFail();
+        $maya = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter2@demo.test'))->firstOrFail();
+        $dewi = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'perawat@demo.test'))->firstOrFail();
+
+        $budi->update(['attendance_fee' => 150_000, 'on_call_fee' => 75_000]);
+        $maya->update(['attendance_fee' => 200_000, 'on_call_fee' => 100_000]);
+
+        CommissionRule::firstOrCreate(['name' => 'Asisten: Rp 10.000 per tindakan'], [
+            'role' => CommissionRole::Assistant, 'type' => CommissionType::Fixed, 'fixed_amount' => 10_000,
+            'base' => CommissionBase::Net, 'recognition' => CommissionRecognition::Performed,
+            'notes' => 'Contoh dari mockup (insentif staf non-dokter). Sesuaikan dengan keputusan owner.',
+        ]);
+
+        // Target produksi per hari kerja, sebanding dengan volume data demo (mockup memakai skala klinik penuh).
+        foreach ([now()->startOfMonth()->subMonthNoOverflow(), now()->startOfMonth()] as $month) {
+            foreach ([[$kemang, 1_600_000], [$depok, 600_000]] as [$branch, $daily]) {
+                Target::firstOrCreate(
+                    ['period' => $month->toDateString(), 'branch_id' => $branch->id, 'practitioner_id' => null, 'metric' => 'production'],
+                    ['amount' => $daily * max(1, Targets::workingDays($month, $branch->id)->count())],
+                );
+            }
+        }
+
+        $start = today()->subDays(28);
+        $end = today(); // tetap, karena setTestNow di dalam loop menggeser today()
+        $hasHistory = Visit::query()->whereIn('status', [VisitStatus::Done, VisitStatus::Billed])
+            ->whereDate('visit_date', '>=', $start)->whereDate('visit_date', '<', today()->subDays(2))->count() > 5;
+
+        if (! $hasHistory) {
+            mt_srand(2026);
+
+            // Restok sebelum riwayat agar pemakaian BOM tidak membuat stok minus.
+            Carbon::setTestNow($start->copy()->setTime(9, 0));
+            $box = Unit::where('name', 'box')->value('id');
+            $komp = Item::where('sku', 'BHN-KOMP')->firstOrFail();
+            StockLedger::receive($kemang->id, [
+                ['item_id' => $komp->id, 'unit_id' => $komp->base_unit_id, 'qty' => 6, 'unit_price' => 285_000, 'batch_number' => 'KMP-2210', 'expired_at' => today()->addYear()->endOfMonth()->toDateString()],
+                ['item_id' => Item::where('sku', 'ALT-GLV')->value('id'), 'unit_id' => $box, 'qty' => 3, 'unit_price' => 65_000, 'batch_number' => 'NTR-M-02', 'expired_at' => null],
+                ['item_id' => Item::where('sku', 'BHN-LIDO')->value('id'), 'unit_id' => $box, 'qty' => 1, 'unit_price' => 490_000, 'batch_number' => 'LD-0801', 'expired_at' => today()->addMonths(15)->endOfMonth()->toDateString()],
+                ['item_id' => Item::where('sku', 'BHN-GIC')->value('id'), 'unit_id' => Item::where('sku', 'BHN-GIC')->value('base_unit_id'), 'qty' => 2, 'unit_price' => 420_000, 'batch_number' => 'GIC-2210', 'expired_at' => today()->addMonths(14)->endOfMonth()->toDateString()],
+            ], Supplier::where('name', 'PT Medika Jaya')->value('id'), 'MJ/RESTOK/01', today(), null, User::where('email', 'perawat@demo.test')->firstOrFail());
+            $patients = Patient::orderBy('id')->get();
+            $treatments = Treatment::whereIn('code', ['KONS', 'SCL', 'TKO', 'TGI', 'CBD', 'PSA', 'RPA', 'CBS'])->get()->keyBy('code');
+            $menu = [['KONS'], ['KONS', 'SCL'], ['TKO'], ['TKO', 'RPA'], ['TGI'], ['CBD'], ['PSA'], ['SCL'], ['KONS', 'TKO'], ['CBS']];
+            $methods = ['cash', 'qris', 'transfer', 'debit', 'cash'];
+
+            for ($day = $start->copy(); $day->lt($end); $day->addDay()) {
+                foreach ([[$kemang, [$budi, $maya], [3, 6]], [$depok, [$maya], [1, 3]]] as [$branch, $doctors, [$min, $max]]) {
+                    $working = collect($doctors)->filter(fn (Practitioner $d): bool => array_sum(DailyMetrics::scheduledMinutes($day, $branch->id, $d->id)) > 0)->values();
+
+                    if ($working->isEmpty()) {
+                        continue;
+                    }
+
+                    Carbon::setTestNow($day->copy()->setTime(8, 0));
+                    $session = CashSessions::current($kasir, $branch->id) ?? CashSessions::open($kasir, $branch->id, 500_000);
+                    $count = mt_rand($min, $max);
+
+                    for ($i = 0; $i < $count; $i++) {
+                        $doctor = $working[$i % $working->count()];
+                        $patient = $patients[mt_rand(0, $patients->count() - 1)];
+                        $arrived = $day->copy()->setTime(8 + $i, mt_rand(0, 40));
+                        $started = $arrived->copy()->addMinutes(mt_rand(5, 25));
+                        Carbon::setTestNow($started);
+
+                        $appointment = Appointment::create([
+                            'branch_id' => $branch->id, 'patient_id' => $patient->id, 'practitioner_id' => $doctor->id,
+                            'start_at' => $arrived->copy()->setMinute(0), 'end_at' => $arrived->copy()->setMinute(0)->addMinutes(45),
+                            'reason' => 'Kontrol / perawatan', 'status' => AppointmentStatus::Arrived,
+                        ]);
+                        $visit = Visit::create([
+                            'appointment_id' => $appointment->id,
+                            'branch_id' => $branch->id, 'patient_id' => $patient->id, 'practitioner_id' => $doctor->id,
+                            'visit_date' => $day->toDateString(), 'status' => VisitStatus::Done, 'arrived_at' => $arrived, 'started_at' => $started,
+                            'finished_at' => $started->copy()->addMinutes(mt_rand(20, 60)),
+                        ]);
+
+                        foreach ($menu[mt_rand(0, count($menu) - 1)] as $code) {
+                            $visit->procedures()->create([
+                                'treatment_id' => $treatments[$code]->id, 'operator_id' => $doctor->id,
+                                'assistant_id' => mt_rand(0, 2) === 0 ? $dewi->id : null,
+                                'tooth_number' => $code === 'KONS' || $code === 'SCL' ? null : (string) [16, 26, 36, 46, 37, 47][mt_rand(0, 5)],
+                            ]);
+                        }
+
+                        // Depok belum opname di demo, jadi stoknya belum dilacak.
+                        if ($branch->is($kemang)) {
+                            StockLedger::usageForVisit($visit->fresh(), $kasir);
+                        }
+                        Carbon::setTestNow($started->copy()->addHour());
+                        $invoice = InvoiceBuilder::forVisit($visit->fresh());
+
+                        // Sebagian pasien memakai promo klinik (Inova Care) 10%.
+                        if (mt_rand(0, 6) === 0) {
+                            $invoice->update(['invoice_discount_percent' => 10]);
+                            InvoiceBuilder::recalculate($invoice->fresh());
+                        }
+
+                        $invoice = InvoiceBuilder::issue($invoice->fresh(), $kasir);
+
+                        if (mt_rand(0, 9) > 0) {
+                            PaymentRecorder::receive($patient, [$invoice->id], [['method' => $methods[mt_rand(0, 4)], 'amount' => $invoice->patient_portion]], $session, $kasir);
+                        }
+                    }
+
+                    // Satu janji tidak datang tiap beberapa hari.
+                    if (mt_rand(0, 3) === 0) {
+                        $at = $day->copy()->setTime(15, 0);
+                        Appointment::create([
+                            'branch_id' => $branch->id, 'patient_id' => $patients[mt_rand(0, $patients->count() - 1)]->id, 'practitioner_id' => $working->first()->id,
+                            'start_at' => $at, 'end_at' => $at->copy()->addMinutes(30), 'reason' => 'Kontrol', 'status' => AppointmentStatus::NoShow,
+                        ]);
+                    }
+
+                    Carbon::setTestNow($day->copy()->setTime(18, 0));
+                    $cash = CashSessions::expectedCash($session);
+                    $reported = array_diff_key(CashSessions::systemTotals($session), ['cash' => 0]);
+                    CashSessions::close($session, $kasir, ['denominations' => ['coins' => $cash], 'reported' => $reported, 'next_opening_cash' => 500_000]);
+                    Attendances::fillFromVisits($branch->id, $day->copy(), $owner);
+                }
+            }
+
+            // Rencana perawatan: diajukan, disetujui, sebagian belum dijadwalkan.
+            $filling = Treatment::where('code', 'TKO')->firstOrFail();
+            $crown = Treatment::where('code', 'CRN')->firstOrFail();
+            foreach ([[10, TreatmentPlanStatus::Accepted, 'Tambal 14, 15', [[$filling, 400_000], [$filling, 400_000]]],
+                [11, TreatmentPlanStatus::Accepted, 'Crown PFM 46', [[$crown, 2_000_000]]],
+                [12, TreatmentPlanStatus::Rejected, 'Crown PFM 36', [[$crown, 2_000_000]]],
+                [13, TreatmentPlanStatus::Presented, 'Tambal 24', [[$filling, 400_000]]]] as [$index, $status, $title, $items]) {
+                $presented = today()->subDays(1 + $index % 4)->setTime(11, 0);
+                $plan = TreatmentPlan::create([
+                    'patient_id' => $patients[$index]->id, 'practitioner_id' => $budi->id, 'branch_id' => $kemang->id, 'title' => $title, 'status' => $status,
+                    'presented_at' => $presented, 'decided_at' => $status === TreatmentPlanStatus::Presented ? null : $presented->copy()->addMinutes(30),
+                ]);
+
+                foreach ($items as $sequence => [$treatment, $price]) {
+                    $plan->items()->create(['treatment_id' => $treatment->id, 'phase' => 1, 'sequence' => $sequence + 1, 'price_estimate' => $price, 'status' => TreatmentPlanItemStatus::Planned]);
+                }
+            }
+
+            Carbon::setTestNow();
+
+            // Rekap jasa bulan lalu: dibuat & difinalkan owner (bulan berjalan dibiarkan untuk dicoba).
+            if (today()->day > 1 && CommissionPayout::query()->doesntExist()) {
+                foreach (CommissionPayouts::generate(now()->startOfMonth()->subMonthNoOverflow(), $owner) as $payout) {
+                    CommissionPayouts::finalize($payout, $owner);
+                }
+            }
+
+            // Snapshot KPI untuk hari yang sudah lewat (dashboard & tren).
+            for ($day = $start->copy(); $day->lt($end); $day->addDay()) {
+                DailyMetrics::snapshot($day->copy());
+            }
+        }
+
+        // Gaji staf: komponen tetap & slip bulan lalu.
+        $components = SalaryComponent::pluck('id', 'name');
+        $salaries = [
+            'admin@demo.test' => [5_000_000, 600_000, 400_000],
+            'perawat@demo.test' => [4_500_000, 600_000, 300_000],
+            'resepsionis@demo.test' => [3_800_000, 600_000, 300_000],
+            'kasir@demo.test' => [3_800_000, 600_000, 300_000],
+        ];
+
+        foreach ($salaries as $email => [$basic, $meal, $transport]) {
+            $user = User::where('email', $email)->firstOrFail();
+
+            foreach ([['Gaji pokok', $basic], ['Uang makan', $meal], ['Tunjangan transport', $transport], ['Potongan BPJS Kesehatan', (int) round($basic * 0.01)]] as [$name, $amount]) {
+                $user->salaryItems()->firstOrCreate(['salary_component_id' => $components[$name]], ['amount' => $amount]);
+            }
+        }
+
+        if (Payslip::query()->doesntExist()) {
+            foreach (Payslips::generate(now()->startOfMonth()->subMonthNoOverflow(), $owner) as $payslip) {
+                Payslips::finalize($payslip, $owner);
+            }
+        }
     }
 
     /**

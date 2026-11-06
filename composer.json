@@ -19,6 +19,7 @@
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
         "league/flysystem-aws-s3-v3": "^3.0",
+        "openspout/openspout": "^4.23",
         "spatie/laravel-activitylog": "^4.12",
         "spatie/laravel-backup": "^10.3"
     },
@@ -59,6 +60,7 @@
             "@php artisan dev"
         ],
         "test": [
+            "Composer\\Config::disableProcessTimeout",
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
         ],

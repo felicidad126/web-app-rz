@@ -19,6 +19,7 @@ use App\Models\PatientPackage;
 use App\Models\StockMovementLine;
 use App\Models\User;
 use App\Models\Visit;
+use App\Services\Commission\CommissionEngine;
 use App\Services\NumberSequence;
 use App\Services\Stock\StockLedger;
 use Illuminate\Support\Facades\DB;
@@ -161,6 +162,8 @@ final class InvoiceBuilder
 
             self::recordPackageUsages($invoice, $items->whereNotNull('patient_package_id')->where('item_type', InvoiceItemType::Procedure)->all());
             self::snapshotCosts($items->whereNotNull('visit_procedure_id')->all());
+            // Fase 6: aturan jasa & nilai paket di-snapshot selagi baris belum terkunci.
+            CommissionEngine::snapshotItems($invoice, $items->where('item_type', InvoiceItemType::Procedure)->all());
 
             $invoice->loadMissing('branch');
             $invoice->forceFill([
@@ -186,6 +189,13 @@ final class InvoiceBuilder
         // Fase 5: barang retail yang dijual keluar dari stok (masalah stok tidak menahan tagihan).
         try {
             StockLedger::saleForInvoice($issued, $user);
+        } catch (Throwable $e) {
+            report($e);
+        }
+
+        // Fase 6: entri jasa dokter dari snapshot (yang terlewat disusulkan saat rekap dibuat).
+        try {
+            CommissionEngine::recordForInvoice($issued);
         } catch (Throwable $e) {
             report($e);
         }
