@@ -32,6 +32,13 @@ class ItemForm
                             ->label('Jenis')
                             ->options(ItemType::class)
                             ->required(),
+                        Select::make('item_category_id')
+                            ->label('Kategori')
+                            ->relationship('category', 'name', fn ($query) => $query->where('is_active', true))
+                            ->createOptionForm([
+                                TextInput::make('name')->label('Nama kategori')->required()->maxLength(80)->unique('item_categories', 'name'),
+                            ])
+                            ->preload(),
                         TextInput::make('kfa_code')
                             ->label('Kode KFA')
                             ->helperText('Kamus Farmasi & Alkes Kemenkes. Wajib untuk obat yang diresepkan (SATUSEHAT).')

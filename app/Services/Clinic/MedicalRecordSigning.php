@@ -9,8 +9,10 @@ use App\Models\Recall;
 use App\Models\User;
 use App\Models\Visit;
 use App\Services\SatuSehat\VisitSync;
+use App\Services\Stock\StockLedger;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * Tanda tangan dokter: mengunci rekam medis, menutup kunjungan, menandai item rencana
@@ -86,6 +88,13 @@ final class MedicalRecordSigning
 
         // Fase 4: kirim ke SATUSEHAT di latar belakang (setelah transaksi tersimpan).
         VisitSync::queue($visit);
+
+        // Fase 5: bahan sesuai BOM tindakan keluar dari stok. Masalah stok tidak boleh menggagalkan tanda tangan.
+        try {
+            StockLedger::usageForVisit($visit->fresh() ?? $visit, $user);
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     private static function scheduleRecall(Visit $visit, int $treatmentId, string $treatmentName, ?int $months): void

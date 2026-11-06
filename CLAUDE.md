@@ -3,7 +3,7 @@
 Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL, Redis.
 
 - **Acuan desain:** `docs/02-dental-pms-planning-v2.md` (scope, skema DB, roadmap).
-- **Status terakhir:** `docs/07-fase-4-implementasi.md` (Fase 1: `docs/03-…`, Fase 2: `docs/05-…`, Fase 3: `docs/06-…`). Review konsep stok & jasa dokter dari klinik: `docs/08-review-konsep-stok-dan-jasa-dokter.md`.
+- **Status terakhir:** `docs/09-fase-5-implementasi.md` (Fase 1: `docs/03-…`, Fase 2: `docs/05-…`, Fase 3: `docs/06-…`, Fase 4: `docs/07-…`). Review konsep stok & jasa dokter dari klinik: `docs/08-review-konsep-stok-dan-jasa-dokter.md`.
 
 ## Perintah
 
@@ -29,7 +29,8 @@ Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL
 - **Uang** disimpan sebagai `bigint` rupiah. Simpan snapshot harga dan % fee di baris transaksi.
 - **Billing:** rumus tagihan hanya di `App\Services\Billing\InvoiceCalculator`. Tagihan terbit, baris tagihan, dan ledger deposit terkunci di level model; koreksi lewat void/refund (`BillingApprovals`, izin `Approve:Billing`, penyetuju ≠ pengaju). Uang masuk/keluar selalu tercatat ke sesi kasir yang terbuka (`CashSessions`).
 - **SATUSEHAT:** semua panggilan lewat `App\Services\SatuSehat\SatuSehatClient` (token di-cache, error disaring). Jangan pernah mencatat URL/payload permintaan ke log: pencarian pasien memuat NIK. Kredensial hanya di `.env`. Pengiriman kunjungan lewat `VisitSync` (antrean, tidak dikirim dua kali).
-- **Nomor urut** (RM, invoice, kunjungan) wajib lewat `App\Services\NumberSequence`.
+- **Stok:** semua perubahan stok lewat `App\Services\Stock\StockLedger` (opname lewat `StockOpnames`); jangan mengubah `item_batches.qty_on_hand` langsung. Jumlah dalam satuan dasar, harga pokok per satuan dasar (bigint). Mutasi tercatat tidak bisa diubah; koreksi lewat pembatalan atau opname. Pemusnahan & opname butuh `Approve:Stock` (penyetuju ≠ pengaju).
+- **Nomor urut** (RM, invoice, kunjungan, mutasi stok, order lab) wajib lewat `App\Services\NumberSequence`.
 - **Lazy loading dilarang** di `local` & `testing` (`Model::shouldBeStrict`). Eager-load relasi di tabel dan relation manager.
 - `app/Policies/*` dibuat oleh Shield. Jangan diedit manual; atur hak akses di seeder.
 - **Service worker** (`public/sw.js`) hanya boleh meng-cache aset statis.

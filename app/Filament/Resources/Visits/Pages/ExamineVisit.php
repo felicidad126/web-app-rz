@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Visits\Pages;
 
 use App\Enums\VisitStatus;
+use App\Filament\Resources\LabOrders\LabOrderResource;
 use App\Filament\Resources\Patients\PatientResource;
 use App\Filament\Resources\TreatmentPlans\TreatmentPlanResource;
 use App\Filament\Resources\Visits\Schemas\ExamForm;
@@ -152,6 +153,11 @@ class ExamineVisit extends EditRecord
                     ->icon(Heroicon::OutlinedClipboardDocumentCheck)
                     ->visible(fn (): bool => auth()->user()?->can('Create:TreatmentPlan') ?? false)
                     ->url(fn (Visit $record): string => TreatmentPlanResource::getUrl('create', ['patient' => $record->patient_id, 'visit' => $record->id])),
+                Action::make('labOrder')
+                    ->label('Buat order lab')
+                    ->icon(Heroicon::OutlinedCube)
+                    ->visible(fn (): bool => auth()->user()?->can('Create:LabOrder') ?? false)
+                    ->url(fn (Visit $record): string => LabOrderResource::getUrl('create', ['visit' => $record->id])),
                 VisitActions::cancel(),
             ])->label('Lainnya')->button()->color('gray'),
         ];

@@ -61,6 +61,23 @@ dataset('akses', [
     ['dokter', '/kasir', 403],
     ['dokter', '/tagihan', 403],
     ['perawat', '/sesi-kasir', 403],
+    // Fase 5: stok, pembelian & lab.
+    ['kasir', '/stok/barang', 200],
+    ['resepsionis', '/stok/barang', 403],
+    ['perawat', '/stok/mutasi', 200],
+    ['perawat', '/stok/opname', 200],
+    ['owner', '/stok/mutasi', 200],
+    ['kasir', '/stok/mutasi', 403],
+    ['dokter', '/stok/opname', 403],
+    ['admin', '/supplier', 200],
+    ['admin', '/kategori-barang', 200],
+    ['resepsionis', '/supplier', 403],
+    ['dokter', '/order-lab', 200],
+    ['dokter', '/order-lab/create', 200],
+    ['resepsionis', '/order-lab', 200],
+    ['resepsionis', '/order-lab/create', 403],
+    ['owner', '/order-lab/create', 403],
+    ['kasir', '/order-lab', 403],
 ]);
 
 it('membatasi halaman sesuai matriks akses', function (string $role, string $url, int $status) {

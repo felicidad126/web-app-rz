@@ -588,15 +588,17 @@ erDiagram
 - [ ] Uji di **sandbox**, lalu pindah ke produksi. Backfill kunjungan sejak soft launch (perintah & tombol sudah ada).
 - **DoD:** semua kunjungan baru terkirim otomatis ke SATUSEHAT produksi, dan kegagalan terlihat di dashboard admin.
 
-### Fase 5: Stok, Pembelian & Lab (Minggu 11–12)
-- [ ] Batch + FEFO + mutasi stok + transfer antar cabang.
-- [ ] Penerimaan barang dari supplier.
-- [ ] Pemotongan otomatis dari BOM tindakan & resep, dengan mutasi balik saat batal.
-- [ ] Stok opname dengan approval.
-- [ ] Alert stok minimum & expired ≤30 hari.
-- [ ] HPP per tindakan.
-- [ ] Order lab + biaya lab.
-- [ ] Test otomatis untuk FEFO & konversi satuan.
+### Fase 5: Stok, Pembelian & Lab (Minggu 11–12) — ✅ selesai
+> Detail hasil, verifikasi, dan penyimpangan: [09-fase-5-implementasi.md](./09-fase-5-implementasi.md).
+
+- [x] Batch + FEFO + mutasi stok + transfer antar cabang.
+- [x] Penerimaan barang dari supplier.
+- [x] Pemotongan otomatis dari BOM tindakan & resep, dengan mutasi balik saat batal.
+- [x] Stok opname dengan approval.
+- [x] Alert stok minimum & expired (default ≤60 hari mengikuti mockup, bisa diatur).
+- [x] HPP per tindakan.
+- [x] Order lab + biaya lab.
+- [x] Test otomatis untuk FEFO & konversi satuan.
 - **DoD:** stok sistem sama dengan stok fisik setelah opname pertama.
 
 ### Fase 6: Komisi, Laporan & Dashboard (Minggu 13–14)

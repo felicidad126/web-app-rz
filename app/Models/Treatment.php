@@ -38,6 +38,12 @@ class Treatment extends Model
         return $this->hasMany(TreatmentBranchPrice::class);
     }
 
+    /** @return HasMany<TreatmentMaterial, $this> */
+    public function materials(): HasMany
+    {
+        return $this->hasMany(TreatmentMaterial::class);
+    }
+
     /** Tarif yang berlaku di cabang tertentu (override cabang, atau tarif dasar). */
     public function priceForBranch(?int $branchId): int
     {

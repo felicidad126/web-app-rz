@@ -1,7 +1,15 @@
 <?php
 
+use App\Enums\LabOrderStatus;
+use App\Enums\StockMovementStatus;
+use App\Enums\StockOpnameStatus;
+use App\Models\Branch;
+use App\Models\LabOrder;
 use App\Models\Patient;
+use App\Models\StockMovement;
+use App\Models\StockOpname;
 use App\Models\User;
+use App\Services\Stock\StockAlerts;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -14,6 +22,19 @@ it('mengisi data demo tanpa factory/Faker dan memakai password dari config', fun
         ->and(Patient::whereNull('nik_hash')->count())->toBe(0)
         ->and(Hash::check('demo-rahasia-123', User::where('email', 'owner@demo.test')->value('password')))->toBeTrue()
         ->and(User::where('email', 'kasir@demo.test')->first()->hasRole('kasir'))->toBeTrue();
+
+    // Fase 5: opname awal disetujui, peringatan stok terlihat, pemusnahan menunggu persetujuan, order lab berjalan.
+    $kemang = Branch::where('code', 'KMG')->firstOrFail();
+    expect(StockOpname::sole()->status)->toBe(StockOpnameStatus::Approved)
+        ->and(StockAlerts::belowMinimum($kemang->id))->not->toBeEmpty()
+        ->and(StockAlerts::expiring($kemang->id))->not->toBeEmpty()
+        ->and(StockMovement::where('status', StockMovementStatus::Pending)->count())->toBe(1)
+        ->and(LabOrder::whereIn('status', LabOrderStatus::active())->count())->toBe(3)
+        ->and(LabOrder::get()->filter->isLate())->toHaveCount(1);
+
+    // Aman dijalankan ulang.
+    $this->seed(DemoSeeder::class);
+    expect(StockOpname::count())->toBe(1)->and(LabOrder::count())->toBe(3);
 });
 
 it('menolak berjalan di produksi', function () {

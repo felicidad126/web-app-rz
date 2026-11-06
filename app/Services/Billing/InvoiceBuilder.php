@@ -5,19 +5,25 @@ namespace App\Services\Billing;
 use App\Enums\InstallmentStatus;
 use App\Enums\InvoiceItemType;
 use App\Enums\InvoiceStatus;
+use App\Enums\LabOrderStatus;
+use App\Enums\StockMovementStatus;
 use App\Enums\VisitStatus;
 use App\Models\Installment;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
+use App\Models\LabOrder;
 use App\Models\PackageUsage;
 use App\Models\Patient;
 use App\Models\PatientPackage;
+use App\Models\StockMovementLine;
 use App\Models\User;
 use App\Models\Visit;
 use App\Services\NumberSequence;
+use App\Services\Stock\StockLedger;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * Membuat, menghitung ulang, dan menerbitkan tagihan.
@@ -141,7 +147,7 @@ final class InvoiceBuilder
     {
         self::ensureDraft($invoice);
 
-        return DB::transaction(function () use ($invoice, $user): Invoice {
+        $issued = DB::transaction(function () use ($invoice, $user): Invoice {
             /** @var Invoice $invoice */
             $invoice = Invoice::query()->lockForUpdate()->findOrFail($invoice->id);
             self::ensureDraft($invoice);
@@ -154,6 +160,7 @@ final class InvoiceBuilder
             }
 
             self::recordPackageUsages($invoice, $items->whereNotNull('patient_package_id')->where('item_type', InvoiceItemType::Procedure)->all());
+            self::snapshotCosts($items->whereNotNull('visit_procedure_id')->all());
 
             $invoice->loadMissing('branch');
             $invoice->forceFill([
@@ -175,6 +182,36 @@ final class InvoiceBuilder
 
             return $invoice;
         });
+
+        // Fase 5: barang retail yang dijual keluar dari stok (masalah stok tidak menahan tagihan).
+        try {
+            StockLedger::saleForInvoice($issued, $user);
+        } catch (Throwable $e) {
+            report($e);
+        }
+
+        return $issued;
+    }
+
+    /**
+     * Snapshot HPP bahan (dari pemakaian stok) dan biaya lab per baris tindakan, untuk margin & jasa dokter (Fase 6).
+     *
+     * @param  array<int, InvoiceItem>  $items
+     */
+    private static function snapshotCosts(array $items): void
+    {
+        foreach ($items as $item) {
+            $material = -(int) StockMovementLine::query()
+                ->where('visit_procedure_id', $item->visit_procedure_id)
+                ->whereHas('movement', fn ($q) => $q->where('status', StockMovementStatus::Posted))
+                ->sum('line_cost');
+            $lab = (int) LabOrder::query()->where('visit_procedure_id', $item->visit_procedure_id)
+                ->where('status', '!=', LabOrderStatus::Cancelled)->sum('cost');
+
+            if ($material !== $item->material_cost || $lab !== $item->lab_cost) {
+                $item->forceFill(['material_cost' => max(0, $material), 'lab_cost' => $lab])->save();
+            }
+        }
     }
 
     /** Tagihan untuk satu cicilan paket (langsung diterbitkan). */

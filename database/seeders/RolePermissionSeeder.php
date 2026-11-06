@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Peran & hak akses sesuai matriks akses Planning v2 (Bagian 4.3), lingkup Fase 1–4.
+ * Peran & hak akses sesuai matriks akses Planning v2 (Bagian 4.3), lingkup Fase 1–5.
  *
  * Format permission mengikuti Filament Shield: "{Aksi}:{Model}", mis. "ViewAny:Patient".
  * Seeder ini idempoten: aman dijalankan ulang setelah menambah resource.
@@ -25,7 +25,7 @@ class RolePermissionSeeder extends Seeder
 
     private const R = ['ViewAny', 'View'];
 
-    private const MASTER = ['Treatment', 'Icd10Code', 'Icd9cmCode', 'OdontogramCondition', 'Item', 'Unit'];
+    private const MASTER = ['Treatment', 'Icd10Code', 'Icd9cmCode', 'OdontogramCondition', 'Item', 'Unit', 'ItemCategory', 'Supplier'];
 
     private const ORGANIZATION = ['Branch', 'User', 'Practitioner', 'Payer'];
 
@@ -49,6 +49,10 @@ class RolePermissionSeeder extends Seeder
             ...$billingRead,
             'Approve:Billing',
             'View:SatuSehat',
+            // Stok: owner melihat dan ikut menyetujui pemusnahan/koreksi opname.
+            ...self::grant(['StockMovement', 'StockOpname', 'LabOrder'], self::R),
+            'View:Stock',
+            'Approve:Stock',
             'View:SipExpiryWidget',
         ];
 
@@ -59,6 +63,10 @@ class RolePermissionSeeder extends Seeder
             // SATUSEHAT: admin memantau, kirim ulang, dan mengatur Location cabang.
             'View:SatuSehat',
             'Resend:SatuSehat',
+            // Stok & lab: admin klinik mengelola dan menyetujui (keputusan owner 6 Nov 2026).
+            ...self::grant(['StockMovement', 'StockOpname', 'LabOrder'], self::CRU),
+            'View:Stock',
+            'Approve:Stock',
             'View:SipExpiryWidget',
         ];
 
@@ -72,9 +80,16 @@ class RolePermissionSeeder extends Seeder
             'owner' => $owner,
             'admin' => $admin,
             // Dokter: jadwal miliknya (dibatasi di query), bisa memanggil pasien ke kursi, menandatangani rekam medis.
-            'dokter' => [...$clinical, ...self::grant(['Appointment', 'Package', 'PatientPackage'], self::R), ...self::grant(['Visit'], self::RU), ...$signRecord],
+            'dokter' => [
+                ...$clinical, ...self::grant(['Appointment', 'Package', 'PatientPackage', 'StockMovement'], self::R), ...self::grant(['Visit'], self::RU),
+                ...self::grant(['LabOrder'], self::CRU), 'View:Stock', ...$signRecord,
+            ],
             // Perawat: mengisi draf rekam medis, tidak menandatangani.
-            'perawat' => [...$clinical, ...self::grant(['Appointment', 'Visit'], self::RU), ...$writeRecord, 'View:SatuSehat'],
+            // Perawat juga mencatat penerimaan, pemakaian, pengajuan pemusnahan, dan menghitung opname (tanpa menyetujui).
+            'perawat' => [
+                ...$clinical, ...self::grant(['Appointment', 'Visit'], self::RU), ...$writeRecord, 'View:SatuSehat',
+                ...self::grant(['StockMovement', 'StockOpname', 'LabOrder'], self::CRU), 'View:Stock',
+            ],
             // Resepsionis mendaftarkan & mengubah data pasien, tetapi tidak menghapus (retensi rekam medis).
             'resepsionis' => [
                 ...self::grant(['Treatment', 'Payer', 'Invoice', 'Package', 'PatientPackage'], self::R),
@@ -83,6 +98,8 @@ class RolePermissionSeeder extends Seeder
                 // Resepsionis memperbaiki NIK pasien yang membuat kiriman tertahan, lalu kirim ulang.
                 'View:SatuSehat',
                 'Resend:SatuSehat',
+                // Resepsionis memantau order lab (barang datang, jadwal pasang).
+                ...self::grant(['LabOrder'], self::RU),
             ],
             // Kasir: tagihan, pembayaran, sesi kasir, paket pasien, deposit. Tidak menghapus apa pun.
             'kasir' => [
@@ -90,6 +107,7 @@ class RolePermissionSeeder extends Seeder
                 ...self::grant(['Invoice', 'CashSession', 'PatientPackage'], self::CRU),
                 'View:Deposit',
                 'TopUp:Deposit',
+                'View:Stock',
             ],
         ];
     }

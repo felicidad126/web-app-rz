@@ -24,6 +24,7 @@ class ItemsTable
                 TextColumn::make('sku')->label('SKU')->searchable()->sortable(),
                 TextColumn::make('name')->label('Nama')->searchable()->sortable()->wrap(),
                 TextColumn::make('type')->label('Jenis')->badge(),
+                TextColumn::make('category.name')->label('Kategori')->placeholder('—')->visibleFrom('md'),
                 TextColumn::make('kfa_code')->label('KFA')->placeholder('-')->searchable()->visibleFrom('md'),
                 TextColumn::make('baseUnit.name')->label('Satuan dasar')->visibleFrom('md'),
                 TextColumn::make('min_stock')->label('Stok min.')->numeric(decimalPlaces: 0)->visibleFrom('lg'),
@@ -32,6 +33,7 @@ class ItemsTable
             ])
             ->filters([
                 SelectFilter::make('type')->label('Jenis')->options(ItemType::class),
+                SelectFilter::make('item_category_id')->label('Kategori')->relationship('category', 'name'),
                 TernaryFilter::make('is_active')->label('Aktif'),
                 TrashedFilter::make(),
             ])

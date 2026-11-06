@@ -3,6 +3,7 @@
 use App\Http\Controllers\BillingPrintController;
 use App\Http\Controllers\ClinicalFileController;
 use App\Http\Controllers\OdontogramPrintController;
+use App\Http\Controllers\StockPrintController;
 use Illuminate\Support\Facades\Route;
 
 // Panel Filament terpasang di root ("/"), lihat App\Providers\Filament\AdminPanelProvider.
@@ -20,4 +21,9 @@ Route::middleware(['auth'])->prefix('cetak')->name('billing.')->group(function (
     Route::get('struk/{transaction}', [BillingPrintController::class, 'receipt'])->name('receipt');
     Route::get('tagihan/{invoice}/struk', [BillingPrintController::class, 'invoiceReceipt'])->name('invoice-receipt');
     Route::get('tagihan/{invoice}/nota.pdf', [BillingPrintController::class, 'invoicePdf'])->name('invoice-pdf');
+});
+
+// Berita acara mutasi stok.
+Route::middleware(['auth'])->prefix('cetak/stok')->name('stock.')->group(function (): void {
+    Route::get('{movement}.pdf', [StockPrintController::class, 'movementPdf'])->name('movement-pdf');
 });

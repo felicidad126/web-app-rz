@@ -8,6 +8,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\RefundSource;
 use App\Enums\RefundStatus;
+use App\Enums\StockMovementType;
 use App\Enums\VisitStatus;
 use App\Models\CashSession;
 use App\Models\Invoice;
@@ -15,8 +16,10 @@ use App\Models\PackageUsage;
 use App\Models\Patient;
 use App\Models\Payment;
 use App\Models\Refund;
+use App\Models\StockMovement;
 use App\Models\User;
 use App\Models\Visit;
+use App\Services\Stock\StockLedger;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -119,6 +122,14 @@ final class BillingApprovals
 
             foreach ($invoice->installments()->get() as $installment) {
                 $installment->syncFromInvoice($invoice);
+            }
+
+            // Fase 5: barang retail yang sudah keluar dikembalikan ke stok.
+            $sale = StockMovement::query()->where('type', StockMovementType::Sale)
+                ->where('source_type', $invoice->getMorphClass())->where('source_id', $invoice->id)->first();
+
+            if ($sale !== null) {
+                StockLedger::reverse($sale, 'Void tagihan '.$invoice->label(), $approver);
             }
 
             if ($invoice->visit_id !== null) {

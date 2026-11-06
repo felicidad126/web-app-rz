@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Items;
 use App\Filament\Resources\Items\Pages\CreateItem;
 use App\Filament\Resources\Items\Pages\EditItem;
 use App\Filament\Resources\Items\Pages\ListItems;
+use App\Filament\Resources\Items\RelationManagers\BatchesRelationManager;
+use App\Filament\Resources\Items\RelationManagers\StockCardRelationManager;
 use App\Filament\Resources\Items\RelationManagers\UnitsRelationManager;
 use App\Filament\Resources\Items\Schemas\ItemForm;
 use App\Filament\Resources\Items\Tables\ItemsTable;
@@ -49,6 +51,8 @@ class ItemResource extends Resource
     {
         return [
             UnitsRelationManager::class,
+            BatchesRelationManager::class,
+            StockCardRelationManager::class,
         ];
     }
 

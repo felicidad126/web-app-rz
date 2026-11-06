@@ -55,6 +55,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Stok
+    |--------------------------------------------------------------------------
+    |
+    | expiry_warning_days: batch dengan ED dalam sekian hari ditandai "pakai lebih dulu" / perlu tindakan.
+    |
+    */
+
+    'stock' => [
+        'expiry_warning_days' => (int) env('CLINIC_STOCK_EXPIRY_WARNING_DAYS', 60),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Password akun demo (DemoSeeder)
     |--------------------------------------------------------------------------
     |

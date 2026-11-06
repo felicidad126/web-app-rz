@@ -4,15 +4,19 @@ namespace Database\Seeders;
 
 use App\Enums\AppointmentStatus;
 use App\Enums\ItemType;
+use App\Enums\LabWorkType;
 use App\Enums\PayerType;
 use App\Enums\PractitionerType;
 use App\Enums\RecallStatus;
+use App\Enums\StockReason;
 use App\Enums\TreatmentCategory;
 use App\Enums\TreatmentPlanStatus;
 use App\Enums\VisitStatus;
 use App\Models\Appointment;
 use App\Models\Branch;
 use App\Models\Item;
+use App\Models\ItemBatch;
+use App\Models\ItemCategory;
 use App\Models\Package;
 use App\Models\Patient;
 use App\Models\PatientPackage;
@@ -27,6 +31,8 @@ use App\Models\PatientPackage;
 use App\Models\Payer;
 use App\Models\Practitioner;
 use App\Models\Recall;
+use App\Models\StockOpname;
+use App\Models\Supplier;
 use App\Models\Treatment;
 use App\Models\TreatmentPlan;
 use App\Models\Unit;
@@ -37,6 +43,9 @@ use App\Services\Billing\InvoiceBuilder;
 use App\Services\Billing\PackageSales;
 use App\Services\Billing\PaymentRecorder;
 use App\Services\Clinic\VisitFlow;
+use App\Services\Lab\LabOrders;
+use App\Services\Stock\StockLedger;
+use App\Services\Stock\StockOpnames;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use RuntimeException;
@@ -155,6 +164,132 @@ class DemoSeeder extends Seeder
         }
 
         $this->seedBilling($kemang);
+        $this->seedStock($kemang, $depok);
+    }
+
+    /**
+     * Fase 5: kategori, supplier & lab, BOM tindakan, opname awal Kemang (saldo awal) yang sudah disetujui,
+     * satu penerimaan, satu transfer ke Depok, satu pemusnahan menunggu persetujuan, dan order lab berjalan.
+     * Ada batch yang hampir kedaluwarsa, sudah kedaluwarsa, dan barang di bawah stok minimum agar peringatan terlihat.
+     */
+    private function seedStock(Branch $kemang, Branch $depok): void
+    {
+        $categories = [
+            'Obat' => ['OBT-AMX500', 'OBT-MEF500', 'OBT-IBU400'],
+            'Anestesi' => ['BHN-LIDO'],
+            'Bahan restorasi' => ['BHN-KOMP', 'BHN-GIC'],
+            'Habis pakai' => ['ALT-GLV', 'ALT-MSK'],
+            'Retail' => ['RTL-SKT'],
+        ];
+
+        foreach ($categories as $name => $skus) {
+            $category = ItemCategory::firstOrCreate(['name' => $name]);
+            Item::whereIn('sku', $skus)->whereNull('item_category_id')->update(['item_category_id' => $category->id]);
+        }
+
+        $medika = Supplier::firstOrCreate(['name' => 'PT Medika Jaya'], ['contact_person' => 'Pak Hendra', 'phone' => '021-5550101']);
+        Supplier::firstOrCreate(['name' => 'CV Dental Supply'], ['contact_person' => 'Bu Lina', 'phone' => '021-5550202']);
+        $prima = Supplier::firstOrCreate(['name' => 'Lab Prima Dental'], ['is_lab' => true, 'phone' => '0812-0000-1111']);
+        $ceramic = Supplier::firstOrCreate(['name' => 'Lab Senyum Ceramic'], ['is_lab' => true, 'phone' => '0812-0000-2222']);
+
+        $item = fn (string $sku): Item => Item::where('sku', $sku)->firstOrFail();
+        $bom = [
+            'TKO' => [['BHN-KOMP', 0.2], ['BHN-LIDO', 1], ['ALT-GLV', 2], ['ALT-MSK', 1]],
+            'TGI' => [['BHN-GIC', 0.1], ['ALT-GLV', 2], ['ALT-MSK', 1]],
+            'CBD' => [['BHN-LIDO', 2], ['ALT-GLV', 2], ['ALT-MSK', 1]],
+            'CBS' => [['BHN-LIDO', 1], ['ALT-GLV', 2], ['ALT-MSK', 1]],
+            'SCL' => [['ALT-GLV', 2], ['ALT-MSK', 1]],
+            'CRN' => [['BHN-LIDO', 1], ['ALT-GLV', 2], ['ALT-MSK', 1]],
+        ];
+
+        foreach ($bom as $code => $materials) {
+            $treatment = Treatment::where('code', $code)->firstOrFail();
+
+            foreach ($materials as [$sku, $qty]) {
+                $material = $item($sku);
+                $treatment->materials()->firstOrCreate(['item_id' => $material->id], ['qty' => $qty, 'unit_id' => $material->base_unit_id]);
+            }
+        }
+
+        if (StockOpname::where('branch_id', $kemang->id)->exists()) {
+            return;
+        }
+
+        $perawat = User::where('email', 'perawat@demo.test')->firstOrFail();
+        $admin = User::where('email', 'admin@demo.test')->firstOrFail();
+        // Semua waktu mundur dihitung dari tanggal acuan yang sama (setTestNow menggeser today()).
+        $today = today();
+        $ed = fn (int $days): string => $today->copy()->addDays($days)->endOfMonth()->toDateString();
+
+        // Opname awal 30 hari lalu = saldo awal sistem. [jumlah, harga pokok, batch, ED]
+        $counts = [
+            'OBT-AMX500' => [180, 1_200, 'AMX-2409', $ed(240)],
+            'OBT-MEF500' => [40, 900, 'MEF-2511', $ed(420)],           // di bawah minimum (50)
+            'OBT-IBU400' => [60, 1_000, 'IBU-2601', $today->copy()->addDays(20)->toDateString()], // hampir kedaluwarsa
+            'BHN-LIDO' => [35, 9_800, 'LD-0612', $today->copy()->addDays(45)->toDateString()],   // hampir kedaluwarsa
+            'BHN-KOMP' => [4, 285_000, 'KMP-2208', $ed(330)],
+            'BHN-GIC' => [1, 420_000, 'GIC-2105', $today->copy()->subDays(10)->toDateString()],  // sudah kedaluwarsa
+            'ALT-GLV' => [600, 650, 'NTR-M-01', null],
+            'ALT-MSK' => [300, 450, 'MSK-01', null],
+            'RTL-SKT' => [12, 18_000, 'SKT-01', null],
+        ];
+
+        Carbon::setTestNow($today->copy()->subDays(30)->setTime(17, 0));
+        $opname = StockOpnames::start($kemang->id, $perawat, 'Opname awal (saldo awal sistem)');
+
+        foreach ($opname->lines()->with('item')->get() as $line) {
+            [$qty, $cost, $batch, $expiry] = $counts[$line->item->sku] ?? [0, 0, null, null];
+            $line->update(['counted_qty' => $qty, 'unit_cost' => $cost, 'batch_number' => $batch, 'expired_at' => $expiry]);
+        }
+
+        StockOpnames::submit($opname, $perawat);
+        Carbon::setTestNow($today->copy()->subDays(29)->setTime(8, 30));
+        StockOpnames::approve($opname->refresh(), $admin);
+
+        // Penerimaan dari supplier seminggu lalu.
+        Carbon::setTestNow($today->copy()->subDays(7)->setTime(11, 0));
+        StockLedger::receive($kemang->id, [
+            ['item_id' => $item('BHN-LIDO')->id, 'unit_id' => Unit::where('name', 'box')->value('id'), 'qty' => 1, 'unit_price' => 490_000, 'batch_number' => 'LD-0711', 'expired_at' => $ed(420)],
+            ['item_id' => $item('ALT-MSK')->id, 'unit_id' => Unit::where('name', 'box')->value('id'), 'qty' => 2, 'unit_price' => 25_000, 'batch_number' => 'MSK-02', 'expired_at' => null],
+        ], $medika->id, 'MJ/2611/0457', today(), null, $perawat);
+
+        // Kirim sarung tangan ke Depok.
+        Carbon::setTestNow($today->copy()->subDays(5)->setTime(14, 0));
+        StockLedger::transfer($kemang->id, $depok->id, [
+            ['item_id' => $item('ALT-GLV')->id, 'unit_id' => $item('ALT-GLV')->base_unit_id, 'qty' => 100],
+        ], 'Stok Depok menipis', $admin);
+
+        // Pemusnahan GIC kedaluwarsa: diajukan perawat, menunggu persetujuan admin klinik.
+        Carbon::setTestNow($today->copy()->subDay()->setTime(16, 0));
+        $gic = ItemBatch::where('branch_id', $kemang->id)->where('batch_number', 'GIC-2105')->firstOrFail();
+        StockLedger::requestDisposal($kemang->id, [['item_batch_id' => $gic->id, 'qty' => (float) $gic->qty_on_hand]], StockReason::Expired, 'Dimusnahkan bersama limbah B3 klinik, saksi: Dewi Perawat.', $perawat);
+        Carbon::setTestNow();
+
+        // Order lab berjalan: satu terlambat, satu jatuh tempo minggu ini.
+        $maya = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter2@demo.test'))->firstOrFail();
+        $budi = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter@demo.test'))->firstOrFail();
+        $patients = Patient::orderBy('id')->limit(12)->get();
+        $orders = [
+            [$patients[3], $budi, $prima, LabWorkType::Crown, 'PFM, margin chamfer, kontak proksimal rapat', '36', 'A2', 650_000, 9, 2, 1],
+            [$patients[7], $maya, $ceramic, LabWorkType::Retainer, 'Hawley RA, klamer Adams 16 26', null, null, 400_000, 10, -2, 1],
+            [$patients[9], $budi, $prima, LabWorkType::Denture, 'GTL akrilik RB, elemen 34–37 dan 44–47', '34–37, 44–47', 'A3', 900_000, 4, 5, 0],
+        ];
+
+        foreach ($orders as [$patient, $doctor, $lab, $type, $spec, $teeth, $shade, $cost, $daysAgo, $dueIn, $steps]) {
+            Carbon::setTestNow($today->copy()->subDays($daysAgo)->setTime(13, 0));
+            $order = LabOrders::create([
+                'branch_id' => $kemang->id, 'patient_id' => $patient->id, 'practitioner_id' => $doctor->id, 'supplier_id' => $lab->id,
+                'work_type' => $type, 'specification' => $spec, 'teeth' => $teeth, 'shade' => $shade, 'cost' => $cost,
+                'due_at' => $today->copy()->addDays($dueIn)->toDateString(),
+            ], $perawat);
+
+            for ($i = 0; $i < $steps; $i++) {
+                Carbon::setTestNow(now()->addDay());
+                LabOrders::advance($order, $perawat);
+            }
+        }
+
+        Carbon::setTestNow();
     }
 
     /**

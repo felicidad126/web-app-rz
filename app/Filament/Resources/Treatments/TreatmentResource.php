@@ -6,6 +6,7 @@ use App\Filament\Resources\Treatments\Pages\CreateTreatment;
 use App\Filament\Resources\Treatments\Pages\EditTreatment;
 use App\Filament\Resources\Treatments\Pages\ListTreatments;
 use App\Filament\Resources\Treatments\RelationManagers\BranchPricesRelationManager;
+use App\Filament\Resources\Treatments\RelationManagers\MaterialsRelationManager;
 use App\Filament\Resources\Treatments\Schemas\TreatmentForm;
 use App\Filament\Resources\Treatments\Tables\TreatmentsTable;
 use App\Filament\Support\NavGroup;
@@ -49,6 +50,7 @@ class TreatmentResource extends Resource
     {
         return [
             BranchPricesRelationManager::class,
+            MaterialsRelationManager::class,
         ];
     }
 

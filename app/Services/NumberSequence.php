@@ -62,6 +62,22 @@ final class NumberSequence
         return 'PKT-'.$period.'-'.str_pad((string) self::next('package', $period), 4, '0', STR_PAD_LEFT);
     }
 
+    /** Nomor dokumen stok per cabang per bulan, mis. PNR-KMG-2611-0003 (awalan = jenis dokumen). */
+    public static function nextStockNumber(string $prefix, string $branchCode, \DateTimeInterface $date): string
+    {
+        $scope = $prefix.'-'.strtoupper($branchCode).'-'.$date->format('ym');
+
+        return $scope.'-'.str_pad((string) self::next('stock', $scope), 4, '0', STR_PAD_LEFT);
+    }
+
+    /** Nomor order lab, mis. LAB-2611-0012. */
+    public static function nextLabOrderNumber(\DateTimeInterface $date): string
+    {
+        $period = $date->format('ym');
+
+        return 'LAB-'.$period.'-'.str_pad((string) self::next('lab', $period), 4, '0', STR_PAD_LEFT);
+    }
+
     public static function nextRmNumber(): string
     {
         $number = self::next('rm');
