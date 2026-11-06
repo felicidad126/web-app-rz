@@ -18,3 +18,6 @@ Schedule::command('clinic:check-sip-expiry')->weeklyOn(1, '07:30')->onOneServer(
 // Bersihkan data import/export Filament & job batch lama.
 Schedule::command('queue:prune-batches --hours=168')->daily();
 Schedule::command('queue:prune-failed --hours=720')->daily();
+
+// Fase 4: kirim ulang kiriman SATUSEHAT yang gagal karena gangguan (masalah data menunggu perbaikan staf).
+Schedule::command('satusehat:retry')->hourlyAt(17)->onOneServer()->withoutOverlapping();

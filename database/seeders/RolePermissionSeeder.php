@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Peran & hak akses sesuai matriks akses Planning v2 (Bagian 4.3), lingkup Fase 1–3.
+ * Peran & hak akses sesuai matriks akses Planning v2 (Bagian 4.3), lingkup Fase 1–4.
  *
  * Format permission mengikuti Filament Shield: "{Aksi}:{Model}", mis. "ViewAny:Patient".
  * Seeder ini idempoten: aman dijalankan ulang setelah menambah resource.
@@ -48,6 +48,7 @@ class RolePermissionSeeder extends Seeder
             ...$readRecord,
             ...$billingRead,
             'Approve:Billing',
+            'View:SatuSehat',
             'View:SipExpiryWidget',
         ];
 
@@ -55,6 +56,9 @@ class RolePermissionSeeder extends Seeder
             ...self::grant([...self::ORGANIZATION, ...self::MASTER, 'ConsentTemplate', 'Patient', 'Appointment', 'Visit', 'Recall', 'Package'], self::CRUD),
             ...self::grant(['Role', 'Activity'], self::R),
             ...$billingRead,
+            // SATUSEHAT: admin memantau, kirim ulang, dan mengatur Location cabang.
+            'View:SatuSehat',
+            'Resend:SatuSehat',
             'View:SipExpiryWidget',
         ];
 
@@ -70,12 +74,15 @@ class RolePermissionSeeder extends Seeder
             // Dokter: jadwal miliknya (dibatasi di query), bisa memanggil pasien ke kursi, menandatangani rekam medis.
             'dokter' => [...$clinical, ...self::grant(['Appointment', 'Package', 'PatientPackage'], self::R), ...self::grant(['Visit'], self::RU), ...$signRecord],
             // Perawat: mengisi draf rekam medis, tidak menandatangani.
-            'perawat' => [...$clinical, ...self::grant(['Appointment', 'Visit'], self::RU), ...$writeRecord],
+            'perawat' => [...$clinical, ...self::grant(['Appointment', 'Visit'], self::RU), ...$writeRecord, 'View:SatuSehat'],
             // Resepsionis mendaftarkan & mengubah data pasien, tetapi tidak menghapus (retensi rekam medis).
             'resepsionis' => [
                 ...self::grant(['Treatment', 'Payer', 'Invoice', 'Package', 'PatientPackage'], self::R),
                 ...self::grant(['Patient', 'Appointment', 'Visit', 'Recall'], self::CRU),
                 'View:Deposit',
+                // Resepsionis memperbaiki NIK pasien yang membuat kiriman tertahan, lalu kirim ulang.
+                'View:SatuSehat',
+                'Resend:SatuSehat',
             ],
             // Kasir: tagihan, pembayaran, sesi kasir, paket pasien, deposit. Tidak menghapus apa pun.
             'kasir' => [

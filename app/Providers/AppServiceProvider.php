@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Policies\ActivityPolicy;
+use App\Services\SatuSehat\SatuSehatClient;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
@@ -17,7 +18,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // Dibaca dari config setiap kali dibutuhkan (kredensial ada di .env server).
+        $this->app->bind(SatuSehatClient::class, fn (): SatuSehatClient => SatuSehatClient::fromConfig());
     }
 
     public function boot(): void

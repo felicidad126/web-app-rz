@@ -13,6 +13,8 @@ final class NavGroup
 
     public const BILLING = 'Keuangan';
 
+    public const OPERATIONS = 'Operasional';
+
     public const CLINICAL_MASTER = 'Master Klinis';
 
     public const INVENTORY = 'Obat & Bahan';
@@ -24,6 +26,6 @@ final class NavGroup
     /** @return list<string> */
     public static function ordered(): array
     {
-        return [self::DAILY, self::PATIENTS, self::CLINICAL, self::BILLING, self::CLINICAL_MASTER, self::INVENTORY, self::ORGANIZATION, self::SETTINGS];
+        return [self::DAILY, self::PATIENTS, self::CLINICAL, self::BILLING, self::OPERATIONS, self::CLINICAL_MASTER, self::INVENTORY, self::ORGANIZATION, self::SETTINGS];
     }
 }

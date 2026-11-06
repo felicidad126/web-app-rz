@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -151,6 +152,12 @@ class Visit extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    /** @return MorphMany<SatuSehatSync, $this> */
+    public function satusehatSyncs(): MorphMany
+    {
+        return $this->morphMany(SatuSehatSync::class, 'syncable');
     }
 
     /** Tagihan kunjungan yang berlaku (bukan void). */

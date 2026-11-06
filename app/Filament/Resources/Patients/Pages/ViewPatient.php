@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Patients\Pages;
 
+use App\Filament\Clinic\SatuSehatActions;
 use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Filament\Resources\Patients\PatientResource;
 use Filament\Actions\Action;
@@ -40,6 +41,7 @@ class ViewPatient extends ViewRecord
                 ->color('gray')
                 ->visible(fn (): bool => auth()->user()?->can('Create:Appointment') ?? false)
                 ->url(fn (): string => AppointmentResource::getUrl('create', ['patient' => $this->getRecord()->getKey()])),
+            SatuSehatActions::lookupPatient(),
             EditAction::make(),
         ];
     }

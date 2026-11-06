@@ -578,12 +578,14 @@ erDiagram
 - [x] Test otomatis untuk rumus tagihan, alokasi diskon, dan status invoice.
 - **DoD:** 🚀 **Soft launch** di 1 cabang. Klinik menjalankan pendaftaran, rekam medis, dan kasir di aplikasi.
 
-### Fase 4: Bridging SATUSEHAT (Minggu 9–10)
-- [ ] Evaluasi `ivanwilliammd/satusehat-integration` vs HTTP client sendiri.
-- [ ] Auth OAuth2 + penyimpanan token, pencarian IHS pasien & nakes.
-- [ ] Job kirim Encounter, Condition, Observation, Procedure, MedicationRequest + `satusehat_syncs` + retry.
-- [ ] Halaman monitoring gagal kirim + kirim ulang.
-- [ ] Uji di **sandbox**, lalu pindah ke produksi. Backfill kunjungan sejak soft launch.
+### Fase 4: Bridging SATUSEHAT (Minggu 9–10) — ✅ kode selesai, ⏳ uji sandbox
+> Detail hasil, verifikasi, dan penyimpangan: [07-fase-4-implementasi.md](./07-fase-4-implementasi.md).
+
+- [x] Evaluasi `ivanwilliammd/satusehat-integration` vs HTTP client sendiri (dipilih client sendiri).
+- [x] Auth OAuth2 + penyimpanan token, pencarian IHS pasien & nakes.
+- [x] Job kirim Encounter, Condition, Observation, Procedure, MedicationRequest + `satusehat_syncs` + retry.
+- [x] Halaman monitoring gagal kirim + kirim ulang.
+- [ ] Uji di **sandbox**, lalu pindah ke produksi. Backfill kunjungan sejak soft launch (perintah & tombol sudah ada).
 - **DoD:** semua kunjungan baru terkirim otomatis ke SATUSEHAT produksi, dan kegagalan terlihat di dashboard admin.
 
 ### Fase 5: Stok, Pembelian & Lab (Minggu 11–12)

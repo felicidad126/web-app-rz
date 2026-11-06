@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Practitioners\Pages;
 
+use App\Filament\Clinic\SatuSehatActions;
 use App\Filament\Resources\Practitioners\PractitionerResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\RestoreAction;
@@ -14,6 +15,7 @@ class EditPractitioner extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            SatuSehatActions::lookupPractitioner(),
             DeleteAction::make(),
             RestoreAction::make(),
         ];

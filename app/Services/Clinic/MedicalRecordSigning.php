@@ -8,6 +8,7 @@ use App\Enums\VisitStatus;
 use App\Models\Recall;
 use App\Models\User;
 use App\Models\Visit;
+use App\Services\SatuSehat\VisitSync;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -82,6 +83,9 @@ final class MedicalRecordSigning
                 ->event('signed')
                 ->log('Rekam medis ditandatangani dan dikunci');
         });
+
+        // Fase 4: kirim ke SATUSEHAT di latar belakang (setelah transaksi tersimpan).
+        VisitSync::queue($visit);
     }
 
     private static function scheduleRecall(Visit $visit, int $treatmentId, string $treatmentName, ?int $months): void

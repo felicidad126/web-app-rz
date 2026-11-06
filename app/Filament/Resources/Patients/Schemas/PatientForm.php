@@ -119,7 +119,7 @@ class PatientForm
                             ->preload(),
                         TextInput::make('satusehat_ihs_id')
                             ->label('IHS Number (SATUSEHAT)')
-                            ->helperText('Diisi otomatis setelah integrasi SATUSEHAT aktif.')
+                            ->helperText('Dicari otomatis dari NIK saat kunjungan dikirim, atau lewat tombol "Cari IHS SATUSEHAT" di halaman pasien.')
                             ->maxLength(255),
                         Checkbox::make('consent_data_at')
                             ->label('Pasien menyetujui pemrosesan data pribadi (UU PDP)')

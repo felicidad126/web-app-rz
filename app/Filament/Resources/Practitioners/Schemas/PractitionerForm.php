@@ -59,7 +59,7 @@ class PractitionerForm
                     ->components([
                         TextInput::make('satusehat_ihs_id')
                             ->label('IHS Practitioner ID')
-                            ->helperText('Diisi otomatis dari NIK setelah integrasi SATUSEHAT aktif (Fase 4).')
+                            ->helperText('Dicari otomatis dari NIK saat kunjungan dikirim, atau klik "Cari IHS SATUSEHAT" di atas.')
                             ->maxLength(255),
                     ]),
             ]);
