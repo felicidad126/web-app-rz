@@ -60,3 +60,32 @@
 
 /* Lima kartu statistik sebaris di desktop: padding lebih kecil agar label tidak terpotong. */
 @media (min-width: 64rem) { .fi-wi-stats-overview-stat { padding: 1rem 1.125rem; } }
+
+/* Logo klinik + nama di header panel & halaman login (resources/views/filament/brand-logo.blade.php). */
+.klinik-brand { display: inline-flex; align-items: center; gap: .625rem; height: 100%; }
+.klinik-brand-logo { height: 100%; width: auto; flex: none; }
+.klinik-brand-name { font-size: 1.125rem; font-weight: 600; color: #18181b; white-space: nowrap; line-height: 1.2; }
+@media (max-width: 47.99rem) { .klinik-brand-name { font-size: 1rem; } }
+
+/*
+ * Cetak halaman panel (mis. tombol "Cetak" di Briefing pagi, atau Ctrl+P di halaman mana pun):
+ * hanya isi halaman, tanpa sidebar, topbar, tombol, filter, dan paginasi; lebar penuh kertas.
+ */
+@media print {
+    @page { margin: 12mm; }
+    html, body, .fi-body { background: #fff !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+    .fi-sidebar, .fi-sidebar-close-overlay, .fi-topbar-ctn, .fi-topbar, .fi-header-actions-ctn, .fi-breadcrumbs,
+    .fi-page-sub-navigation-tabs, .fi-ta-header-toolbar, .fi-pagination, .fi-ta-actions, .fi-dropdown, .fi-modal,
+    .fi-no-notification, .klinik-no-print { display: none !important; }
+    .fi-layout, .fi-main-ctn { display: block !important; overflow: visible !important; }
+    .fi-main-ctn { margin: 0 !important; padding: 0 !important; min-height: 0 !important; opacity: 1 !important; width: 100% !important; }
+    .fi-main { max-width: none !important; padding: 0 !important; }
+    .fi-ta-ctn, .fi-ta-content { overflow: visible !important; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-shadow: none !important; }
+    .fi-section, .fi-wi-stats-overview-stat, tr { break-inside: avoid; }
+}
+
+/* Lebar penuh untuk tabel, dashboard & halaman detail; form buat/ubah tetap ±80rem agar isian tidak terlalu panjang di monitor lebar. */
+@media (min-width: 96rem) {
+    .fi-resource-create-record-page, .fi-resource-edit-record-page { max-width: 80rem; margin-inline: auto; width: 100%; }
+}

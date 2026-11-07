@@ -22,7 +22,7 @@ class PwaController
             'scope' => '/',
             'display' => 'standalone',
             'orientation' => 'any',
-            'background_color' => '#ffffff',
+            'background_color' => '#fef8e8', // krem logo klinik (layar pembuka PWA)
             'theme_color' => '#0d6e63',
             'icons' => [
                 ['src' => '/icons/icon-192.png', 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],

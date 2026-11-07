@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     <style>
-        /* Baris ±72 karakter agar nyaman dibaca di layar lebar. */
-        .guide-body { font-size: 15px; line-height: 1.6; max-width: 72ch }
+        /* Lebar baca diatur halaman (Guide::$maxContentWidth = 3xl), teks mengisi kartu. */
+        .guide-body { font-size: 15px; line-height: 1.6 }
         .guide-body h2 { font-size: 17px; font-weight: 600; margin: 4px 0 10px }
         .guide-body p, .guide-body ul, .guide-body ol { margin: 0 0 10px }
         .guide-body ul { list-style: disc; padding-left: 22px }

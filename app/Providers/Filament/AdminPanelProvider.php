@@ -17,7 +17,9 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -41,6 +43,12 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('')
             ->brandName(fn (): string => (string) config('app.name'))
+            // Logo klinik (public/icons/logo.svg) + nama; favicon & ikon PWA dari logo yang sama.
+            ->brandLogo(fn (): View => view('filament.brand-logo'))
+            ->brandLogoHeight('2.25rem')
+            ->favicon(fn (): string => asset('favicon.png').'?v='.(is_file(public_path('favicon.png')) ? filemtime(public_path('favicon.png')) : 0))
+            // Lebar penuh: tabel & dashboard memakai seluruh layar; teks panjang (Panduan) dibatasi di view-nya sendiri.
+            ->maxContentWidth(Width::Full)
             ->darkMode(false)
             ->login()
             ->passwordReset()

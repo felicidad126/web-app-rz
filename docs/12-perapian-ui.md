@@ -91,9 +91,12 @@ Semua halaman panel (79 halaman, 6 peran, desktop & HP) difoto, diaudit per segm
 
 ### Belum dikerjakan (sengaja)
 - Isian rupiah di form tagihan kasir & hitung pecahan saat tutup kasir tidak diberi pemisah ribuan: totalnya dihitung langsung dari isian mentah, masker berisiko merusak total.
-- Hapus belum diganti istilah "Arsipkan" di semua tempat; ikon & warna aplikasi menunggu logo final.
+- Hapus belum diganti istilah "Arsipkan" di semua tempat.
 - Nama aplikasi: **East Family Dental Care** (ikon HP: **East Dental**), keputusan 12 Nov 2026. Hanya dari `APP_NAME` / `APP_SHORT_NAME`; jangan menulis nama langsung di kode atau view.
 - Alamat klinik ada di data **cabang** (Organisasi → Cabang), tampil di struk, nota, dan berita acara di bawah nama aplikasi. Data demo: cabang utama **Pondok Ranggon** (Jl. Pd. Ranggon, RT.2/RW.3, Kec. Cipayung, Jakarta Timur 13860), cabang kedua **Cabang contoh** (fiktif, untuk fitur multi-cabang). Tanpa pilihan, owner/admin membuka cabang yang pertama didaftarkan (bukan urutan abjad).
+- **Logo klinik** (rumah + gigi, garis #5A5149 di krem #FEF8E8), dari gambar klinik lalu divektorkan: `public/icons/logo.svg` (header & login, bersama nama aplikasi lewat `resources/views/filament/brand-logo.blade.php`), `icons/icon*.png`/`icon.svg` (ikon PWA & halaman offline), `favicon.ico`/`favicon.png` (versi garis tebal agar terbaca di 16 px). Warna UI tetap teal Fondasi UI.
+- **Lebar konten penuh** (`maxContentWidth(Width::Full)`): tabel & dashboard memakai seluruh layar lebar; halaman bacaan/form pendek punya lebar sendiri: Panduan `3xl` (tab & kartu selebar teks), Profil `4xl`. Halaman buat/ubah data tetap ±80rem di layar ≥ 1536 px (`klinik.css`), supaya isian form tidak terlalu panjang.
+- **Cetak halaman panel** (tombol Cetak di Briefing pagi atau Ctrl+P di halaman mana pun): `@media print` di `klinik.css` menyembunyikan sidebar, topbar, tombol, filter, paginasi; isi selebar kertas A4 (margin 12 mm). Elemen yang tidak perlu dicetak: kelas `klinik-no-print`.
 - Input tanggal di Jadwal masih memakai format bawaan browser.
 
 ---

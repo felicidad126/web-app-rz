@@ -29,7 +29,13 @@ it('nama aplikasi tampil di panel; cookie sesi tidak berubah saat nama diganti',
         ->and(config('cache.prefix'))->toBe('dental-pms-cache-')
         ->and(config('database.redis.options.prefix'))->toBe('dental-pms-database-');
 
-    $this->get('/login')->assertOk()->assertSee(config('app.name'))->assertSee('content="'.config('app.short_name').'"', false);
+    $this->get('/login')->assertOk()->assertSee(config('app.name'))->assertSee('content="'.config('app.short_name').'"', false)
+        // Logo klinik di header/login dan favicon dari logo yang sama.
+        ->assertSee('icons/logo.svg', false)->assertSee('favicon.png?v=', false);
+
+    foreach (['icons/logo.svg', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png', 'favicon.ico', 'favicon.png'] as $file) {
+        expect(filesize(public_path($file)))->toBeGreaterThan(0, $file);
+    }
 });
 
 it('memasang manifest dan service worker di halaman panel', function () {
