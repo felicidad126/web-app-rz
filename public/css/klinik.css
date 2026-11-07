@@ -71,8 +71,17 @@
  * Cetak halaman panel (mis. tombol "Cetak" di Briefing pagi, atau Ctrl+P di halaman mana pun):
  * hanya isi halaman, tanpa sidebar, topbar, tombol, filter, dan paginasi; lebar penuh kertas.
  */
+/* Kop klinik untuk cetak (resources/views/filament/print-header.blade.php): tersembunyi di layar. */
+.klinik-print-header { display: none; }
+
 @media print {
     @page { margin: 12mm; }
+    .klinik-print-header { display: flex !important; align-items: center; gap: 12px; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1.5px solid #3f3f46; }
+    .klinik-print-header-logo { height: 40px; width: auto; }
+    .klinik-print-header-clinic { flex: 1; min-width: 0; }
+    .klinik-print-header-name { font-size: 16px; font-weight: 600; color: #18181b; }
+    .klinik-print-header-branch { font-size: 11px; color: #52525b; }
+    .klinik-print-header-meta { font-size: 10px; color: #52525b; text-align: right; white-space: nowrap; }
     html, body, .fi-body { background: #fff !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
     .fi-sidebar, .fi-sidebar-close-overlay, .fi-topbar-ctn, .fi-topbar, .fi-header-actions-ctn, .fi-breadcrumbs,
     .fi-page-sub-navigation-tabs, .fi-ta-header-toolbar, .fi-pagination, .fi-ta-actions, .fi-dropdown, .fi-modal,
@@ -93,3 +102,64 @@
     .fi-resource-create-record-page, .fi-resource-edit-record-page { max-width: 80rem; }
 }
 .klinik-narrow-page { max-width: 56rem; }
+
+/*
+ * Panduan (resources/views/filament/pages/guide.blade.php): pusat bantuan sesuai mockup yang disepakati
+ * 7 Nov 2026 — judul + cari, kartu per peran, pertanyaan umum; halaman peran dengan daftar topik di kiri.
+ */
+.klinik-guide-hero { text-align: center; padding: 8px 0 28px; }
+.klinik-guide-hero h1 { font-size: 2rem; line-height: 1.2; font-weight: 600; margin: 0 0 10px; color: #18181b; }
+.klinik-guide-hero > p { color: #52525b; margin: 0 0 22px; font-size: 1rem; }
+.klinik-guide-search { display: flex; gap: 12px; justify-content: center; align-items: flex-start; max-width: 40rem; margin: 0 auto; }
+.klinik-guide-search-box { position: relative; flex: 1; text-align: left; }
+.klinik-guide-search-box input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid #d4d4d8; border-radius: 8px; background: #fff; font-size: 15px; }
+.klinik-guide-search-box input:focus { outline: 2px solid #0d6e63; outline-offset: -1px; border-color: transparent; }
+.klinik-guide-results { position: absolute; z-index: 20; top: 50px; left: 0; right: 0; background: #fff; border: 1px solid #e4e4e7; border-radius: 10px; box-shadow: 0 10px 24px rgba(0,0,0,.08); max-height: 26rem; overflow-y: auto; }
+.klinik-guide-result { display: grid; gap: 2px; padding: 10px 14px; border-top: 1px solid #f4f4f5; }
+.klinik-guide-result:first-child { border-top: 0; }
+.klinik-guide-result:hover, .klinik-guide-result:focus-visible { background: #f4f4f5; }
+.klinik-guide-result-section { font-size: 12px; color: #71717a; }
+.klinik-guide-result-title { font-weight: 600; color: #18181b; }
+.klinik-guide-result-snippet { font-size: 13px; color: #52525b; }
+.klinik-guide-empty { padding: 12px 14px; margin: 0; font-size: 14px; color: #52525b; }
+.klinik-guide-cards { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; }
+@media (min-width: 40rem) { .klinik-guide-cards { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 80rem) { .klinik-guide-cards { grid-template-columns: repeat(4, 1fr); } }
+.klinik-guide-card { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 20px; background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; color: inherit; }
+.klinik-guide-card:hover { border-color: #a1a1aa; }
+.klinik-guide-card:focus-visible { outline: 2px solid #0d6e63; outline-offset: 2px; }
+.klinik-guide-card.is-mine { border-color: #0d6e63; }
+.klinik-guide-mine { position: absolute; top: 16px; right: 16px; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #f4f4f5; color: #3f3f46; }
+.klinik-guide-card-icon { width: 44px; height: 44px; border-radius: 10px; background: #effaf8; display: grid; place-items: center; margin-bottom: 8px; }
+.klinik-guide-card-icon svg { width: 22px; height: 22px; fill: none; stroke: #0d6e63; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.klinik-guide-card-title { font-size: 17px; font-weight: 600; color: #18181b; }
+.klinik-guide-card-text { font-size: 14px; line-height: 1.5; color: #52525b; flex: 1; }
+.klinik-guide-card-link { margin-top: 8px; font-size: 14px; font-weight: 500; text-decoration: underline; color: #18181b; }
+.klinik-guide-faq { display: grid; grid-template-columns: 1fr; gap: 12px 32px; padding: 24px; background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; scroll-margin-top: 80px; }
+@media (min-width: 64rem) { .klinik-guide-faq { grid-template-columns: 1fr 2fr; } }
+.klinik-guide-faq h2 { font-size: 1.5rem; font-weight: 600; margin: 0 0 8px; color: #18181b; }
+.klinik-guide-faq > div > p { color: #52525b; font-size: 14px; line-height: 1.6; margin: 0; }
+.klinik-guide-q { border-bottom: 1px solid #e4e4e7; scroll-margin-top: 80px; }
+.klinik-guide-q-title { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; text-align: left; font-weight: 600; font-size: 15px; color: #18181b; min-height: 44px; }
+.klinik-guide-q-icon { flex: none; width: 26px; height: 26px; border: 1px solid #d4d4d8; border-radius: 50%; display: grid; place-items: center; font-weight: 400; color: #3f3f46; }
+.klinik-guide-q.is-open .klinik-guide-q-icon { background: #0d6e63; border-color: #0d6e63; color: #fff; }
+.klinik-guide-q-answer { padding: 0 40px 14px 0; color: #52525b; }
+.klinik-guide-prose { font-size: 15px; line-height: 1.6; }
+.klinik-guide-prose p, .klinik-guide-prose ul, .klinik-guide-prose ol { margin: 0 0 10px; }
+.klinik-guide-prose ul { list-style: disc; padding-left: 22px; }
+.klinik-guide-prose ol { list-style: decimal; padding-left: 22px; }
+.klinik-guide-prose li { margin: 2px 0; }
+.klinik-guide-prose code { font-size: 13px; padding: 1px 5px; border-radius: 4px; background: rgba(128,128,128,.15); }
+.klinik-guide-role { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
+@media (min-width: 64rem) { .klinik-guide-role { grid-template-columns: 15rem minmax(0, 54rem); } }
+.klinik-guide-toc { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+@media (min-width: 64rem) { .klinik-guide-toc { position: sticky; top: 5rem; } }
+.klinik-guide-toc a { padding: 7px 10px; border-radius: 8px; color: #3f3f46; }
+.klinik-guide-toc a:hover { background: #f4f4f5; }
+.klinik-guide-toc .klinik-guide-back { color: #0d6e63; font-weight: 500; margin-bottom: 8px; }
+.klinik-guide-toc-label { font-size: 12px; color: #71717a; padding: 0 10px 4px; }
+.klinik-guide-article { background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; padding: 8px 24px; }
+.klinik-guide-topic { padding: 16px 0; border-top: 1px solid #f4f4f5; scroll-margin-top: 80px; }
+.klinik-guide-topic:first-child { border-top: 0; }
+.klinik-guide-topic h2 { font-size: 17px; font-weight: 600; margin: 0 0 8px; color: #18181b; }
+.klinik-guide-search .fi-btn { height: 44px; padding-inline: 20px; }

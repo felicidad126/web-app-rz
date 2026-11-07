@@ -15,6 +15,7 @@ use App\Models\PractitionerSchedule;
 use App\Models\Treatment;
 use App\Models\User;
 use App\Services\Clinic\BranchReadiness;
+use App\Support\GuideContent;
 use Livewire\Livewire;
 
 function readinessStaff(Branch $branch, string $role): User
@@ -71,12 +72,34 @@ it('cabang dengan staf, kursi, jadwal, SIP, tarif, dan aturan jasa siap dipakai'
 it('panduan menampilkan bagian umum + peran pengguna; owner melihat semua', function () {
     $kasir = loginAs('kasir');
     expect(array_keys(Guide::sectionsFor($kasir)))->toBe(['umum', 'kasir']);
-    Livewire::test(Guide::class)->assertOk()->assertSee('Tutup kasir')->assertDontSee('Tanda tangani & kunci');
+
+    // Halaman utama: judul + cari, kartu peran yang boleh dilihat (peran sendiri ditandai), pertanyaan umum.
+    Livewire::test(Guide::class)->assertOk()
+        ->assertSee('Butuh bantuan?')->assertSee('Peran Anda')->assertSee('Lihat panduan')
+        ->assertSee('Lupa password, bagaimana?')
+        ->assertSee('Tutup kasir') // ada di indeks pencarian
+        ->assertDontSee('Admin klinik</span>', false)
+        ->assertDontSee('Tanda tangani & kunci');
+
+    // Halaman peran: daftar topik di kiri, isi di kanan.
+    Livewire::withQueryParams(['peran' => 'kasir'])->test(Guide::class)->assertOk()
+        ->assertSee('Semua panduan')->assertSee('Menerima pembayaran')->assertSee('Tunai dihitung')
+        ->assertSee('href="#tutup-kasir"', false);
+
+    // Peran lain tidak bisa dibuka lewat URL: kembali ke halaman utama.
+    Livewire::withQueryParams(['peran' => 'dokter'])->test(Guide::class)->assertOk()
+        ->assertSee('Butuh bantuan?')->assertDontSee('Tanda tangani & kunci');
 
     $owner = loginAs('owner');
     expect(array_keys(Guide::sectionsFor($owner)))->toBe(array_keys(Guide::ROLES));
 
     foreach (array_keys(Guide::ROLES) as $role) {
-        expect(resource_path("guides/{$role}.md"))->toBeFile();
+        expect(resource_path("guides/{$role}.md"))->toBeFile()
+            ->and(GuideContent::topics($role, Guide::ROLES[$role]))->not->toBeEmpty()
+            ->and(Guide::DESCRIPTIONS[$role] ?? null)->not->toBeNull();
     }
+
+    expect(collect(GuideContent::topics('kasir', 'Kasir'))->pluck('title')->all())
+        ->toBe(['Menerima pembayaran', 'Paket & cicilan', 'Salah input', 'Tutup kasir'])
+        ->and(GuideContent::topics('faq'))->toHaveCount(6);
 });

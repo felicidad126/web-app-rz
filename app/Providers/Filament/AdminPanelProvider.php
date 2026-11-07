@@ -87,6 +87,8 @@ class AdminPanelProvider extends PanelProvider
                     ->navigationSort(2),
             ])
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => Blade::render('<x-pwa-head /><x-touch-targets /><x-panel-styles />'))
+            // Kop klinik saat halaman dicetak (disembunyikan di layar).
+            ->renderHook(PanelsRenderHook::CONTENT_START, fn (): View => view('filament.print-header'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
