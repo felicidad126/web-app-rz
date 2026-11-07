@@ -22,7 +22,7 @@
 set -Eeuo pipefail
 
 REPO_URL="${REPO_URL:-https://github.com/felicidad126/web-app-rz.git}"
-REPO_BRANCH="${REPO_BRANCH:-claude/stoic-sagan-qer84s}"
+REPO_BRANCH="${REPO_BRANCH:-main}"
 APP_DIR="${APP_DIR:-/var/www/dental-pms}"
 APP_USER="www-data"
 DB_NAME="dental_pms"

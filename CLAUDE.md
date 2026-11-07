@@ -5,6 +5,12 @@ Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL
 - **Acuan desain:** `docs/02-dental-pms-planning-v2.md` (scope, skema DB, roadmap).
 - **Status terakhir:** `docs/11-fase-7-implementasi.md` (pembelian BHP: `docs/13-pembelian.md`) (Fase 1: `docs/03-…`, Fase 2: `docs/05-…`, Fase 3: `docs/06-…`, Fase 4: `docs/07-…`, Fase 5: `docs/09-…`, Fase 6: `docs/10-…`). Review konsep stok & jasa dokter dari klinik: `docs/08-review-konsep-stok-dan-jasa-dokter.md`.
 
+## Cara kerja (disepakati dengan user, 7 Nov 2026)
+
+- **Sepakati dulu, baru ubah.** Perubahan fitur, alur, tampilan, data demo, atau skrip server: usulkan dulu (rencana singkat, mockup, atau contoh tampilan) dan tunggu persetujuan user sebelum mengubah kode, commit, atau push. Pertanyaan user ("kenapa …?", "ada concern?") dijawab dulu, bukan langsung diubah. Contoh tampilan boleh dibuat di scratchpad atau lewat `git stash`, tanpa commit.
+- **Branch:** `main` = versi yang terpasang di server (`deploy/update.sh` mengikuti `main`). Setiap sesi/fitur dikerjakan di branch sendiri lalu dibuat PR ke `main` (CI harus hijau); merge hanya setelah user setuju, lalu user menjalankan `sudo bash /var/www/dental-pms/deploy/update.sh` di server.
+- Komunikasi dengan user dalam Bahasa Indonesia.
+
 ## Perintah
 
 - Cek semua sebelum commit: `composer check` (Pint, Larastan level 5, Pest).

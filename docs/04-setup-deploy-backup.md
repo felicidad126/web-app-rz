@@ -88,7 +88,7 @@ Script sudah diuji end-to-end di Ubuntu 26.04 (PHP 8.5, MySQL 8.4, Nginx 1.28) d
 Di VM, sebagai user dengan akses sudo:
 
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/felicidad126/web-app-rz/claude/stoic-sagan-qer84s/deploy/provision.sh
+curl -fsSLO https://raw.githubusercontent.com/felicidad126/web-app-rz/main/deploy/provision.sh
 ```
 
 ```bash
@@ -113,6 +113,14 @@ Update kode dan setelah mengubah `.env`:
 ```bash
 sudo bash /var/www/dental-pms/deploy/update.sh
 ```
+
+Server mengikuti branch **`main`**: fitur baru dikerjakan di branch sendiri, masuk lewat PR, dan baru sampai ke server setelah PR di-merge lalu `update.sh` dijalankan. Server yang dipasang sebelum 7 Nov 2026 masih mengikuti `claude/stoic-sagan-qer84s`; pindahkan sekali dengan:
+
+```bash
+sudo REPO_BRANCH=main bash /var/www/dental-pms/deploy/update.sh
+```
+
+Setelah itu `update.sh` biasa otomatis mengikuti `main`.
 
 #### 3.0.1 HTTPS lewat Tailscale (tanpa domain)
 
