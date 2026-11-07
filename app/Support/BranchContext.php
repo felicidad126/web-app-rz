@@ -42,7 +42,10 @@ final class BranchContext
             return (int) $selected;
         }
 
-        return $available->first()?->id;
+        // Belum memilih: cabang yang pertama didaftarkan (biasanya cabang utama), bukan urutan abjad.
+        $first = $available->min('id');
+
+        return $first === null ? null : (int) $first;
     }
 
     public static function set(int $branchId): void

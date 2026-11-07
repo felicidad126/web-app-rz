@@ -93,6 +93,7 @@ Semua halaman panel (79 halaman, 6 peran, desktop & HP) difoto, diaudit per segm
 - Isian rupiah di form tagihan kasir & hitung pecahan saat tutup kasir tidak diberi pemisah ribuan: totalnya dihitung langsung dari isian mentah, masker berisiko merusak total.
 - Hapus belum diganti istilah "Arsipkan" di semua tempat; ikon & warna aplikasi menunggu logo final.
 - Nama aplikasi: **East Family Dental Care** (ikon HP: **East Dental**), keputusan 12 Nov 2026. Hanya dari `APP_NAME` / `APP_SHORT_NAME`; jangan menulis nama langsung di kode atau view.
+- Alamat klinik ada di data **cabang** (Organisasi → Cabang), tampil di struk, nota, dan berita acara di bawah nama aplikasi. Data demo: cabang utama **Pondok Ranggon** (Jl. Pd. Ranggon, RT.2/RW.3, Kec. Cipayung, Jakarta Timur 13860), cabang kedua **Cabang contoh** (fiktif, untuk fitur multi-cabang). Tanpa pilihan, owner/admin membuka cabang yang pertama didaftarkan (bukan urutan abjad).
 - Input tanggal di Jadwal masih memakai format bawaan browser.
 
 ---

@@ -79,23 +79,29 @@ class DemoSeeder extends Seeder
 
         $this->call(DatabaseSeeder::class);
 
-        $kemang = Branch::firstOrCreate(['code' => 'KMG'], ['name' => 'Senyum Dental — Kemang', 'address' => 'Jl. Kemang Raya No. 10, Jakarta Selatan', 'phone' => '021-7190000']);
-        $depok = Branch::firstOrCreate(['code' => 'DPK'], ['name' => 'Senyum Dental — Depok', 'address' => 'Jl. Margonda Raya No. 200, Depok', 'phone' => '021-7770000']);
+        // Cabang utama = alamat klinik East Family Dental Care; cabang kedua fiktif, hanya untuk memperlihatkan
+        // fitur multi-cabang (transfer stok, laporan per cabang). Data demo lama (KMG/DPK) diganti di tempat.
+        $main = $this->demoBranch('PDR', 'KMG', [
+            'name' => 'Pondok Ranggon',
+            'address' => 'Jl. Pd. Ranggon, RT.2/RW.3, Pd. Ranggon, Kec. Cipayung, Kota Jakarta Timur, DKI Jakarta 13860',
+            'phone' => null,
+        ]);
+        $second = $this->demoBranch('CTH', 'DPK', ['name' => 'Cabang contoh', 'address' => 'Alamat contoh (data demo)', 'phone' => null]);
 
-        foreach ([$kemang, $depok] as $branch) {
+        foreach ([$main, $second] as $branch) {
             foreach (['Unit 1', 'Unit 2'] as $chair) {
                 $branch->chairs()->firstOrCreate(['name' => $chair]);
             }
         }
 
         $accounts = [
-            ['owner@demo.test', 'Drg. Ratna Owner', 'owner', [$kemang, $depok]],
-            ['admin@demo.test', 'Sari Admin', 'admin', [$kemang, $depok]],
-            ['dokter@demo.test', 'Drg. Budi Santoso', 'dokter', [$kemang]],
-            ['dokter2@demo.test', 'Drg. Maya Lestari, Sp.Ort', 'dokter', [$kemang, $depok]],
-            ['perawat@demo.test', 'Dewi Perawat', 'perawat', [$kemang]],
-            ['resepsionis@demo.test', 'Rina Resepsionis', 'resepsionis', [$kemang]],
-            ['kasir@demo.test', 'Andi Kasir', 'kasir', [$kemang]],
+            ['owner@demo.test', 'Drg. Ratna Owner', 'owner', [$main, $second]],
+            ['admin@demo.test', 'Sari Admin', 'admin', [$main, $second]],
+            ['dokter@demo.test', 'Drg. Budi Santoso', 'dokter', [$main]],
+            ['dokter2@demo.test', 'Drg. Maya Lestari, Sp.Ort', 'dokter', [$main, $second]],
+            ['perawat@demo.test', 'Dewi Perawat', 'perawat', [$main]],
+            ['resepsionis@demo.test', 'Rina Resepsionis', 'resepsionis', [$main]],
+            ['kasir@demo.test', 'Andi Kasir', 'kasir', [$main]],
         ];
 
         foreach ($accounts as [$email, $name, $role, $branches]) {
@@ -105,13 +111,13 @@ class DemoSeeder extends Seeder
         }
 
         Practitioner::firstOrCreate(['user_id' => User::where('email', 'dokter@demo.test')->value('id')], [
-            'type' => PractitionerType::Dentist, 'str_number' => '3172100120001234', 'sip_number' => 'SIP/0123/DG/KMG/2024', 'sip_expired_at' => now()->addDays(40),
+            'type' => PractitionerType::Dentist, 'str_number' => '3172100120001234', 'sip_number' => 'SIP/0123/DG/JKT/2024', 'sip_expired_at' => now()->addDays(40),
         ]);
         Practitioner::firstOrCreate(['user_id' => User::where('email', 'dokter2@demo.test')->value('id')], [
-            'type' => PractitionerType::DentalSpecialist, 'specialty' => 'Sp.Ort', 'str_number' => '3172100120005678', 'sip_number' => 'SIP/0456/DGS/KMG/2025', 'sip_expired_at' => now()->addYears(3),
+            'type' => PractitionerType::DentalSpecialist, 'specialty' => 'Sp.Ort', 'str_number' => '3172100120005678', 'sip_number' => 'SIP/0456/DGS/JKT/2025', 'sip_expired_at' => now()->addYears(3),
         ]);
         Practitioner::firstOrCreate(['user_id' => User::where('email', 'perawat@demo.test')->value('id')], [
-            'type' => PractitionerType::DentalTherapist, 'str_number' => '3172200120009999', 'sip_number' => 'SIPTGM/0789/KMG/2025', 'sip_expired_at' => now()->addYears(2),
+            'type' => PractitionerType::DentalTherapist, 'str_number' => '3172200120009999', 'sip_number' => 'SIPTGM/0789/JKT/2025', 'sip_expired_at' => now()->addYears(2),
         ]);
 
         Payer::firstOrCreate(['code' => 'BPJS'], ['name' => 'BPJS Kesehatan', 'type' => PayerType::Bpjs, 'is_active' => false]);
@@ -141,7 +147,7 @@ class DemoSeeder extends Seeder
             ]);
         }
 
-        Treatment::where('code', 'SCL')->first()->branchPrices()->firstOrCreate(['branch_id' => $depok->id], ['price' => 300_000]);
+        Treatment::where('code', 'SCL')->first()->branchPrices()->firstOrCreate(['branch_id' => $second->id], ['price' => 300_000]);
 
         $unit = fn (string $name): int => Unit::where('name', $name)->value('id');
 
@@ -169,23 +175,23 @@ class DemoSeeder extends Seeder
         }
 
         if (Patient::count() < 25) {
-            $this->seedPatients(25, $kemang->id, Payer::where('code', 'UMUM')->value('id'));
+            $this->seedPatients(25, $main->id, Payer::where('code', 'UMUM')->value('id'));
         }
 
         Treatment::where('code', 'SCL')->update(['recall_months' => 6]);
         Treatment::where('code', 'KBH')->update(['recall_months' => 1]);
 
-        $this->seedSchedules($kemang, $depok);
+        $this->seedSchedules($main, $second);
 
         // Jalankan ulang seeder ini di hari lain untuk mendapat janji temu demo hari itu.
         if (Appointment::whereDate('start_at', today())->doesntExist()) {
-            $this->seedDay($kemang);
+            $this->seedDay($main);
         }
 
-        $this->seedBilling($kemang);
-        $this->seedStock($kemang, $depok);
-        $this->seedPurchasing($kemang);
-        $this->seedPerformance($kemang, $depok);
+        $this->seedBilling($main);
+        $this->seedStock($main, $second);
+        $this->seedPurchasing($main);
+        $this->seedPerformance($main, $second);
     }
 
     /**
@@ -193,7 +199,7 @@ class DemoSeeder extends Seeder
      * rencana perawatan, target, uang hadir, aturan jasa asisten, rekap jasa & slip gaji bulan lalu, lalu snapshot KPI.
      * Dibuat sekali (penanda: kunjungan selesai dalam 28 hari terakhir); urutan acak tetap (seed 2026) agar angka stabil.
      */
-    private function seedPerformance(Branch $kemang, Branch $depok): void
+    private function seedPerformance(Branch $main, Branch $second): void
     {
         $owner = User::where('email', 'owner@demo.test')->firstOrFail();
         $kasir = User::where('email', 'kasir@demo.test')->firstOrFail();
@@ -212,7 +218,7 @@ class DemoSeeder extends Seeder
 
         // Target produksi per hari kerja, sebanding dengan volume data demo (mockup memakai skala klinik penuh).
         foreach ([now()->startOfMonth()->subMonthNoOverflow(), now()->startOfMonth()] as $month) {
-            foreach ([[$kemang, 1_600_000], [$depok, 600_000]] as [$branch, $daily]) {
+            foreach ([[$main, 1_600_000], [$second, 600_000]] as [$branch, $daily]) {
                 Target::firstOrCreate(
                     ['period' => $month->toDateString(), 'branch_id' => $branch->id, 'practitioner_id' => null, 'metric' => 'production'],
                     ['amount' => $daily * max(1, Targets::workingDays($month, $branch->id)->count())],
@@ -232,7 +238,7 @@ class DemoSeeder extends Seeder
             Carbon::setTestNow($start->copy()->setTime(9, 0));
             $box = Unit::where('name', 'box')->value('id');
             $komp = Item::where('sku', 'BHN-KOMP')->firstOrFail();
-            StockLedger::receive($kemang->id, [
+            StockLedger::receive($main->id, [
                 ['item_id' => $komp->id, 'unit_id' => $komp->base_unit_id, 'qty' => 6, 'unit_price' => 285_000, 'batch_number' => 'KMP-2210', 'expired_at' => today()->addYear()->endOfMonth()->toDateString()],
                 ['item_id' => Item::where('sku', 'ALT-GLV')->value('id'), 'unit_id' => $box, 'qty' => 3, 'unit_price' => 65_000, 'batch_number' => 'NTR-M-02', 'expired_at' => null],
                 ['item_id' => Item::where('sku', 'BHN-LIDO')->value('id'), 'unit_id' => $box, 'qty' => 1, 'unit_price' => 490_000, 'batch_number' => 'LD-0801', 'expired_at' => today()->addMonths(15)->endOfMonth()->toDateString()],
@@ -244,7 +250,7 @@ class DemoSeeder extends Seeder
             $methods = ['cash', 'qris', 'transfer', 'debit', 'cash'];
 
             for ($day = $start->copy(); $day->lt($end); $day->addDay()) {
-                foreach ([[$kemang, [$budi, $maya], [3, 6]], [$depok, [$maya], [1, 3]]] as [$branch, $doctors, [$min, $max]]) {
+                foreach ([[$main, [$budi, $maya], [3, 6]], [$second, [$maya], [1, 3]]] as [$branch, $doctors, [$min, $max]]) {
                     $working = collect($doctors)->filter(fn (Practitioner $d): bool => array_sum(DailyMetrics::scheduledMinutes($day, $branch->id, $d->id)) > 0)->values();
 
                     if ($working->isEmpty()) {
@@ -282,8 +288,8 @@ class DemoSeeder extends Seeder
                             ]);
                         }
 
-                        // Depok belum opname di demo, jadi stoknya belum dilacak.
-                        if ($branch->is($kemang)) {
+                        // Cabang contoh belum opname di demo, jadi stoknya belum dilacak.
+                        if ($branch->is($main)) {
                             StockLedger::usageForVisit($visit->fresh(), $kasir);
                         }
                         Carbon::setTestNow($started->copy()->addHour());
@@ -328,7 +334,7 @@ class DemoSeeder extends Seeder
                 [13, TreatmentPlanStatus::Presented, 'Tambal 24', [[$filling, 400_000]]]] as [$index, $status, $title, $items]) {
                 $presented = today()->subDays(1 + $index % 4)->setTime(11, 0);
                 $plan = TreatmentPlan::create([
-                    'patient_id' => $patients[$index]->id, 'practitioner_id' => $budi->id, 'branch_id' => $kemang->id, 'title' => $title, 'status' => $status,
+                    'patient_id' => $patients[$index]->id, 'practitioner_id' => $budi->id, 'branch_id' => $main->id, 'title' => $title, 'status' => $status,
                     'presented_at' => $presented, 'decided_at' => $status === TreatmentPlanStatus::Presented ? null : $presented->copy()->addMinutes(30),
                 ]);
 
@@ -377,11 +383,11 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * Fase 5: kategori, supplier & lab, BOM tindakan, opname awal Kemang (saldo awal) yang sudah disetujui,
-     * satu penerimaan, satu transfer ke Depok, satu pemusnahan menunggu persetujuan, dan order lab berjalan.
+     * Fase 5: kategori, supplier & lab, BOM tindakan, opname awal Pondok Ranggon (saldo awal) yang sudah disetujui,
+     * satu penerimaan, satu transfer ke cabang contoh, satu pemusnahan menunggu persetujuan, dan order lab berjalan.
      * Ada batch yang hampir kedaluwarsa, sudah kedaluwarsa, dan barang di bawah stok minimum agar peringatan terlihat.
      */
-    private function seedStock(Branch $kemang, Branch $depok): void
+    private function seedStock(Branch $main, Branch $second): void
     {
         $categories = [
             'Obat' => ['OBT-AMX500', 'OBT-MEF500', 'OBT-IBU400'],
@@ -420,7 +426,7 @@ class DemoSeeder extends Seeder
             }
         }
 
-        if (StockOpname::where('branch_id', $kemang->id)->exists()) {
+        if (StockOpname::where('branch_id', $main->id)->exists()) {
             return;
         }
 
@@ -444,7 +450,7 @@ class DemoSeeder extends Seeder
         ];
 
         Carbon::setTestNow($today->copy()->subDays(30)->setTime(17, 0));
-        $opname = StockOpnames::start($kemang->id, $perawat, 'Opname awal (saldo awal sistem)');
+        $opname = StockOpnames::start($main->id, $perawat, 'Opname awal (saldo awal sistem)');
 
         foreach ($opname->lines()->with('item')->get() as $line) {
             [$qty, $cost, $batch, $expiry] = $counts[$line->item->sku] ?? [0, 0, null, null];
@@ -457,21 +463,21 @@ class DemoSeeder extends Seeder
 
         // Penerimaan dari supplier seminggu lalu.
         Carbon::setTestNow($today->copy()->subDays(7)->setTime(11, 0));
-        StockLedger::receive($kemang->id, [
+        StockLedger::receive($main->id, [
             ['item_id' => $item('BHN-LIDO')->id, 'unit_id' => Unit::where('name', 'box')->value('id'), 'qty' => 1, 'unit_price' => 490_000, 'batch_number' => 'LD-0711', 'expired_at' => $ed(420)],
             ['item_id' => $item('ALT-MSK')->id, 'unit_id' => Unit::where('name', 'box')->value('id'), 'qty' => 2, 'unit_price' => 25_000, 'batch_number' => 'MSK-02', 'expired_at' => null],
         ], $medika->id, 'MJ/2611/0457', today(), null, $perawat);
 
-        // Kirim sarung tangan ke Depok.
+        // Kirim sarung tangan ke cabang contoh.
         Carbon::setTestNow($today->copy()->subDays(5)->setTime(14, 0));
-        StockLedger::transfer($kemang->id, $depok->id, [
+        StockLedger::transfer($main->id, $second->id, [
             ['item_id' => $item('ALT-GLV')->id, 'unit_id' => $item('ALT-GLV')->base_unit_id, 'qty' => 100],
-        ], 'Stok Depok menipis', $admin);
+        ], 'Stok cabang contoh menipis', $admin);
 
         // Pemusnahan GIC kedaluwarsa: diajukan perawat, menunggu persetujuan admin klinik.
         Carbon::setTestNow($today->copy()->subDay()->setTime(16, 0));
-        $gic = ItemBatch::where('branch_id', $kemang->id)->where('batch_number', 'GIC-2105')->firstOrFail();
-        StockLedger::requestDisposal($kemang->id, [['item_batch_id' => $gic->id, 'qty' => (float) $gic->qty_on_hand]], StockReason::Expired, 'Dimusnahkan bersama limbah B3 klinik, saksi: Dewi Perawat.', $perawat);
+        $gic = ItemBatch::where('branch_id', $main->id)->where('batch_number', 'GIC-2105')->firstOrFail();
+        StockLedger::requestDisposal($main->id, [['item_batch_id' => $gic->id, 'qty' => (float) $gic->qty_on_hand]], StockReason::Expired, 'Dimusnahkan bersama limbah B3 klinik, saksi: Dewi Perawat.', $perawat);
         Carbon::setTestNow();
 
         // Order lab berjalan: satu terlambat, satu jatuh tempo minggu ini.
@@ -487,7 +493,7 @@ class DemoSeeder extends Seeder
         foreach ($orders as [$patient, $doctor, $lab, $type, $spec, $teeth, $shade, $cost, $daysAgo, $dueIn, $steps]) {
             Carbon::setTestNow($today->copy()->subDays($daysAgo)->setTime(13, 0));
             $order = LabOrders::create([
-                'branch_id' => $kemang->id, 'patient_id' => $patient->id, 'practitioner_id' => $doctor->id, 'supplier_id' => $lab->id,
+                'branch_id' => $main->id, 'patient_id' => $patient->id, 'practitioner_id' => $doctor->id, 'supplier_id' => $lab->id,
                 'work_type' => $type, 'specification' => $spec, 'teeth' => $teeth, 'shade' => $shade, 'cost' => $cost,
                 'due_at' => $today->copy()->addDays($dueIn)->toDateString(),
             ], $perawat);
@@ -502,12 +508,26 @@ class DemoSeeder extends Seeder
     }
 
     /**
+     * Cabang demo berdasarkan kode; cabang dari data demo lama ($legacyCode) diganti di tempat
+     * supaya riwayat transaksinya tetap ikut.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    private function demoBranch(string $code, string $legacyCode, array $attributes): Branch
+    {
+        $branch = Branch::where('code', $code)->first() ?? Branch::where('code', $legacyCode)->first() ?? new Branch;
+        $branch->fill(['code' => $code, ...$attributes])->save();
+
+        return $branch;
+    }
+
+    /**
      * Pembelian (alur aplikasi inventori klinik): kas pembelian, permintaan perawat (menunggu, disetujui),
      * pesanan yang sudah dibayar dan baru diterima sebagian (lewat perkiraan datang), dan ongkos kirim.
      */
-    private function seedPurchasing(Branch $kemang): void
+    private function seedPurchasing(Branch $main): void
     {
-        if (PurchaseRequest::where('branch_id', $kemang->id)->exists()) {
+        if (PurchaseRequest::where('branch_id', $main->id)->exists()) {
             return;
         }
 
@@ -521,16 +541,16 @@ class DemoSeeder extends Seeder
         $at = fn (int $daysAgo, int $hour) => Carbon::setTestNow($today->copy()->subDays($daysAgo)->setTime($hour, 0));
 
         $at(10, 9);
-        Purchasing::deposit($kemang->id, 2_000_000, 'Setoran awal kas pembelian dari owner', $owner);
+        Purchasing::deposit($main->id, 2_000_000, 'Setoran awal kas pembelian dari owner', $owner);
 
         $at(9, 10);
-        $mef = Purchasing::requestItem($kemang->id, $item('OBT-MEF500')->id, 2, $box, 'Stok 40 tablet, di bawah minimum 50', $perawat);
+        $mef = Purchasing::requestItem($main->id, $item('OBT-MEF500')->id, 2, $box, 'Stok 40 tablet, di bawah minimum 50', $perawat);
         $at(9, 13);
         Purchasing::approve($mef, $admin);
-        $order = Purchasing::createOrder($kemang->id, $supply->id, today(), [
+        $order = Purchasing::createOrder($main->id, $supply->id, today(), [
             ['item_id' => $item('OBT-MEF500')->id, 'unit_id' => $box, 'qty' => 2, 'unit_price' => 85_000, 'purchase_request_id' => $mef->id],
             ['item_id' => $item('OBT-AMX500')->id, 'unit_id' => $box, 'qty' => 1, 'unit_price' => 110_000],
-        ], $admin, $today->copy()->subDays(3), 'Kirim ke klinik Kemang', payNow: true);
+        ], $admin, $today->copy()->subDays(3), 'Kirim ke klinik Pondok Ranggon', payNow: true);
 
         $at(6, 11);
         $lines = $order->lines()->get();
@@ -538,15 +558,15 @@ class DemoSeeder extends Seeder
             ['line_id' => $lines[0]->id, 'qty' => 1, 'batch_number' => 'MEF-2611', 'expired_at' => $today->copy()->addMonths(18)->endOfMonth()->toDateString()],
             ['line_id' => $lines[1]->id, 'qty' => 1, 'batch_number' => 'AMX-2611', 'expired_at' => $today->copy()->addMonths(20)->endOfMonth()->toDateString()],
         ], $perawat, today(), 'CVDS/2611/112');
-        Purchasing::expense($kemang->id, 20_000, 'Ongkos kirim CV Dental Supply', $admin);
+        Purchasing::expense($main->id, 20_000, 'Ongkos kirim CV Dental Supply', $admin);
 
         $at(2, 15);
-        $brush = Purchasing::requestItem($kemang->id, $item('RTL-SKT')->id, 24, $item('RTL-SKT')->base_unit_id, 'Laku untuk pasien behel, stok tinggal 12', $perawat);
+        $brush = Purchasing::requestItem($main->id, $item('RTL-SKT')->id, 24, $item('RTL-SKT')->base_unit_id, 'Laku untuk pasien behel, stok tinggal 12', $perawat);
         $at(2, 17);
         Purchasing::approve($brush, $owner);
 
         $at(1, 16);
-        Purchasing::requestItem($kemang->id, $item('BHN-KOMP')->id, 2, $item('BHN-KOMP')->base_unit_id, 'Persiapan 3 kasus estetik minggu depan', $perawat);
+        Purchasing::requestItem($main->id, $item('BHN-KOMP')->id, 2, $item('BHN-KOMP')->base_unit_id, 'Persiapan 3 kasus estetik minggu depan', $perawat);
 
         Carbon::setTestNow();
     }
@@ -555,7 +575,7 @@ class DemoSeeder extends Seeder
      * Fase 3: paket behel dengan cicilan berjalan, dan satu tagihan lama yang belum lunas
      * (muncul sebagai "saldo terutang" di kasir). Transaksi lama dibuat dengan waktu mundur.
      */
-    private function seedBilling(Branch $kemang): void
+    private function seedBilling(Branch $main): void
     {
         $control = Treatment::where('code', 'KBH')->firstOrFail();
         $package = Package::firstOrCreate(['code' => 'ORT-MTL'], [
@@ -569,15 +589,15 @@ class DemoSeeder extends Seeder
         $kasir = User::where('email', 'kasir@demo.test')->firstOrFail();
 
         // Riwayat transaksi dibuat dengan sesi kasir mundur; jangan ganggu sesi kasir yang sedang dipakai.
-        if (CashSessions::current($kasir, $kemang->id) !== null) {
+        if (CashSessions::current($kasir, $main->id) !== null) {
             return;
         }
         $maya = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter2@demo.test'))->firstOrFail();
         $budi = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter@demo.test'))->firstOrFail();
         $patients = Patient::orderBy('id')->limit(12)->get();
-        $pay = function (Carbon $at, callable $makeInvoices, string $method, int $amount) use ($kasir, $kemang): void {
+        $pay = function (Carbon $at, callable $makeInvoices, string $method, int $amount) use ($kasir, $main): void {
             Carbon::setTestNow($at);
-            $session = CashSessions::open($kasir, $kemang->id, 500_000);
+            $session = CashSessions::open($kasir, $main->id, 500_000);
             $invoices = $makeInvoices();
             PaymentRecorder::receive($invoices[0]->patient, array_map(fn ($i) => $i->id, $invoices), [['method' => $method, 'amount' => $amount]], $session, $kasir);
             $cash = CashSessions::expectedCash($session);
@@ -593,7 +613,7 @@ class DemoSeeder extends Seeder
             $start = today()->subMonths(5)->startOfMonth()->addDays(9);
             Carbon::setTestNow($start->copy()->setTime(10, 0));
             $sold = PackageSales::sell($orthoPatient, $package, [
-                'branch_id' => $kemang->id, 'practitioner_id' => $maya->id, 'down_payment' => 2_000_000,
+                'branch_id' => $main->id, 'practitioner_id' => $maya->id, 'down_payment' => 2_000_000,
                 'installment_count' => 6, 'start_date' => $start, 'due_day' => 5,
             ]);
             Carbon::setTestNow();
@@ -615,7 +635,7 @@ class DemoSeeder extends Seeder
             $at = today()->subMonth()->setTime(10, 0);
             Carbon::setTestNow($at);
             $visit = Visit::create([
-                'branch_id' => $kemang->id, 'patient_id' => $patient->id, 'practitioner_id' => $budi->id,
+                'branch_id' => $main->id, 'patient_id' => $patient->id, 'practitioner_id' => $budi->id,
                 'visit_date' => $at, 'status' => VisitStatus::Done, 'started_at' => $at, 'finished_at' => $at->copy()->addHour(),
             ]);
 
@@ -628,32 +648,32 @@ class DemoSeeder extends Seeder
         }
     }
 
-    private function seedSchedules(Branch $kemang, Branch $depok): void
+    private function seedSchedules(Branch $main, Branch $second): void
     {
         $budi = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter@demo.test'))->first();
         $maya = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter2@demo.test'))->first();
-        [$kmg1, $kmg2] = [$kemang->chairs()->where('name', 'Unit 1')->value('id'), $kemang->chairs()->where('name', 'Unit 2')->value('id')];
-        $dpk1 = $depok->chairs()->where('name', 'Unit 1')->value('id');
+        [$kmg1, $kmg2] = [$main->chairs()->where('name', 'Unit 1')->value('id'), $main->chairs()->where('name', 'Unit 2')->value('id')];
+        $dpk1 = $second->chairs()->where('name', 'Unit 1')->value('id');
 
         foreach (range(1, 6) as $day) {
-            $budi->schedules()->firstOrCreate(['branch_id' => $kemang->id, 'day_of_week' => $day], ['chair_id' => $kmg1, 'start_time' => '08:00', 'end_time' => '16:00']);
+            $budi->schedules()->firstOrCreate(['branch_id' => $main->id, 'day_of_week' => $day], ['chair_id' => $kmg1, 'start_time' => '08:00', 'end_time' => '16:00']);
         }
 
         foreach ([1, 3, 4, 6] as $day) {
-            $maya->schedules()->firstOrCreate(['branch_id' => $kemang->id, 'day_of_week' => $day], ['chair_id' => $kmg2, 'start_time' => '08:00', 'end_time' => '17:00']);
+            $maya->schedules()->firstOrCreate(['branch_id' => $main->id, 'day_of_week' => $day], ['chair_id' => $kmg2, 'start_time' => '08:00', 'end_time' => '17:00']);
         }
 
         foreach ([2, 5] as $day) {
-            $maya->schedules()->firstOrCreate(['branch_id' => $depok->id, 'day_of_week' => $day], ['chair_id' => $dpk1, 'start_time' => '09:00', 'end_time' => '17:00']);
+            $maya->schedules()->firstOrCreate(['branch_id' => $second->id, 'day_of_week' => $day], ['chair_id' => $dpk1, 'start_time' => '09:00', 'end_time' => '17:00']);
         }
     }
 
-    /** Satu hari praktik di Kemang: janji temu per kursi, satu pasien di ruang tunggu, rencana & recall. */
-    private function seedDay(Branch $kemang): void
+    /** Satu hari praktik di Pondok Ranggon: janji temu per kursi, satu pasien di ruang tunggu, rencana & recall. */
+    private function seedDay(Branch $main): void
     {
         $budi = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter@demo.test'))->first();
         $maya = Practitioner::whereHas('user', fn ($q) => $q->where('email', 'dokter2@demo.test'))->first();
-        $chairs = $kemang->chairs()->orderBy('name')->pluck('id')->all();
+        $chairs = $main->chairs()->orderBy('name')->pluck('id')->all();
         $patients = Patient::orderBy('id')->limit(12)->get();
 
         $day = [
@@ -672,7 +692,7 @@ class DemoSeeder extends Seeder
         foreach ($day as [$p, $doctor, $chair, $time, $minutes, $category, $reason, $status]) {
             $start = today()->setTimeFromTimeString($time);
             Appointment::create([
-                'branch_id' => $kemang->id,
+                'branch_id' => $main->id,
                 'patient_id' => $patients[$p]->id,
                 'practitioner_id' => $doctor->id,
                 'chair_id' => $chairs[$chair] ?? null,
@@ -693,7 +713,7 @@ class DemoSeeder extends Seeder
             $plan = TreatmentPlan::create([
                 'patient_id' => $patients[1]->id,
                 'practitioner_id' => $budi->id,
-                'branch_id' => $kemang->id,
+                'branch_id' => $main->id,
                 'title' => 'Rencana perawatan menyeluruh',
                 'status' => TreatmentPlanStatus::Accepted,
                 'presented_at' => now()->subWeek(),
@@ -723,7 +743,7 @@ class DemoSeeder extends Seeder
         $scaling = Treatment::where('code', 'SCL')->first();
         foreach ($patients->slice(9, 3)->values() as $i => $patient) {
             Recall::firstOrCreate(['patient_id' => $patient->id, 'treatment_id' => $scaling->id], [
-                'branch_id' => $kemang->id,
+                'branch_id' => $main->id,
                 'reason' => 'Kontrol: scaling 6 bulan',
                 'due_date' => today()->addDays([-20, 3, 12][$i]),
                 'status' => RecallStatus::Pending,
