@@ -5,8 +5,10 @@ namespace App\Filament\Clusters\Stock\Resources\StockMovements\Pages;
 use App\Enums\StockMovementStatus;
 use App\Enums\StockMovementType;
 use App\Filament\Clusters\Stock\Resources\StockMovements\StockMovementResource;
+use App\Models\PurchaseOrder;
 use App\Models\StockMovement;
 use App\Models\User;
+use App\Services\Purchasing\Purchasing;
 use App\Services\Stock\StockLedger;
 use App\Support\Money;
 use Filament\Actions\Action;
@@ -27,7 +29,7 @@ class ViewStockMovement extends ViewRecord
     {
         /** @var StockMovement $movement */
         $movement = $this->getRecord();
-        $movement->loadMissing(['branch', 'supplier', 'counterpartBranch', 'creator', 'approver', 'reverses', 'lines.item.baseUnit', 'lines.batch', 'lines.enteredUnit']);
+        $movement->loadMissing(['branch', 'supplier', 'counterpartBranch', 'creator', 'approver', 'reverses', 'source', 'lines.item.baseUnit', 'lines.batch', 'lines.enteredUnit']);
 
         return $schema->columns(1)->components([View::make('filament.stock.movement')->viewData(['movement' => $movement])]);
     }
@@ -76,7 +78,13 @@ class ViewStockMovement extends ViewRecord
                 ->authorize(fn (): bool => auth()->user()?->can('Approve:Stock') ?? false)
                 ->modalDescription('Untuk salah input atau barang yang dikembalikan. Setiap baris dikembalikan ke batch asalnya lewat mutasi pembatalan.')
                 ->schema([Textarea::make('reason')->label('Alasan')->required()->minLength(5)])
-                ->action(fn (StockMovement $record, array $data) => $this->decide(fn (User $user) => StockLedger::cancel($record, $data['reason'], $user), 'Mutasi dibatalkan')),
+                ->action(fn (StockMovement $record, array $data) => $this->decide(
+                    // Penerimaan dari pesanan: jumlah diterima di pesanan ikut dikembalikan.
+                    fn (User $user) => $record->source_type === (new PurchaseOrder)->getMorphClass()
+                        ? Purchasing::cancelReceipt($record, $data['reason'], $user)
+                        : StockLedger::cancel($record, $data['reason'], $user),
+                    'Mutasi dibatalkan',
+                )),
             Action::make('pdf')
                 ->label('Cetak berita acara')
                 ->icon(Heroicon::OutlinedPrinter)

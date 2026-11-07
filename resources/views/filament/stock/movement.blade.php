@@ -11,6 +11,7 @@
         'Tanggal' => $movement->movement_date->format('d/m/Y'),
         'Supplier' => $movement->supplier?->name,
         'No. faktur' => $movement->supplier_invoice_no,
+        'Dari pesanan' => $movement->source instanceof \App\Models\PurchaseOrder ? $movement->source->number : null,
         'Cabang lawan' => $movement->counterpartBranch?->name,
         'Alasan' => $movement->reason?->getLabel(),
         'Catatan' => $movement->notes,

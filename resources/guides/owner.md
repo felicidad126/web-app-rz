@@ -8,6 +8,8 @@
 
 **Jasa & gaji** — *Jasa & Gaji*: aturan jasa, rekap & slip jasa dokter, slip gaji staf. Koreksi jasa selalu lewat entri pembalik.
 
-**Persetujuan** — *Keuangan → Persetujuan void & refund*.
+**Persetujuan** — *Keuangan → Persetujuan void & refund*. Permintaan pembelian dari perawat: *Stok → Permintaan* (owner atau admin, bukan pengajunya).
+
+**Kas pembelian** — *Stok → Kas pembelian*: **Setor kas** untuk belanja barang, lalu pantau saldo berjalan, pembayaran pesanan, dan pengeluaran lain per cabang.
 
 **Rollout cabang** — *Organisasi → Kesiapan cabang* menunjukkan cabang mana yang siap dipakai.

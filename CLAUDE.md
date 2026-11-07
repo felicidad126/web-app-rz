@@ -3,7 +3,7 @@
 Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL, Redis.
 
 - **Acuan desain:** `docs/02-dental-pms-planning-v2.md` (scope, skema DB, roadmap).
-- **Status terakhir:** `docs/11-fase-7-implementasi.md` (Fase 1: `docs/03-…`, Fase 2: `docs/05-…`, Fase 3: `docs/06-…`, Fase 4: `docs/07-…`, Fase 5: `docs/09-…`, Fase 6: `docs/10-…`). Review konsep stok & jasa dokter dari klinik: `docs/08-review-konsep-stok-dan-jasa-dokter.md`.
+- **Status terakhir:** `docs/11-fase-7-implementasi.md` (pembelian BHP: `docs/13-pembelian.md`) (Fase 1: `docs/03-…`, Fase 2: `docs/05-…`, Fase 3: `docs/06-…`, Fase 4: `docs/07-…`, Fase 5: `docs/09-…`, Fase 6: `docs/10-…`). Review konsep stok & jasa dokter dari klinik: `docs/08-review-konsep-stok-dan-jasa-dokter.md`.
 
 ## Perintah
 
@@ -30,6 +30,7 @@ Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL
 - **Billing:** rumus tagihan hanya di `App\Services\Billing\InvoiceCalculator`. Tagihan terbit, baris tagihan, dan ledger deposit terkunci di level model; koreksi lewat void/refund (`BillingApprovals`, izin `Approve:Billing`, penyetuju ≠ pengaju). Uang masuk/keluar selalu tercatat ke sesi kasir yang terbuka (`CashSessions`).
 - **SATUSEHAT:** semua panggilan lewat `App\Services\SatuSehat\SatuSehatClient` (token di-cache, error disaring). Jangan pernah mencatat URL/payload permintaan ke log: pencarian pasien memuat NIK. Kredensial hanya di `.env`. Pengiriman kunjungan lewat `VisitSync` (antrean, tidak dikirim dua kali).
 - **Stok:** semua perubahan stok lewat `App\Services\Stock\StockLedger` (opname lewat `StockOpnames`); jangan mengubah `item_batches.qty_on_hand` langsung. Jumlah dalam satuan dasar, harga pokok per satuan dasar (bigint). Mutasi tercatat tidak bisa diubah; koreksi lewat pembatalan atau opname. Pemusnahan & opname butuh `Approve:Stock` (penyetuju ≠ pengaju).
+- **Pembelian** (`docs/13-pembelian.md`): hanya lewat `App\Services\Purchasing\Purchasing`. Permintaan disetujui orang lain (`Approve:Purchase`); memesan tidak menambah stok, stok bertambah saat diterima (`Purchasing::receive` → `StockLedger::receive`, bisa sebagian). Penerimaan dari pesanan dibatalkan lewat `Purchasing::cancelReceipt`. Kas pembelian per cabang tidak boleh minus dan entrinya tidak diubah; koreksi lewat entri pembalik (`reverseCash`) atau pembatalan pesanan.
 - **Jasa dokter:** hanya lewat `App\Services\Commission\CommissionEngine` (aturan di-snapshot saat tagihan terbit; entri jasa tidak diubah, koreksi lewat entri pembalik) dan `CommissionPayouts` (`Manage:Commission`). Dokter tanpa `ViewAll:Commission` hanya melihat miliknya (`CommissionScope`).
 - **KPI & laporan:** definisi KPI hanya di `App\Enums\Kpi`; angka harian lewat `App\Services\Reports\DailyMetrics`/`Metrics` (hari lampau dari snapshot `daily_metrics`, jangan diubah tanpa `--force`). Laporan baru = kelas di `app/Reports` + `ReportRegistry`; izin dicek di `canView()` dan berlaku sama untuk unduhan. Laba hanya `View:ProfitReports`.
 - **Odontogram & OHI-S:** catatan dari peta lewat trait `EditsOdontogramChart` (satu baris per permukaan, kode seluruh gigi tanpa permukaan; catatan lama tidak ditimpa). Data peta/SVG hanya di `App\Services\Clinic\OdontogramVisual`, rumus OHI-S hanya di `App\Services\Clinic\OralHygiene`. Pemeriksaan intraoral terkunci bersama rekam medis.

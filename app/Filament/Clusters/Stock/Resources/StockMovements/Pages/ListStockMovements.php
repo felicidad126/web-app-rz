@@ -27,14 +27,14 @@ class ListStockMovements extends ListRecords
     {
         return [
             'semua' => Tab::make('Semua'),
-            'penerimaan' => Tab::make('Penerimaan')->modifyQueryUsing(fn (Builder $q) => $q->where('type', StockMovementType::Receipt)),
-            'keluar' => Tab::make('Pemakaian & penjualan')->modifyQueryUsing(fn (Builder $q) => $q->whereIn('type', [StockMovementType::Usage, StockMovementType::Dispensing, StockMovementType::Sale])),
-            'transfer' => Tab::make('Transfer')->modifyQueryUsing(fn (Builder $q) => $q->whereIn('type', [StockMovementType::TransferIn, StockMovementType::TransferOut])),
-            'koreksi' => Tab::make('Pemusnahan & koreksi')->modifyQueryUsing(fn (Builder $q) => $q->whereIn('type', [StockMovementType::Disposal, StockMovementType::Adjustment, StockMovementType::Reversal])),
+            'penerimaan' => Tab::make('Penerimaan')->modifyQueryUsing(fn (Builder $query) => $query->where('type', StockMovementType::Receipt)),
+            'keluar' => Tab::make('Pemakaian & penjualan')->modifyQueryUsing(fn (Builder $query) => $query->whereIn('type', [StockMovementType::Usage, StockMovementType::Dispensing, StockMovementType::Sale])),
+            'transfer' => Tab::make('Transfer')->modifyQueryUsing(fn (Builder $query) => $query->whereIn('type', [StockMovementType::TransferIn, StockMovementType::TransferOut])),
+            'koreksi' => Tab::make('Pemusnahan & koreksi')->modifyQueryUsing(fn (Builder $query) => $query->whereIn('type', [StockMovementType::Disposal, StockMovementType::Adjustment, StockMovementType::Reversal])),
             'persetujuan' => Tab::make('Menunggu persetujuan')
                 ->badge(fn (): ?int => ($n = StockMovementResource::getEloquentQuery()->where('status', StockMovementStatus::Pending)->count()) > 0 ? $n : null)
                 ->badgeColor('warning')
-                ->modifyQueryUsing(fn (Builder $q) => $q->where('status', StockMovementStatus::Pending)),
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', StockMovementStatus::Pending)),
         ];
     }
 

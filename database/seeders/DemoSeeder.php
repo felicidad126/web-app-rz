@@ -40,6 +40,7 @@ use App\Models\PatientPackage;
 use App\Models\Payer;
 use App\Models\Payslip;
 use App\Models\Practitioner;
+use App\Models\PurchaseRequest;
 use App\Models\Recall;
 use App\Models\SalaryComponent;
 use App\Models\StockOpname;
@@ -59,6 +60,7 @@ use App\Services\Commission\Attendances;
 use App\Services\Commission\CommissionPayouts;
 use App\Services\Lab\LabOrders;
 use App\Services\Payroll\Payslips;
+use App\Services\Purchasing\Purchasing;
 use App\Services\Reports\DailyMetrics;
 use App\Services\Reports\Targets;
 use App\Services\Stock\StockLedger;
@@ -182,6 +184,7 @@ class DemoSeeder extends Seeder
 
         $this->seedBilling($kemang);
         $this->seedStock($kemang, $depok);
+        $this->seedPurchasing($kemang);
         $this->seedPerformance($kemang, $depok);
     }
 
@@ -494,6 +497,56 @@ class DemoSeeder extends Seeder
                 LabOrders::advance($order, $perawat);
             }
         }
+
+        Carbon::setTestNow();
+    }
+
+    /**
+     * Pembelian (alur aplikasi inventori klinik): kas pembelian, permintaan perawat (menunggu, disetujui),
+     * pesanan yang sudah dibayar dan baru diterima sebagian (lewat perkiraan datang), dan ongkos kirim.
+     */
+    private function seedPurchasing(Branch $kemang): void
+    {
+        if (PurchaseRequest::where('branch_id', $kemang->id)->exists()) {
+            return;
+        }
+
+        $owner = User::where('email', 'owner@demo.test')->firstOrFail();
+        $admin = User::where('email', 'admin@demo.test')->firstOrFail();
+        $perawat = User::where('email', 'perawat@demo.test')->firstOrFail();
+        $item = fn (string $sku): Item => Item::where('sku', $sku)->firstOrFail();
+        $box = (int) Unit::where('name', 'box')->value('id');
+        $supply = Supplier::where('name', 'CV Dental Supply')->firstOrFail();
+        $today = today();
+        $at = fn (int $daysAgo, int $hour) => Carbon::setTestNow($today->copy()->subDays($daysAgo)->setTime($hour, 0));
+
+        $at(10, 9);
+        Purchasing::deposit($kemang->id, 2_000_000, 'Setoran awal kas pembelian dari owner', $owner);
+
+        $at(9, 10);
+        $mef = Purchasing::requestItem($kemang->id, $item('OBT-MEF500')->id, 2, $box, 'Stok 40 tablet, di bawah minimum 50', $perawat);
+        $at(9, 13);
+        Purchasing::approve($mef, $admin);
+        $order = Purchasing::createOrder($kemang->id, $supply->id, today(), [
+            ['item_id' => $item('OBT-MEF500')->id, 'unit_id' => $box, 'qty' => 2, 'unit_price' => 85_000, 'purchase_request_id' => $mef->id],
+            ['item_id' => $item('OBT-AMX500')->id, 'unit_id' => $box, 'qty' => 1, 'unit_price' => 110_000],
+        ], $admin, $today->copy()->subDays(3), 'Kirim ke klinik Kemang', payNow: true);
+
+        $at(6, 11);
+        $lines = $order->lines()->get();
+        Purchasing::receive($order, [
+            ['line_id' => $lines[0]->id, 'qty' => 1, 'batch_number' => 'MEF-2611', 'expired_at' => $today->copy()->addMonths(18)->endOfMonth()->toDateString()],
+            ['line_id' => $lines[1]->id, 'qty' => 1, 'batch_number' => 'AMX-2611', 'expired_at' => $today->copy()->addMonths(20)->endOfMonth()->toDateString()],
+        ], $perawat, today(), 'CVDS/2611/112');
+        Purchasing::expense($kemang->id, 20_000, 'Ongkos kirim CV Dental Supply', $admin);
+
+        $at(2, 15);
+        $brush = Purchasing::requestItem($kemang->id, $item('RTL-SKT')->id, 24, $item('RTL-SKT')->base_unit_id, 'Laku untuk pasien behel, stok tinggal 12', $perawat);
+        $at(2, 17);
+        Purchasing::approve($brush, $owner);
+
+        $at(1, 16);
+        Purchasing::requestItem($kemang->id, $item('BHN-KOMP')->id, 2, $item('BHN-KOMP')->base_unit_id, 'Persiapan 3 kasus estetik minggu depan', $perawat);
 
         Carbon::setTestNow();
     }

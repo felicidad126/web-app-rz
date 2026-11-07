@@ -70,6 +70,18 @@ final class NumberSequence
         return $scope.'-'.str_pad((string) self::next('stock', $scope), 4, '0', STR_PAD_LEFT);
     }
 
+    /** Nomor permintaan pembelian per cabang per bulan, mis. PMT-KMG-2611-0004. */
+    public static function nextPurchaseRequestNumber(string $branchCode, \DateTimeInterface $date): string
+    {
+        return self::nextStockNumber('PMT', $branchCode, $date);
+    }
+
+    /** Nomor pesanan pembelian per cabang per bulan, mis. PSN-KMG-2611-0002. */
+    public static function nextPurchaseOrderNumber(string $branchCode, \DateTimeInterface $date): string
+    {
+        return self::nextStockNumber('PSN', $branchCode, $date);
+    }
+
     /** Nomor order lab, mis. LAB-2611-0012. */
     public static function nextLabOrderNumber(\DateTimeInterface $date): string
     {

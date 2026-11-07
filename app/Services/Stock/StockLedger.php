@@ -11,6 +11,7 @@ use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\ItemBatch;
 use App\Models\Prescription;
+use App\Models\PurchaseOrder;
 use App\Models\StockMovement;
 use App\Models\StockMovementLine;
 use App\Models\User;
@@ -38,15 +39,23 @@ final class StockLedger
      * Penerimaan barang dari supplier (langsung tercatat).
      *
      * @param  list<array{item_id: int, unit_id: int, qty: float|int|string, unit_price: int|string, batch_number?: string|null, expired_at?: mixed}>  $lines
+     * @param  Model|null  $source  dokumen asal, mis. pesanan pembelian (PurchaseOrder)
      */
-    public static function receive(int $branchId, array $lines, ?int $supplierId = null, ?string $invoiceNo = null, mixed $date = null, ?string $notes = null, ?User $user = null): StockMovement
+    public static function receive(int $branchId, array $lines, ?int $supplierId = null, ?string $invoiceNo = null, mixed $date = null, ?string $notes = null, ?User $user = null, ?Model $source = null): StockMovement
     {
         if ($lines === []) {
             throw new InvalidArgumentException('Isi minimal satu barang yang diterima.');
         }
 
-        return DB::transaction(function () use ($branchId, $lines, $supplierId, $invoiceNo, $date, $notes, $user): StockMovement {
-            $movement = self::newMovement(StockMovementType::Receipt, $branchId, $date, $notes, $user, ['supplier_id' => $supplierId, 'supplier_invoice_no' => $invoiceNo]);
+        return DB::transaction(function () use ($branchId, $lines, $supplierId, $invoiceNo, $date, $notes, $user, $source): StockMovement {
+            $attributes = ['supplier_id' => $supplierId, 'supplier_invoice_no' => $invoiceNo];
+
+            if ($source !== null) {
+                $attributes['source_type'] = $source->getMorphClass();
+                $attributes['source_id'] = $source->getKey();
+            }
+
+            $movement = self::newMovement(StockMovementType::Receipt, $branchId, $date, $notes, $user, $attributes);
 
             foreach ($lines as $line) {
                 $item = Item::with('units')->findOrFail($line['item_id']);
@@ -211,8 +220,17 @@ final class StockLedger
      * Pembatalan manual oleh admin (izin Approve:Stock): salah input penerimaan, atau bahan/obat yang dikembalikan.
      * Penerimaan yang barangnya sudah terpakai tidak bisa dibatalkan (stok batch akan minus); koreksi lewat opname.
      */
-    public static function cancel(StockMovement $movement, string $reason, User $user): StockMovement
+    /**
+     * Batalkan penerimaan/pemakaian yang salah input lewat mutasi pembalik.
+     * Penerimaan dari pesanan pembelian dibatalkan lewat Purchasing::cancelReceipt (yang memanggil ini dengan
+     * $fromPurchasing = true) agar jumlah diterima di pesanan ikut dikembalikan.
+     */
+    public static function cancel(StockMovement $movement, string $reason, User $user, bool $fromPurchasing = false): StockMovement
     {
+        if (! $fromPurchasing && $movement->source_type === (new PurchaseOrder)->getMorphClass()) {
+            throw new InvalidArgumentException('Penerimaan ini berasal dari pesanan pembelian; batalkan lewat Purchasing::cancelReceipt.');
+        }
+
         if (! $user->can('Approve:Stock')) {
             throw new InvalidArgumentException('Hanya admin klinik yang bisa membatalkan mutasi.');
         }

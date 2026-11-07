@@ -66,10 +66,10 @@ final class StockActions
                     ->schema([
                         self::itemSelect(),
                         self::unitSelect(),
-                        TextInput::make('qty')->numeric()->minValue(0.001)->required(),
-                        TextInput::make('unit_price')->numeric()->minValue(0)->prefix('Rp')->required(),
-                        TextInput::make('batch_number')->maxLength(60),
-                        TextInput::make('expired_at')->placeholder('08/2027')
+                        TextInput::make('qty')->label('Jumlah')->numeric()->minValue(0.001)->required(),
+                        TextInput::make('unit_price')->label('Harga / satuan')->numeric()->minValue(0)->prefix('Rp')->required(),
+                        TextInput::make('batch_number')->label('No. batch')->maxLength(60),
+                        TextInput::make('expired_at')->label('ED')->placeholder('08/2027')
                             ->rule(fn (): \Closure => function (string $attribute, mixed $value, \Closure $fail): void {
                                 try {
                                     ExpiryDate::parse($value);
@@ -103,7 +103,7 @@ final class StockActions
             ->schema([
                 Repeater::make('lines')->label('Barang')
                     ->table([TableColumn::make('Barang')->width('55%'), TableColumn::make('Satuan')->width('25%'), TableColumn::make('Jumlah')->width('20%')])
-                    ->schema([self::itemSelect(), self::unitSelect(), TextInput::make('qty')->numeric()->minValue(0.001)->required()])
+                    ->schema([self::itemSelect(), self::unitSelect(), TextInput::make('qty')->label('Jumlah')->numeric()->minValue(0.001)->required()])
                     ->minItems(1)->defaultItems(1)->addActionLabel('Tambah barang'),
                 TextInput::make('notes')->label('Keperluan')->placeholder('Mis. sterilisasi, bahan tambahan pasien RM-000231')->required()->maxLength(255),
             ])
@@ -128,7 +128,7 @@ final class StockActions
                     ->required(),
                 Repeater::make('lines')->label('Barang')
                     ->table([TableColumn::make('Barang')->width('55%'), TableColumn::make('Satuan')->width('25%'), TableColumn::make('Jumlah')->width('20%')])
-                    ->schema([self::itemSelect(), self::unitSelect(), TextInput::make('qty')->numeric()->minValue(0.001)->required()])
+                    ->schema([self::itemSelect(), self::unitSelect(), TextInput::make('qty')->label('Jumlah')->numeric()->minValue(0.001)->required()])
                     ->minItems(1)->defaultItems(1)->addActionLabel('Tambah barang'),
                 TextInput::make('notes')->label('Catatan')->maxLength(255),
             ])
@@ -157,8 +157,8 @@ final class StockActions
                 Repeater::make('lines')->label('Batch')
                     ->table([TableColumn::make('Batch')->width('75%'), TableColumn::make('Jumlah (satuan dasar)')->width('25%')])
                     ->schema([
-                        Select::make('item_batch_id')->options(fn (): array => self::batchOptions())->searchable()->required()->distinct(),
-                        TextInput::make('qty')->numeric()->minValue(0.001)->required(),
+                        Select::make('item_batch_id')->label('Batch')->options(fn (): array => self::batchOptions())->searchable()->required()->distinct(),
+                        TextInput::make('qty')->label('Jumlah')->numeric()->minValue(0.001)->required(),
                     ])
                     ->minItems(1)->addActionLabel('Tambah batch'),
                 Textarea::make('notes')->label('Keterangan')->placeholder('Mis. cara pemusnahan dan saksi')->rows(2),
@@ -195,6 +195,7 @@ final class StockActions
     public static function itemSelect(): Select
     {
         return Select::make('item_id')
+            ->label('Barang')
             ->options(fn (): array => Item::where('is_active', true)->orderBy('name')->pluck('name', 'id')->all())
             ->searchable()
             ->required()
@@ -205,6 +206,7 @@ final class StockActions
     public static function unitSelect(): Select
     {
         return Select::make('unit_id')
+            ->label('Satuan')
             ->options(fn (Get $get): array => self::unitOptions($get('item_id')))
             ->required();
     }

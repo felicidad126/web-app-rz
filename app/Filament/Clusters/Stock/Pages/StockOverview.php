@@ -2,11 +2,16 @@
 
 namespace App\Filament\Clusters\Stock\Pages;
 
+use App\Enums\PurchaseOrderStatus;
+use App\Enums\PurchaseRequestStatus;
+use App\Filament\Clusters\Stock\PurchaseActions;
 use App\Filament\Clusters\Stock\StockActions;
 use App\Filament\Clusters\Stock\StockCluster;
 use App\Filament\Resources\Items\ItemResource;
 use App\Models\Item;
 use App\Models\ItemBatch;
+use App\Models\PurchaseOrderLine;
+use App\Models\PurchaseRequest;
 use App\Services\Stock\StockAlerts;
 use App\Services\Stock\StockLedger;
 use App\Support\BranchContext;
@@ -59,6 +64,9 @@ class StockOverview extends Page implements HasActions, HasSchemas, HasTable
 
     /** @var array<int, array{batch: ItemBatch|null, cost: int}>|null */
     private ?array $details = null;
+
+    /** @var array<int, string>|null barang yang sudah diminta/dipesan (belum datang): item_id => keterangan */
+    private ?array $purchasing = null;
 
     public static function canAccess(): bool
     {
@@ -139,6 +147,10 @@ class StockOverview extends Page implements HasActions, HasSchemas, HasTable
             ])
             ->filters([
                 SelectFilter::make('item_category_id')->label('Kategori')->relationship('category', 'name'),
+            ])
+            ->recordActions([
+                PurchaseActions::requestItem(forRow: true)
+                    ->visible(fn (Item $record): bool => ! isset($this->purchasing()[$record->id])),
             ]);
     }
 
@@ -196,6 +208,32 @@ class StockOverview extends Page implements HasActions, HasSchemas, HasTable
         return $this->details[$item->id] ?? ['batch' => null, 'cost' => 0];
     }
 
+    /** @return array<int, string> */
+    private function purchasing(): array
+    {
+        if ($this->purchasing === null) {
+            $branchId = (int) BranchContext::id();
+
+            $requested = PurchaseRequest::query()->where('branch_id', $branchId)
+                ->whereIn('status', [PurchaseRequestStatus::Pending, PurchaseRequestStatus::Approved])
+                ->orderBy('id')->get(['item_id', 'number'])
+                ->mapWithKeys(fn (PurchaseRequest $r): array => [$r->item_id => 'sudah diminta '.$r->number]);
+
+            $ordered = PurchaseOrderLine::query()
+                ->join('purchase_orders', 'purchase_orders.id', '=', 'purchase_order_lines.purchase_order_id')
+                ->where('purchase_orders.branch_id', $branchId)
+                ->whereIn('purchase_orders.status', [PurchaseOrderStatus::Ordered, PurchaseOrderStatus::Partial])
+                ->whereColumn('purchase_order_lines.received_quantity', '<', 'purchase_order_lines.quantity')
+                ->orderBy('purchase_orders.id')
+                ->get(['purchase_order_lines.item_id', 'purchase_orders.number'])
+                ->mapWithKeys(fn (PurchaseOrderLine $line): array => [$line->item_id => 'dalam pesanan '.$line->getAttribute('number')]);
+
+            $this->purchasing = $ordered->union($requested)->all();
+        }
+
+        return $this->purchasing;
+    }
+
     private function expiryColor(?ItemBatch $batch): ?string
     {
         $days = $batch?->daysToExpiry();
@@ -217,7 +255,7 @@ class StockOverview extends Page implements HasActions, HasSchemas, HasTable
         return match (true) {
             $stock < 0 => 'Stok minus · cek saat opname',
             $days !== null && $days < 0 => 'Kedaluwarsa · ajukan pemusnahan',
-            $stock < (float) $item->min_stock => 'Di bawah minimum · pesan lagi',
+            $stock < (float) $item->min_stock => 'Di bawah minimum · '.($this->purchasing()[$item->id] ?? 'pesan lagi'),
             $days !== null && $days <= (int) config('clinic.stock.expiry_warning_days', 60) => 'Pakai lebih dulu (FEFO)',
             default => null,
         };

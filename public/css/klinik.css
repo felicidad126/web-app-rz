@@ -45,6 +45,8 @@
 
 /* Sembunyikan kolom tabel buatan sendiri (Blade) di layar sempit. */
 @media (max-width: 47.99rem) { .klinik-hide-sm { display: none !important; } }
+/* Kebalikannya: hanya di HP (mis. tanggal di bawah keterangan saat kolom Tanggal disembunyikan). */
+@media (min-width: 48rem) { .klinik-only-sm { display: none !important; } }
 .klinik-nowrap { white-space: nowrap; }
 
 /* Kartu statistik di HP: dua kolom, lebih ringkas. */

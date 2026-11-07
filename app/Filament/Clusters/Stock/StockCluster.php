@@ -9,7 +9,7 @@ use Filament\Pages\Enums\SubNavigationPosition;
 use Filament\Support\Icons\Heroicon;
 use UnitEnum;
 
-/** Stok (mockup "Stok"): tab Barang · Mutasi & penerimaan · Opname. */
+/** Stok (mockup "Stok"): tab Barang · Permintaan · Pesanan · Mutasi & penerimaan · Opname · Kas pembelian. */
 class StockCluster extends Cluster
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArchiveBox;

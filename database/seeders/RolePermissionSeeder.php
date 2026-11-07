@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Peran & hak akses sesuai matriks akses Planning v2 (Bagian 4.3), lingkup Fase 1–6.
+ * Peran & hak akses sesuai matriks akses Planning v2 (Bagian 4.3), lingkup Fase 1–7 + pembelian.
  *
  * Format permission mengikuti Filament Shield: "{Aksi}:{Model}", mis. "ViewAny:Patient".
  * Seeder ini idempoten: aman dijalankan ulang setelah menambah resource.
@@ -57,6 +57,11 @@ class RolePermissionSeeder extends Seeder
             ...self::grant(['StockMovement', 'StockOpname', 'LabOrder'], self::R),
             'View:Stock',
             'Approve:Stock',
+            // Pembelian: owner memantau, menyetujui permintaan, dan mengelola kas pembelian.
+            ...self::grant(['PurchaseRequest', 'PurchaseOrder'], self::R),
+            'Approve:Purchase',
+            'View:PurchaseCash',
+            'Manage:PurchaseCash',
             'View:SipExpiryWidget',
             'View:CashReport',
             // Jasa dokter & gaji: owner mengatur aturan, membuat & membayar rekap, mengelola gaji (Planning §4.3).
@@ -85,6 +90,12 @@ class RolePermissionSeeder extends Seeder
             ...self::grant(['StockMovement', 'StockOpname', 'LabOrder'], self::CRU),
             'View:Stock',
             'Approve:Stock',
+            // Pembelian: admin menyetujui permintaan perawat, memesan ke supplier, menerima, dan mengelola kas pembelian.
+            ...self::grant(['PurchaseRequest', 'PurchaseOrder'], self::CRU),
+            'Approve:Purchase',
+            'Receive:Purchase',
+            'View:PurchaseCash',
+            'Manage:PurchaseCash',
             'View:SipExpiryWidget',
             'View:CashReport',
             // Jasa & gaji: admin melihat (R) dan mencatat kehadiran dokter harian.
@@ -121,6 +132,8 @@ class RolePermissionSeeder extends Seeder
             'perawat' => [
                 ...$clinical, ...self::grant(['Appointment', 'Visit'], self::RU), ...$writeRecord, 'View:SatuSehat',
                 ...self::grant(['StockMovement', 'StockOpname', 'LabOrder'], self::CRU), 'View:Stock',
+                // Perawat meminta barang dan mencatat barang pesanan yang datang (tanpa memesan/menyetujui).
+                ...self::grant(['PurchaseRequest'], self::CRU), ...self::grant(['PurchaseOrder'], self::R), 'Receive:Purchase',
                 'View:MorningHuddle', 'View:TopDiagnosesWidget',
             ],
             // Resepsionis mendaftarkan & mengubah data pasien, tetapi tidak menghapus (retensi rekam medis).

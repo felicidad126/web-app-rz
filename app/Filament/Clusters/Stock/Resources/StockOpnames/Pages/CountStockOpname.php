@@ -74,21 +74,23 @@ class CountStockOpname extends EditRecord
                         ->schema([
                             Hidden::make('item_batch_id'),
                             Select::make('item_id')
+                                ->label('Barang')
                                 ->options(fn (): array => Item::where('is_active', true)->orderBy('name')->pluck('name', 'id')->all())
                                 ->searchable()
                                 ->required()
                                 ->disabled(fn (Get $get): bool => filled($get('item_batch_id')))
                                 ->dehydrated(),
-                            TextInput::make('batch_number')->maxLength(60)->readOnly(fn (Get $get): bool => filled($get('item_batch_id'))),
+                            TextInput::make('batch_number')->label('No. batch')->maxLength(60)->readOnly(fn (Get $get): bool => filled($get('item_batch_id'))),
                             TextInput::make('expired_at')
+                                ->label('ED')
                                 ->placeholder('08/2027')
                                 ->formatStateUsing(fn ($state): ?string => $state ? Carbon::parse($state)->format('m/Y') : null)
                                 ->dehydrateStateUsing(fn ($state) => ExpiryDate::parse($state)?->toDateString())
                                 ->readOnly(fn (Get $get): bool => filled($get('item_batch_id'))),
-                            TextInput::make('unit_cost')->numeric()->minValue(0)->prefix('Rp')->readOnly(fn (Get $get): bool => filled($get('item_batch_id'))),
-                            TextInput::make('counted_qty')->numeric()->minValue(0)
+                            TextInput::make('unit_cost')->label('Harga pokok')->numeric()->minValue(0)->prefix('Rp')->readOnly(fn (Get $get): bool => filled($get('item_batch_id'))),
+                            TextInput::make('counted_qty')->label('Jumlah fisik')->numeric()->minValue(0)
                                 ->suffix(fn (Get $get): ?string => Item::with('baseUnit')->find($get('item_id'))?->baseUnit->name),
-                            TextInput::make('notes')->maxLength(255),
+                            TextInput::make('notes')->label('Catatan')->maxLength(255),
                         ])
                         ->mutateRelationshipDataBeforeCreateUsing(fn (array $data): array => [...$data, 'system_qty' => 0])
                         ->addActionLabel('Tambah barang/batch yang ditemukan')

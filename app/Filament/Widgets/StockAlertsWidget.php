@@ -3,13 +3,19 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\LabOrderStatus;
+use App\Enums\PurchaseOrderStatus;
+use App\Enums\PurchaseRequestStatus;
 use App\Enums\StockMovementStatus;
 use App\Enums\StockOpnameStatus;
 use App\Filament\Clusters\Stock\Pages\StockOverview;
+use App\Filament\Clusters\Stock\Resources\PurchaseOrders\PurchaseOrderResource;
+use App\Filament\Clusters\Stock\Resources\PurchaseRequests\PurchaseRequestResource;
 use App\Filament\Clusters\Stock\Resources\StockMovements\StockMovementResource;
 use App\Filament\Clusters\Stock\Resources\StockOpnames\StockOpnameResource;
 use App\Filament\Resources\LabOrders\LabOrderResource;
 use App\Models\LabOrder;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseRequest;
 use App\Models\StockMovement;
 use App\Models\StockOpname;
 use App\Services\Stock\StockAlerts;
@@ -77,6 +83,10 @@ class StockAlertsWidget extends StatsOverviewWidget
                     : StockMovementResource::getUrl('index', ['tab' => 'persetujuan']));
         }
 
+        if (auth()->user()?->can('ViewAny:PurchaseRequest') ?? false) {
+            $stats[] = $this->purchasingStat($branchId);
+        }
+
         if (auth()->user()?->can('ViewAny:LabOrder') ?? false) {
             $lab = LabOrder::query()->where('branch_id', $branchId)->whereIn('status', [LabOrderStatus::Created, LabOrderStatus::Sent]);
             $late = (clone $lab)->whereDate('due_at', '<', today())->count();
@@ -93,5 +103,26 @@ class StockAlertsWidget extends StatsOverviewWidget
         }
 
         return $stats;
+    }
+
+    /** Pembelian: permintaan menunggu persetujuan & pesanan yang belum datang (kuning bila perlu tindakan). */
+    private function purchasingStat(int $branchId): Stat
+    {
+        $canApprove = auth()->user()?->can('Approve:Purchase') ?? false;
+        $pending = PurchaseRequest::query()->where('branch_id', $branchId)->where('status', PurchaseRequestStatus::Pending)->count();
+        $open = PurchaseOrder::query()->where('branch_id', $branchId)->whereIn('status', [PurchaseOrderStatus::Ordered, PurchaseOrderStatus::Partial]);
+        $waiting = (clone $open)->count();
+        $late = (clone $open)->whereDate('expected_at', '<', today())->count();
+        $needsAction = ($canApprove && $pending > 0) || $late > 0;
+
+        return Stat::make('Pembelian', $waiting.' pesanan belum datang')
+            ->description(collect([
+                $pending > 0 ? $pending.' permintaan menunggu persetujuan' : null,
+                $late > 0 ? $late.' lewat perkiraan datang' : null,
+            ])->filter()->implode(' · ') ?: 'Tidak ada yang menunggu')
+            ->color($needsAction ? 'warning' : 'gray')
+            ->url($canApprove && $pending > 0
+                ? PurchaseRequestResource::getUrl('index', ['tab' => 'menunggu'])
+                : (PurchaseOrderResource::canViewAny() ? PurchaseOrderResource::getUrl('index') : PurchaseRequestResource::getUrl('index')));
     }
 }

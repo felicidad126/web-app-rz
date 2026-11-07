@@ -1,14 +1,19 @@
 <?php
 
 use App\Enums\LabOrderStatus;
+use App\Enums\PurchaseOrderStatus;
+use App\Enums\PurchaseRequestStatus;
 use App\Enums\StockMovementStatus;
 use App\Enums\StockOpnameStatus;
 use App\Models\Branch;
 use App\Models\LabOrder;
 use App\Models\Patient;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseRequest;
 use App\Models\StockMovement;
 use App\Models\StockOpname;
 use App\Models\User;
+use App\Services\Purchasing\Purchasing;
 use App\Services\Stock\StockAlerts;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Support\Facades\Hash;
@@ -32,9 +37,15 @@ it('mengisi data demo tanpa factory/Faker dan memakai password dari config', fun
         ->and(LabOrder::whereIn('status', LabOrderStatus::active())->count())->toBe(3)
         ->and(LabOrder::get()->filter->isLate())->toHaveCount(1);
 
+    // Pembelian: satu permintaan menunggu, satu siap dipesan, pesanan dibayar & diterima sebagian, saldo kas sisa.
+    expect(PurchaseRequest::where('status', PurchaseRequestStatus::Pending)->count())->toBe(1)
+        ->and(PurchaseRequest::where('status', PurchaseRequestStatus::Approved)->count())->toBe(1)
+        ->and(PurchaseOrder::sole())->status->toBe(PurchaseOrderStatus::Partial)->paid_amount->toBe(280_000)
+        ->and(Purchasing::balance($kemang->id))->toBe(2_000_000 - 280_000 - 20_000);
+
     // Aman dijalankan ulang.
     $this->seed(DemoSeeder::class);
-    expect(StockOpname::count())->toBe(1)->and(LabOrder::count())->toBe(3);
+    expect(StockOpname::count())->toBe(1)->and(LabOrder::count())->toBe(3)->and(PurchaseRequest::count())->toBe(3);
 });
 
 it('menolak berjalan di produksi', function () {
