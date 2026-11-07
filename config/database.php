@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
 use Pdo\Mysql;
 
 return [
@@ -149,7 +148,8 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
+            // Tetap, tidak mengikuti APP_NAME: antrean job di Redis tidak terputus saat nama aplikasi diganti.
+            'prefix' => env('REDIS_PREFIX', 'dental-pms-database-'),
             'persistent' => env('REDIS_PERSISTENT', false),
         ],
 

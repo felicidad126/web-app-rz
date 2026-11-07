@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
-
 return [
 
     /*
@@ -118,7 +116,8 @@ return [
     |
     */
 
-    'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
+    // Tetap, tidak mengikuti APP_NAME (mengganti nama aplikasi tidak mengosongkan cache).
+    'prefix' => env('CACHE_PREFIX', 'dental-pms-cache-'),
 
     /*
     |--------------------------------------------------------------------------

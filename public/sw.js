@@ -1,13 +1,13 @@
 /*
- * Service worker Dental PMS.
+ * Service worker aplikasi klinik (nama dari APP_NAME, lihat PwaController).
  *
  * Aturan (Planning v2 §4.2 & §5.9):
  * - Hanya aset statis (build, ikon, font, aset Filament) yang di-cache.
  * - Semua request lain (HTML, Livewire, API) selalu ke jaringan dan TIDAK PERNAH di-cache,
  *   karena bisa berisi data pasien (UU PDP).
- * - Jika offline saat membuka halaman, tampilkan /offline.html.
+ * - Jika offline saat membuka halaman, tampilkan /offline.html (halaman statis tanpa data, dari PwaController).
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const STATIC_CACHE = `dental-pms-static-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [OFFLINE_URL, '/icons/icon-192.png', '/icons/icon.svg'];

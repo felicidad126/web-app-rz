@@ -41,3 +41,4 @@ Aplikasi manajemen klinik gigi (PWA): Laravel 13, Filament v5, Livewire 4, MySQL
 - **Lazy loading dilarang** di `local` & `testing` (`Model::shouldBeStrict`). Eager-load relasi di tabel dan relation manager.
 - `app/Policies/*` dibuat oleh Shield. Jangan diedit manual; atur hak akses di seeder.
 - **Service worker** (`public/sw.js`) hanya boleh meng-cache aset statis.
+- **Nama aplikasi** hanya lewat `config('app.name')` / `config('app.short_name')` (`APP_NAME` / `APP_SHORT_NAME`); jangan menulis nama langsung. Manifest & halaman offline dilayani `PwaController`. Cookie sesi & prefix cache/Redis sengaja tetap `dental-pms-…` (jangan dikaitkan ke `APP_NAME`).

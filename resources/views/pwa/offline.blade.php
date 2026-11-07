@@ -1,9 +1,10 @@
+{{-- Halaman offline PWA (di-cache service worker). Statis: jangan menampilkan data pengguna/pasien. --}}
 <!doctype html>
 <html lang="id">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Offline — Dental PMS</title>
+    <title>Offline — {{ config('app.name') }}</title>
     <meta name="theme-color" content="#0d6e63">
     <style>
         :root { color-scheme: light dark; --bg: #f8fafc; --fg: #0f172a; --muted: #475569; --accent: #0d6e63; }
@@ -20,7 +21,7 @@
 <main>
     <img src="/icons/icon.svg" alt="">
     <h1>Tidak ada koneksi internet</h1>
-    <p>Dental PMS membutuhkan koneksi untuk menampilkan data. Periksa Wi-Fi atau data seluler, lalu coba lagi.</p>
+    <p>{{ config('app.name') }} membutuhkan koneksi untuk menampilkan data. Periksa Wi-Fi atau data seluler, lalu coba lagi.</p>
     <button type="button" onclick="location.reload()">Coba lagi</button>
 </main>
 </body>

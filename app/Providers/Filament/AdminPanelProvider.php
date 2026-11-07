@@ -40,7 +40,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('')
-            ->brandName('Dental PMS')
+            ->brandName(fn (): string => (string) config('app.name'))
             ->darkMode(false)
             ->login()
             ->passwordReset()

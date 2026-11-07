@@ -15,6 +15,7 @@
 #   TAILSCALE_HTTPS=y|n   (tanpa domain: HTTPS via https://<nama-vm>.<tailnet>.ts.net)
 #   REPO_URL=...  REPO_BRANCH=...  APP_DIR=/var/www/dental-pms  ENABLE_UFW=y|n
 #   OWNER_NAME=...  OWNER_EMAIL=...  OWNER_PASSWORD=...
+#   APP_NAME="East Family Dental Care"  APP_SHORT_NAME="East Dental"   (nama aplikasi; kosong = biarkan isi .env)
 #   SWAP_SIZE=auto|0|2G     (auto: buat swap 2 GB bila RAM < 4 GB dan belum ada swap; 0 = jangan buat)
 #   LOW_MEMORY=auto|y|n     (auto: setelan hemat RAM untuk MySQL & PHP-FPM bila RAM <= 3 GB)
 #
@@ -441,6 +442,9 @@ fi
 env_set APP_ENV "$APP_ENV_VALUE"
 env_set APP_DEBUG false
 env_set APP_URL "$APP_URL_VALUE"
+# Nama aplikasi (header, ikon HP, PDF). Hanya diubah bila diberikan; cookie & prefix cache tidak ikut berubah.
+if [[ -n "${APP_NAME:-}" ]]; then env_set APP_NAME "\"${APP_NAME//\"/}\""; fi
+if [[ -n "${APP_SHORT_NAME:-}" ]]; then env_set APP_SHORT_NAME "\"${APP_SHORT_NAME//\"/}\""; fi
 env_set LOG_LEVEL warning
 env_set DB_CONNECTION mysql
 env_set DB_HOST 127.0.0.1

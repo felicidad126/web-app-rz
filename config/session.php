@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
-
 return [
 
     /*
@@ -127,10 +125,8 @@ return [
     |
     */
 
-    'cookie' => env(
-        'SESSION_COOKIE',
-        Str::slug((string) env('APP_NAME', 'laravel')).'-session'
-    ),
+    // Tetap, tidak mengikuti APP_NAME: mengganti nama aplikasi tidak boleh me-logout semua pengguna.
+    'cookie' => env('SESSION_COOKIE', 'dental-pms-session'),
 
     /*
     |--------------------------------------------------------------------------

@@ -16,6 +16,12 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
+    | Nama pendek untuk ikon aplikasi di layar HP (manifest PWA, iOS). Nama panjang terpotong di bawah ikon.
+    */
+
+    'short_name' => env('APP_SHORT_NAME', env('APP_NAME', 'Laravel')),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------

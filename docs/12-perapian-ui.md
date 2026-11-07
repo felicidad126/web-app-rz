@@ -91,7 +91,8 @@ Semua halaman panel (79 halaman, 6 peran, desktop & HP) difoto, diaudit per segm
 
 ### Belum dikerjakan (sengaja)
 - Isian rupiah di form tagihan kasir & hitung pecahan saat tutup kasir tidak diberi pemisah ribuan: totalnya dihitung langsung dari isian mentah, masker berisiko merusak total.
-- Hapus belum diganti istilah "Arsipkan" di semua tempat; ikon & warna aplikasi menunggu nama dan logo final.
+- Hapus belum diganti istilah "Arsipkan" di semua tempat; ikon & warna aplikasi menunggu logo final.
+- Nama aplikasi: **East Family Dental Care** (ikon HP: **East Dental**), keputusan 12 Nov 2026. Hanya dari `APP_NAME` / `APP_SHORT_NAME`; jangan menulis nama langsung di kode atau view.
 - Input tanggal di Jadwal masih memakai format bawaan browser.
 
 ---

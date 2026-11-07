@@ -274,6 +274,7 @@ server {
 | Variabel | Keterangan |
 |---|---|
 | `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://...` | Wajib di produksi |
+| `APP_NAME`, `APP_SHORT_NAME` | Nama aplikasi (header panel, judul tab, PDF/nota, email, manifest PWA, halaman offline) dan nama pendek di bawah ikon HP. Default `"East Family Dental Care"` / `"East Dental"`. Ganti di `.env` (nilai berspasi pakai tanda kutip) lalu `php artisan optimize`; atau jalankan ulang provision dengan `APP_NAME=... APP_SHORT_NAME=...`. Cookie sesi & prefix cache/Redis **tidak** ikut nama ini, jadi tidak ada yang ter-logout dan antrean job tetap jalan. HP yang sudah memasang aplikasi memperbarui namanya sendiri dalam beberapa hari (atau hapus lalu pasang ulang ikon). |
 | `APP_KEY` | Kunci enkripsi (NIK, secret MFA, session). **Simpan cadangannya di password manager owner.** Kalau hilang, NIK dan MFA tidak bisa didekripsi. |
 | `BLIND_INDEX_KEY` | Kunci HMAC untuk pencarian NIK. Generate sekali dengan `php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"`. **Jangan pernah diganti setelah ada data.** Simpan cadangannya bersama `APP_KEY`. |
 | `TRUSTED_PROXIES` | Isi hanya jika aplikasi di balik reverse proxy, Cloudflare, atau load balancer (IP dipisah koma, atau `*`), supaya URL aset dan cookie memakai HTTPS. Kosongkan untuk Nginx + PHP-FPM langsung. Mode Tailscale: diisi otomatis `127.0.0.1,::1`. Jika `APP_URL` diawali `https://`, link dan redirect selalu dibuat https. |

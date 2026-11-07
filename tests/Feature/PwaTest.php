@@ -1,9 +1,14 @@
 <?php
 
-it('menyediakan manifest PWA yang valid', function () {
-    $manifest = json_decode(file_get_contents(public_path('manifest.webmanifest')), true, flags: JSON_THROW_ON_ERROR);
+it('menyediakan manifest PWA yang valid dengan nama dari APP_NAME', function () {
+    config(['app.name' => 'Klinik Contoh Sejahtera', 'app.short_name' => 'Klinik Contoh']);
 
-    expect($manifest['display'])->toBe('standalone')
+    $response = $this->get('/manifest.webmanifest')->assertOk()->assertHeader('Content-Type', 'application/manifest+json')->assertCookieMissing('dental-pms-session');
+    $manifest = json_decode($response->getContent(), true, flags: JSON_THROW_ON_ERROR);
+
+    expect($manifest['name'])->toBe('Klinik Contoh Sejahtera')
+        ->and($manifest['short_name'])->toBe('Klinik Contoh')
+        ->and($manifest['display'])->toBe('standalone')
         ->and($manifest['start_url'])->toBe('/')
         ->and(collect($manifest['icons'])->pluck('sizes')->all())->toContain('192x192', '512x512')
         ->and(collect($manifest['icons'])->pluck('purpose')->all())->toContain('maskable');
@@ -11,6 +16,20 @@ it('menyediakan manifest PWA yang valid', function () {
     foreach ($manifest['icons'] as $icon) {
         expect(file_exists(public_path(ltrim($icon['src'], '/'))))->toBeTrue($icon['src']);
     }
+});
+
+it('halaman offline statis memakai nama aplikasi, tanpa sesi', function () {
+    config(['app.name' => 'Klinik Contoh Sejahtera']);
+
+    $this->get('/offline.html')->assertOk()->assertSee('Klinik Contoh Sejahtera membutuhkan koneksi')->assertCookieMissing('dental-pms-session');
+});
+
+it('nama aplikasi tampil di panel; cookie sesi tidak berubah saat nama diganti', function () {
+    expect(config('session.cookie'))->toBe('dental-pms-session')
+        ->and(config('cache.prefix'))->toBe('dental-pms-cache-')
+        ->and(config('database.redis.options.prefix'))->toBe('dental-pms-database-');
+
+    $this->get('/login')->assertOk()->assertSee(config('app.name'))->assertSee('content="'.config('app.short_name').'"', false);
 });
 
 it('memasang manifest dan service worker di halaman panel', function () {
