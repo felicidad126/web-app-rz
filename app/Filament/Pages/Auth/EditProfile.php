@@ -6,7 +6,6 @@ use Filament\Auth\Pages\EditProfile as BaseEditProfile;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Components\Attributes\Unexposed;
-use Filament\Support\Enums\Width;
 
 /**
  * Profil pengguna dengan pola form yang sama seperti halaman lain: isian di dalam kartu "Akun",
@@ -14,8 +13,11 @@ use Filament\Support\Enums\Width;
  */
 class EditProfile extends BaseEditProfile
 {
-    /** Form pendek: tidak perlu selebar layar. */
-    protected Width|string|null $maxContentWidth = Width::FourExtraLarge;
+    /** Form pendek: lebar dibatasi tetapi rata kiri sejajar judul (klinik.css .klinik-narrow-page). */
+    public function getPageClasses(): array
+    {
+        return [...parent::getPageClasses(), 'klinik-narrow-page'];
+    }
 
     #[Unexposed]
     public function defaultForm(Schema $schema): Schema

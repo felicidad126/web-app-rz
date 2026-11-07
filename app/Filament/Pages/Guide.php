@@ -6,7 +6,6 @@ use App\Filament\Support\NavGroup;
 use App\Models\User;
 use BackedEnum;
 use Filament\Pages\Page;
-use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Str;
 use UnitEnum;
@@ -29,9 +28,6 @@ class Guide extends Page
     ];
 
     protected string $view = 'filament.pages.guide';
-
-    /** Kolom baca (±80 karakter per baris): tab & kartu selebar teks, tidak menyisakan kartu kosong di layar lebar. */
-    protected Width|string|null $maxContentWidth = Width::ThreeExtraLarge;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQuestionMarkCircle;
 

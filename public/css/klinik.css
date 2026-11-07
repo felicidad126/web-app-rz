@@ -85,7 +85,11 @@
     .fi-section, .fi-wi-stats-overview-stat, tr { break-inside: avoid; }
 }
 
-/* Lebar penuh untuk tabel, dashboard & halaman detail; form buat/ubah tetap ±80rem agar isian tidak terlalu panjang di monitor lebar. */
+/*
+ * Lebar penuh untuk tabel, dashboard & halaman detail. Form buat/ubah dan Profil dibatasi agar isian tidak
+ * terlalu panjang di monitor lebar, tetapi tetap rata kiri (sejajar judul & sidebar), tidak di tengah.
+ */
 @media (min-width: 96rem) {
-    .fi-resource-create-record-page, .fi-resource-edit-record-page { max-width: 80rem; margin-inline: auto; width: 100%; }
+    .fi-resource-create-record-page, .fi-resource-edit-record-page { max-width: 80rem; }
 }
+.klinik-narrow-page { max-width: 56rem; }
