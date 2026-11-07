@@ -98,6 +98,8 @@ wait_for_redis() {
     die "Redis tidak bisa dijalankan. Cek: journalctl -u redis-server"
 }
 
+# Tunggu kunci dpkg (mis. unattended-upgrades) sampai 10 menit, jangan langsung gagal.
+apt_get() { apt-get -o DPkg::Lock::Timeout=600 "$@"; }
 as_app() { runuser -u "$APP_USER" -- env HOME=/var/www COMPOSER_HOME=/var/www/.composer "$@"; }
 artisan() { (cd "$APP_DIR" && as_app php artisan "$@"); }
 
@@ -267,13 +269,22 @@ sysctl -q -p /etc/sysctl.d/99-dental-pms.conf >/dev/null 2>&1 || true
 # 1. Paket sistem
 # ---------------------------------------------------------------------------
 step "Memasang paket sistem (PHP, MySQL, Redis, Nginx, Supervisor)"
-apt-get update -qq
-apt-get install -y -qq \
+# VM cloud yang baru menyala sering masih menjalankan cloud-init / unattended-upgrades yang mengunci apt.
+if command -v cloud-init >/dev/null 2>&1; then
+    timeout 900 cloud-init status --wait >/dev/null 2>&1 || true
+fi
+for attempt in 1 2 3 4 5 6 7 8 9 10; do
+    apt_get update -qq && break
+    (( attempt == 10 )) && die "apt-get update gagal 10 kali (apt dipakai proses lain?). Coba jalankan ulang beberapa menit lagi."
+    warn "apt sedang dipakai proses lain (update otomatis Ubuntu); menunggu 30 detik…"
+    sleep 30
+done
+apt_get install -y -qq \
     ca-certificates curl git unzip openssl cron tzdata \
     nginx supervisor redis-server mysql-server \
     php-fpm php-cli php-mysql php-redis php-intl php-mbstring php-xml php-zip php-curl php-gd php-bcmath \
     composer certbot python3-certbot-nginx ufw >/dev/null
-apt-get install -y -qq 7zip >/dev/null 2>&1 || apt-get install -y -qq p7zip-full >/dev/null 2>&1 || warn "7zip tidak terpasang (dipakai untuk restore backup)."
+apt_get install -y -qq 7zip >/dev/null 2>&1 || apt_get install -y -qq p7zip-full >/dev/null 2>&1 || warn "7zip tidak terpasang (dipakai untuk restore backup)."
 
 PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
 php -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);' || die "Butuh PHP 8.3+, terpasang $PHP_VERSION."
