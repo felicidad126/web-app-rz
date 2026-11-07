@@ -3,7 +3,6 @@
 namespace App\Filament\Clusters\Stock\Resources\PurchaseRequests;
 
 use App\Enums\PurchaseRequestStatus;
-use App\Filament\Clinic\CodeText;
 use App\Filament\Clusters\Stock\PurchaseActions;
 use App\Filament\Clusters\Stock\Resources\PurchaseOrders\PurchaseOrderResource;
 use App\Filament\Clusters\Stock\Resources\PurchaseRequests\Pages\ListPurchaseRequests;
@@ -91,11 +90,12 @@ class PurchaseRequestResource extends Resource
             ->emptyStateDescription('Permintaan muncul di sini saat perawat menekan "Minta beli" di tab Barang atau "Ajukan permintaan".')
             ->columns([
                 // Di HP cukup Barang · Jumlah · Status: nomor, tanggal, dan pengaju ada di bawah nama barang.
-                TextColumn::make('item.name')->label('Barang')->searchable(['number'])->wrap()->grow()
-                    ->description(fn (PurchaseRequest $record): HtmlString => CodeText::join([
-                        [$record->number, true], $record->created_at->format('d/m H:i'), $record->requester?->name,
-                    ])),
-                TextColumn::make('reason')->label('Alasan')->wrap()->placeholder('—')->visibleFrom('lg'),
+                TextColumn::make('item.name')->label('Barang')->searchable(['number'])->wrap()
+                    ->description(fn (PurchaseRequest $record): HtmlString => new HtmlString(
+                        '<span class="klinik-mono klinik-nowrap">'.e($record->number).'</span> · '
+                        .e(collect([$record->created_at->format('d/m H:i'), $record->requester?->name])->filter()->implode(' · '))
+                    )),
+                TextColumn::make('reason')->label('Alasan')->wrap()->width('28%')->placeholder('—')->visibleFrom('lg'),
                 TextColumn::make('quantity')->label('Jumlah')->alignEnd()
                     ->formatStateUsing(fn (PurchaseRequest $record): string => StockLedger::format((float) $record->quantity).' '.$record->unit->name),
                 TextColumn::make('status')->label('Status')->badge()
