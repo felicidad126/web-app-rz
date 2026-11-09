@@ -88,7 +88,7 @@ Script sudah diuji end-to-end di Ubuntu 26.04 (PHP 8.5, MySQL 8.4, Nginx 1.28) d
 Di VM, sebagai user dengan akses sudo:
 
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/felicidad126/web-app-rz/main/deploy/provision.sh
+curl -fsSLO https://raw.githubusercontent.com/felicidad126/web-app-rz/inventori/deploy/provision.sh
 ```
 
 ```bash
@@ -114,13 +114,13 @@ Update kode dan setelah mengubah `.env`:
 sudo bash /var/www/dental-pms/deploy/update.sh
 ```
 
-Server mengikuti branch **`main`**: fitur baru dikerjakan di branch sendiri, masuk lewat PR, dan baru sampai ke server setelah PR di-merge lalu `update.sh` dijalankan. Server yang dipasang sebelum 7 Nov 2026 masih mengikuti `claude/stoic-sagan-qer84s`; pindahkan sekali dengan:
+Server edisi inventori mengikuti branch **`inventori`** (aplikasi klinik lengkap ada di `main`): fitur baru dikerjakan di branch sendiri, masuk lewat PR ke `inventori`, dan baru sampai ke server setelah PR di-merge lalu `update.sh` dijalankan. Memindahkan server ke branch lain cukup sekali:
 
 ```bash
-sudo REPO_BRANCH=main bash /var/www/dental-pms/deploy/update.sh
+sudo REPO_BRANCH=inventori bash /var/www/dental-pms/deploy/update.sh
 ```
 
-Setelah itu `update.sh` biasa otomatis mengikuti `main`.
+Setelah itu `update.sh` biasa otomatis mengikuti branch tersebut. Langkah mengganti demo lengkap menjadi edisi inventori (termasuk reset database) ada di `docs/14-edisi-inventori.md`.
 
 #### 3.0.1 HTTPS lewat Tailscale (tanpa domain)
 

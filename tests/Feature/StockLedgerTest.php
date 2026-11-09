@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\InvoiceItemType;
 use App\Enums\ItemType;
 use App\Enums\StockMovementStatus;
 use App\Enums\StockMovementType;
@@ -9,20 +8,13 @@ use App\Enums\StockReason;
 use App\Models\Branch;
 use App\Models\Item;
 use App\Models\ItemBatch;
-use App\Models\Patient;
 use App\Models\StockMovement;
-use App\Models\Treatment;
 use App\Models\Unit;
 use App\Models\User;
-use App\Models\Visit;
-use App\Services\Billing\BillingApprovals;
-use App\Services\Billing\InvoiceBuilder;
-use App\Services\Clinic\MedicalRecordSigning;
 use App\Services\Stock\ExpiryDate;
 use App\Services\Stock\StockAlerts;
 use App\Services\Stock\StockLedger;
 use App\Services\Stock\StockOpnames;
-use Database\Seeders\ReferenceDataSeeder;
 use Illuminate\Support\Carbon;
 
 beforeEach(function () {
@@ -79,52 +71,6 @@ it('mengeluarkan stok dengan FEFO, melewati batch kedaluwarsa, dan mencatat keku
         ->and(StockAlerts::negative($this->branch->id))->toHaveCount(1)
         ->and(StockAlerts::belowMinimum($this->branch->id)->pluck('id')->all())->toBe([$this->lido->id])
         ->and(StockAlerts::expiring($this->branch->id)->pluck('batch_number')->all())->toBe(['B-OLD']);
-});
-
-it('memotong bahan sesuai BOM saat rekam medis ditandatangani, sekali saja, dan menyimpan HPP di tagihan', function () {
-    $this->seed(ReferenceDataSeeder::class);
-    receiveLido([['item_id' => $this->lido->id, 'unit_id' => $this->kotak->id, 'qty' => 1, 'unit_price' => 500_000, 'batch_number' => 'L1', 'expired_at' => '2027-01-31']]);
-    $extraction = Treatment::factory()->create(['base_price' => 300_000, 'icd9cm_code' => null]);
-    $extraction->materials()->create(['item_id' => $this->lido->id, 'qty' => 2, 'unit_id' => $this->ampul->id]);
-
-    $visit = Visit::factory()->inTreatment()->create(['branch_id' => $this->branch->id]);
-    $procedure = $visit->procedures()->create(['treatment_id' => $extraction->id, 'operator_id' => $visit->practitioner_id, 'tooth_number' => '38']);
-    $record = $visit->ensureMedicalRecord();
-    $record->update(['subjective' => 'Gigi bungsu sakit']);
-    $record->diagnoses()->create(['icd10_code' => 'K02.1']);
-
-    $doctor = loginAs('dokter');
-    MedicalRecordSigning::sign($visit->fresh(), $doctor);
-    StockLedger::usageForVisit($visit->fresh(), $doctor);
-
-    $usage = StockMovement::where('type', StockMovementType::Usage)->get();
-    expect($usage)->toHaveCount(1)
-        ->and((float) $usage->first()->lines()->sum('qty'))->toBe(-2.0)
-        ->and($usage->first()->lines()->first()->visit_procedure_id)->toBe($procedure->id)
-        ->and(StockAlerts::estimatedMaterialCost($extraction, $this->branch->id))->toBe(20_000);
-
-    $invoice = InvoiceBuilder::issue(InvoiceBuilder::forVisit($visit->fresh()));
-    expect($invoice->items()->first()->material_cost)->toBe(20_000);
-});
-
-it('menjual barang retail saat tagihan terbit dan mengembalikannya saat tagihan di-void', function () {
-    $pcs = Unit::create(['name' => 'pcs']);
-    $brush = Item::create(['sku' => 'SKT', 'name' => 'Sikat gigi ortho', 'type' => ItemType::Retail, 'base_unit_id' => $pcs->id, 'sell_price' => 35_000]);
-    StockLedger::receive($this->branch->id, [['item_id' => $brush->id, 'unit_id' => $pcs->id, 'qty' => 10, 'unit_price' => 20_000]]);
-
-    $invoice = InvoiceBuilder::blank(Patient::factory()->create(), $this->branch->id);
-    $invoice->items()->create(['item_type' => InvoiceItemType::Item, 'item_id' => $brush->id, 'unit_id' => $pcs->id, 'description' => 'Sikat gigi ortho', 'qty' => 2, 'unit_price' => 35_000]);
-    InvoiceBuilder::issue($invoice);
-
-    expect(StockLedger::available($brush->id, $this->branch->id))->toBe(8.0);
-
-    $owner = User::factory()->withMfa()->create();
-    $owner->assignRole('owner');
-    BillingApprovals::requestInvoiceVoid($invoice->fresh(), 'Salah input barang', $this->perawat);
-    BillingApprovals::decideInvoiceVoid($invoice->fresh(), true, $owner);
-
-    expect(StockLedger::available($brush->id, $this->branch->id))->toBe(10.0)
-        ->and(StockMovement::where('type', StockMovementType::Reversal)->count())->toBe(1);
 });
 
 it('memusnahkan batch kedaluwarsa hanya setelah disetujui orang lain yang berhak', function () {

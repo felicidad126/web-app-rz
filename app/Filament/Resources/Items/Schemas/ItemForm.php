@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Items\Schemas;
 
 use App\Enums\ItemType;
-use App\Filament\Support\MoneyInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -40,10 +39,6 @@ class ItemForm
                                 TextInput::make('name')->label('Nama kategori')->required()->maxLength(80)->unique('item_categories', 'name'),
                             ])
                             ->preload(),
-                        TextInput::make('kfa_code')
-                            ->label('Kode KFA')
-                            ->helperText('Kamus Farmasi & Alkes Kemenkes. Wajib untuk obat yang diresepkan (SATUSEHAT).')
-                            ->maxLength(30),
                         Select::make('base_unit_id')
                             ->label('Satuan dasar')
                             ->helperText('Satuan terkecil untuk pencatatan stok. Konversi satuan lain diatur setelah disimpan.')
@@ -60,10 +55,6 @@ class ItemForm
                             ->minValue(0)
                             ->default(0)
                             ->required(),
-                        MoneyInput::make('sell_price')
-                            ->label('Harga jual')
-                            ->helperText('Per satuan dasar. Kosongkan jika tidak dijual terpisah.')
-                            ->minValue(0),
                         Toggle::make('track_expiry')
                             ->label('Lacak tanggal kedaluwarsa')
                             ->default(true),

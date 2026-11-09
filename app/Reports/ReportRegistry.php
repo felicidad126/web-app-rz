@@ -9,10 +9,8 @@ final class ReportRegistry
     /** @return list<class-string<Report>> */
     public static function all(): array
     {
-        return [
-            RevenueReport::class, CashFlowReport::class, ProfitReport::class, ReceivablesReport::class, CommissionReport::class,
-            StockReport::class, ExpiryReport::class, VisitsReport::class, DiagnosisReport::class, NoShowReport::class,
-        ];
+        // Edisi inventori: hanya laporan stok, kedaluwarsa, dan kas pembelian.
+        return [StockReport::class, ExpiryReport::class, PurchaseCashReport::class];
     }
 
     /** @return array<string, string> laporan yang boleh dilihat pengguna */

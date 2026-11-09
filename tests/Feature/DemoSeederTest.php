@@ -1,12 +1,10 @@
 <?php
 
-use App\Enums\LabOrderStatus;
 use App\Enums\PurchaseOrderStatus;
 use App\Enums\PurchaseRequestStatus;
 use App\Enums\StockMovementStatus;
 use App\Enums\StockOpnameStatus;
 use App\Models\Branch;
-use App\Models\LabOrder;
 use App\Models\Patient;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
@@ -18,25 +16,24 @@ use App\Services\Stock\StockAlerts;
 use Database\Seeders\DemoSeeder;
 use Illuminate\Support\Facades\Hash;
 
-it('mengisi data demo tanpa factory/Faker dan memakai password dari config', function () {
+it('mengisi data demo inventori tanpa factory/Faker dan memakai password dari config', function () {
     config(['clinic.demo_password' => 'demo-rahasia-123']);
 
     $this->seed(DemoSeeder::class);
 
-    expect(Patient::count())->toBe(25)
-        ->and(Patient::whereNull('nik_hash')->count())->toBe(0)
+    // Akun edisi inventori saja (owner, admin, perawat), tanpa data klinik.
+    expect(User::pluck('email')->sort()->values()->all())->toBe(['admin@demo.test', 'owner@demo.test', 'perawat2@demo.test', 'perawat@demo.test'])
         ->and(Hash::check('demo-rahasia-123', User::where('email', 'owner@demo.test')->value('password')))->toBeTrue()
-        ->and(User::where('email', 'kasir@demo.test')->first()->hasRole('kasir'))->toBeTrue();
+        ->and(User::where('email', 'perawat@demo.test')->first()->hasRole('perawat'))->toBeTrue()
+        ->and(Patient::count())->toBe(0);
 
-    // Fase 5: opname awal disetujui, peringatan stok terlihat, pemusnahan menunggu persetujuan, order lab berjalan.
+    // Stok: opname awal disetujui, peringatan stok terlihat, pemusnahan menunggu persetujuan.
     $main = Branch::where('code', 'PDR')->firstOrFail();
     expect($main)->name->toBe('Pondok Ranggon')->address->toContain('Kec. Cipayung, Kota Jakarta Timur');
     expect(StockOpname::sole()->status)->toBe(StockOpnameStatus::Approved)
         ->and(StockAlerts::belowMinimum($main->id))->not->toBeEmpty()
         ->and(StockAlerts::expiring($main->id))->not->toBeEmpty()
-        ->and(StockMovement::where('status', StockMovementStatus::Pending)->count())->toBe(1)
-        ->and(LabOrder::whereIn('status', LabOrderStatus::active())->count())->toBe(3)
-        ->and(LabOrder::get()->filter->isLate())->toHaveCount(1);
+        ->and(StockMovement::where('status', StockMovementStatus::Pending)->count())->toBe(1);
 
     // Pembelian: satu permintaan menunggu, satu siap dipesan, pesanan dibayar & diterima sebagian, saldo kas sisa.
     expect(PurchaseRequest::where('status', PurchaseRequestStatus::Pending)->count())->toBe(1)
@@ -46,7 +43,7 @@ it('mengisi data demo tanpa factory/Faker dan memakai password dari config', fun
 
     // Aman dijalankan ulang.
     $this->seed(DemoSeeder::class);
-    expect(StockOpname::count())->toBe(1)->and(LabOrder::count())->toBe(3)->and(PurchaseRequest::count())->toBe(3);
+    expect(StockOpname::count())->toBe(1)->and(PurchaseRequest::count())->toBe(3)->and(User::count())->toBe(4);
 });
 
 it('mengganti cabang fiktif dari data demo lama di tempat, tanpa cabang ganda', function () {

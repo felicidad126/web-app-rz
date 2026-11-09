@@ -6,7 +6,6 @@ use App\Filament\Concerns\SentenceCaseLabels;
 use App\Filament\Resources\Branches\Pages\CreateBranch;
 use App\Filament\Resources\Branches\Pages\EditBranch;
 use App\Filament\Resources\Branches\Pages\ListBranches;
-use App\Filament\Resources\Branches\RelationManagers\ChairsRelationManager;
 use App\Filament\Resources\Branches\Schemas\BranchForm;
 use App\Filament\Resources\Branches\Tables\BranchesTable;
 use App\Filament\Support\NavGroup;
@@ -50,9 +49,7 @@ class BranchResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            ChairsRelationManager::class,
-        ];
+        return [];
     }
 
     public static function getPages(): array

@@ -94,6 +94,8 @@ class Reports extends Page implements HasSchemas
         return [
             Action::make('excel')->label('Download Excel')->icon(Heroicon::OutlinedArrowDownTray)->color('gray')
                 ->url(fn (): string => route('reports.export', [...$this->filters, 'format' => 'xlsx'])),
+            Action::make('csv')->label('Download CSV')->icon(Heroicon::OutlinedTableCells)->color('gray')
+                ->url(fn (): string => route('reports.export', [...$this->filters, 'format' => 'csv'])),
             Action::make('pdf')->label('Download PDF')->icon(Heroicon::OutlinedDocumentArrowDown)->color('gray')
                 ->url(fn (): string => route('reports.export', [...$this->filters, 'format' => 'pdf']), shouldOpenInNewTab: true),
         ];

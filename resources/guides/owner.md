@@ -1,15 +1,11 @@
 ## Owner
 
-**Pagi** — *Harian → Briefing pagi*: angka kemarin (produksi, kas, pasien baru, tidak datang), jadwal & slot kosong hari ini, dan pasien yang bisa dihubungi untuk mengisi slot besok.
+**Pantau stok** — *Dashboard*: barang di bawah minimum, kedaluwarsa, stok minus, dan pembelian yang menunggu. Pilih cabang lewat tombol cabang di kanan atas.
 
-**Laporan** — *Laporan → Laporan*: produksi, kas, jasa dokter, stok, margin. Download PDF/Excel. Ringkasan harian juga dikirim ke email owner bila SMTP sudah diatur.
+**Laporan** — *Laporan → Laporan*: stok & nilai persediaan, barang kedaluwarsa, dan kas pembelian. Download Excel, PDF, atau CSV.
 
-**Target** — *Laporan → Target produksi*: isi target bulanan per cabang (dan per dokter bila perlu).
-
-**Jasa & gaji** — *Jasa & Gaji*: aturan jasa, rekap & slip jasa dokter, slip gaji staf. Koreksi jasa selalu lewat entri pembalik.
-
-**Persetujuan** — *Keuangan → Persetujuan void & refund*. Permintaan pembelian dari perawat: *Stok → Permintaan* (owner atau admin, bukan pengajunya).
+**Persetujuan** — permintaan pembelian (*Stok → Permintaan*), pemusnahan barang dan koreksi opname (*Stok → Mutasi & penerimaan* / *Opname*). Owner atau admin, bukan pengajunya.
 
 **Kas pembelian** — *Stok → Kas pembelian*: **Setor kas** untuk belanja barang, lalu pantau saldo berjalan, pembayaran pesanan, dan pengeluaran lain per cabang.
 
-**Rollout cabang** — *Organisasi → Kesiapan cabang* menunjukkan cabang mana yang siap dipakai.
+**Pengguna & audit** — *Pengaturan & Akses → Pengguna* untuk akun staf; *Audit log* mencatat siapa mengubah apa dan kapan.

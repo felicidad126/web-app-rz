@@ -19,7 +19,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -42,7 +41,7 @@ class SupplierResource extends Resource
 
     protected static ?string $modelLabel = 'supplier';
 
-    protected static ?string $pluralModelLabel = 'supplier & lab';
+    protected static ?string $pluralModelLabel = 'supplier';
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -51,10 +50,6 @@ class SupplierResource extends Resource
         return $schema
             ->components([
                 TextInput::make('name')->label('Nama')->required()->maxLength(255),
-                Toggle::make('is_lab')
-                    ->label('Lab gigi')
-                    ->helperText('Muncul sebagai pilihan lab di order lab.')
-                    ->inline(false),
                 TextInput::make('contact_person')->label('Kontak')->maxLength(255),
                 TextInput::make('phone')->label('Telepon')->tel()->maxLength(30),
                 TextInput::make('email')->label('Email')->email()->maxLength(255),
@@ -70,15 +65,11 @@ class SupplierResource extends Resource
             ->defaultSort('name')
             ->columns([
                 TextColumn::make('name')->label('Nama')->searchable()->sortable(),
-                TextColumn::make('is_lab')->label('Jenis')->badge()->color('gray')
-                    ->formatStateUsing(fn (bool $state): string => $state ? 'Lab gigi' : 'Supplier')
-                    ->visibleFrom('md'),
                 TextColumn::make('contact_person')->label('Kontak')->placeholder('—')->visibleFrom('md'),
                 TextColumn::make('phone')->label('Telepon')->placeholder('—')->visibleFrom('md'),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
             ])
             ->filters([
-                TernaryFilter::make('is_lab')->label('Lab gigi'),
                 TrashedFilter::make(),
             ])
             ->recordActions([

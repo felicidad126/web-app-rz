@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Items\Tables;
 
 use App\Enums\ItemType;
-use App\Support\Money;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -26,12 +25,8 @@ class ItemsTable
                 TextColumn::make('name')->label('Nama')->searchable()->sortable()->wrap(),
                 TextColumn::make('type')->label('Jenis')->badge()->color('gray')->visibleFrom('md'),
                 TextColumn::make('category.name')->label('Kategori')->placeholder('—')->visibleFrom('lg'),
-                TextColumn::make('kfa_code')->label('Kode KFA')->fontFamily('mono')->placeholder('—')->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('baseUnit.name')->label('Satuan dasar')->visibleFrom('md'),
                 TextColumn::make('min_stock')->label('Stok min.')->numeric(decimalPlaces: 0)->alignEnd()->visibleFrom('lg'),
-                TextColumn::make('sell_price')->label('Harga jual')->alignEnd()->placeholder('—')->visibleFrom('lg')
-                    ->formatStateUsing(fn ($state): string => Money::format((int) $state, false)),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
             ])
             ->filters([

@@ -1,8 +1,6 @@
 <?php
 
 use App\Enums\ItemType;
-use App\Enums\LabOrderStatus;
-use App\Enums\LabWorkType;
 use App\Enums\StockMovementStatus;
 use App\Enums\StockMovementType;
 use App\Enums\StockOpnameStatus;
@@ -16,26 +14,15 @@ use App\Filament\Clusters\Stock\Resources\StockOpnames\Pages\ViewStockOpname;
 use App\Filament\Resources\Items\Pages\EditItem;
 use App\Filament\Resources\Items\RelationManagers\BatchesRelationManager;
 use App\Filament\Resources\Items\RelationManagers\StockCardRelationManager;
-use App\Filament\Resources\LabOrders\Pages\CreateLabOrder;
-use App\Filament\Resources\LabOrders\Pages\ListLabOrders;
-use App\Filament\Resources\LabOrders\Pages\ViewLabOrder;
-use App\Filament\Resources\Treatments\Pages\EditTreatment;
-use App\Filament\Resources\Treatments\RelationManagers\MaterialsRelationManager;
 use App\Filament\Widgets\StockAlertsWidget;
-use App\Models\Appointment;
 use App\Models\Branch;
 use App\Models\Item;
 use App\Models\ItemBatch;
-use App\Models\LabOrder;
-use App\Models\Patient;
-use App\Models\Practitioner;
 use App\Models\StockMovement;
 use App\Models\StockOpname;
 use App\Models\Supplier;
-use App\Models\Treatment;
 use App\Models\Unit;
 use App\Models\User;
-use App\Models\Visit;
 use App\Services\Stock\StockLedger;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
@@ -51,6 +38,16 @@ beforeEach(function () {
 });
 
 afterEach(fn () => Carbon::setTestNow());
+
+/** Pengguna tanpa peran (tidak punya izin stok) di cabang yang sama. */
+function noStockUser(): User
+{
+    $user = User::factory()->withMfa()->create();
+    $user->branches()->sync([test()->branch->id]);
+    test()->actingAs($user);
+
+    return $user;
+}
 
 function stockUser(string $role): User
 {
@@ -172,7 +169,7 @@ it('berita acara hanya untuk pengguna dengan izin stok di cabangnya', function (
         ['item_id' => $this->lido->id, 'unit_id' => $this->ampul->id, 'qty' => 5, 'unit_price' => 9_800, 'batch_number' => 'A', 'expired_at' => null],
     ], null, null, null, null, $perawat);
 
-    stockUser('resepsionis');
+    noStockUser();
     $this->get(route('stock.movement-pdf', $movement))->assertForbidden();
 
     $other = Branch::factory()->create(['code' => 'DPK']);
@@ -182,7 +179,7 @@ it('berita acara hanya untuk pengguna dengan izin stok di cabangnya', function (
     $this->actingAs($outsider)->get(route('stock.movement-pdf', $movement))->assertForbidden();
 });
 
-it('menampilkan batch & kartu stok di halaman barang, dan perkiraan HPP di BOM tindakan', function () {
+it('menampilkan batch & kartu stok di halaman barang', function () {
     $perawat = stockUser('perawat');
     StockLedger::receive($this->branch->id, [
         ['item_id' => $this->lido->id, 'unit_id' => $this->ampul->id, 'qty' => 50, 'unit_price' => 9_800, 'batch_number' => 'LD-1', 'expired_at' => '12/2026'],
@@ -196,84 +193,9 @@ it('menampilkan batch & kartu stok di halaman barang, dan perkiraan HPP di BOM t
     Livewire::test(StockCardRelationManager::class, ['ownerRecord' => $this->lido, 'pageClass' => EditItem::class])
         ->assertOk()->assertSee('+50 ampul')->assertSee('−4 ampul')->assertSee('46 ampul');
 
-    $treatment = Treatment::factory()->create(['name' => 'Pencabutan']);
-    Livewire::test(MaterialsRelationManager::class, ['ownerRecord' => $treatment, 'pageClass' => EditTreatment::class])
-        ->callTableAction('create', data: ['item_id' => $this->lido->id, 'qty' => 2, 'unit_id' => $this->ampul->id])
-        ->assertHasNoTableActionErrors()
-        ->assertSee('Rp 19.600');
-
-    expect($treatment->materials()->sole())->item_id->toBe($this->lido->id);
 });
 
-it('dokter membuat order lab dari kunjungan; tahap maju sampai dipasang; terlambat dan janji pasang terlihat', function () {
-    $lab = Supplier::create(['name' => 'Lab Prima Dental', 'is_lab' => true, 'phone' => '0812-1111-2222']);
-    $doctor = Practitioner::factory()->create();
-    $patient = Patient::factory()->create(['name' => 'Siti Aminah']);
-    $visit = Visit::factory()->inTreatment()->create(['branch_id' => $this->branch->id, 'patient_id' => $patient->id, 'practitioner_id' => $doctor->id]);
-    stockUser('dokter');
-
-    $this->get('/order-lab/create?visit='.$visit->id)->assertOk();
-
-    Livewire::withQueryParams(['visit' => $visit->id])
-        ->test(CreateLabOrder::class)
-        ->assertSchemaStateSet(['patient_id' => $patient->id, 'visit_id' => $visit->id, 'practitioner_id' => $doctor->id, 'branch_id' => $this->branch->id])
-        ->fillForm([
-            'supplier_id' => $lab->id,
-            'work_type' => LabWorkType::Crown->value,
-            'specification' => 'PFM, margin chamfer',
-            'teeth' => '36',
-            'shade' => 'A2',
-            'cost' => 650_000,
-            'due_at' => '2026-11-03',
-        ])
-        ->call('create')
-        ->assertHasNoFormErrors();
-
-    $order = LabOrder::sole();
-    expect($order)->number->toBe('LAB-2611-0001')->status->toBe(LabOrderStatus::Created)->cost->toBe(650_000)
-        ->and($order->isLate())->toBeTrue();
-
-    Appointment::factory()->create(['patient_id' => $patient->id, 'branch_id' => $this->branch->id, 'practitioner_id' => $doctor->id, 'start_at' => '2026-11-10 09:00', 'end_at' => '2026-11-10 09:30']);
-
-    Livewire::test(ListLabOrders::class)
-        ->assertOk()
-        ->assertSee('1 terlambat')
-        ->assertSee('terlambat 2 hari')
-        ->assertSee('10/11/2026 09:00')
-        ->callTableAction('advance', $order)
-        ->assertNotified('Tahap: Dikirim ke lab');
-
-    foreach ([LabOrderStatus::Received, LabOrderStatus::Checked, LabOrderStatus::Fitted] as $expected) {
-        Livewire::test(ViewLabOrder::class, ['record' => $order->getRouteKey()])->callAction('advance');
-        expect($order->fresh()->status)->toBe($expected);
-    }
-
-    $order->refresh();
-    expect($order->sent_at)->not->toBeNull()->and($order->fitted_at)->not->toBeNull()
-        ->and($order->isLate())->toBeFalse();
-
-    Livewire::test(ViewLabOrder::class, ['record' => $order->getRouteKey()])
-        ->assertOk()->assertActionHidden('advance')->assertActionHidden('cancel')->assertSee('Lab Prima Dental');
-});
-
-it('membatalkan order lab dengan alasan; biaya lab batal tidak ikut tagihan', function () {
-    $lab = Supplier::create(['name' => 'Lab Prima Dental', 'is_lab' => true]);
-    $doctor = Practitioner::factory()->create();
-    $patient = Patient::factory()->create();
-    stockUser('perawat');
-    $order = LabOrder::create([
-        'number' => 'LAB-2611-0009', 'branch_id' => $this->branch->id, 'patient_id' => $patient->id, 'practitioner_id' => $doctor->id,
-        'supplier_id' => $lab->id, 'work_type' => LabWorkType::Retainer, 'specification' => 'Hawley', 'cost' => 400_000,
-    ]);
-
-    Livewire::test(ViewLabOrder::class, ['record' => $order->getRouteKey()])
-        ->callAction('cancel', ['reason' => 'Pasien pindah kota'])
-        ->assertNotified('Order lab dibatalkan');
-
-    expect($order->fresh())->status->toBe(LabOrderStatus::Cancelled)->cancel_reason->toBe('Pasien pindah kota');
-});
-
-it('widget stok menampilkan peringatan minimum, kedaluwarsa, dan order lab terlambat', function () {
+it('widget stok menampilkan peringatan minimum dan kedaluwarsa', function () {
     $perawat = stockUser('perawat');
     StockLedger::receive($this->branch->id, [
         ['item_id' => $this->lido->id, 'unit_id' => $this->ampul->id, 'qty' => 10, 'unit_price' => 9_800, 'batch_number' => 'LD-1', 'expired_at' => '12/2026'],
@@ -282,10 +204,9 @@ it('widget stok menampilkan peringatan minimum, kedaluwarsa, dan order lab terla
     Livewire::test(StockAlertsWidget::class)
         ->assertOk()
         ->assertSee('Di bawah minimum')
-        ->assertSee('Kedaluwarsa ≤ 60 hari')
-        ->assertSee('Order lab terlambat');
+        ->assertSee('Kedaluwarsa ≤ 60 hari');
 
-    stockUser('resepsionis');
+    noStockUser();
     expect(StockAlertsWidget::canView())->toBeFalse();
 });
 

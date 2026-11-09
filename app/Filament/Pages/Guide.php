@@ -22,10 +22,7 @@ class Guide extends Page
     /** Urutan kartu: peran → judul. */
     public const ROLES = [
         'umum' => 'Umum',
-        'resepsionis' => 'Resepsionis',
-        'dokter' => 'Dokter',
         'perawat' => 'Perawat',
-        'kasir' => 'Kasir',
         'admin' => 'Admin klinik',
         'owner' => 'Owner',
     ];
@@ -33,12 +30,9 @@ class Guide extends Page
     /** Keterangan singkat di kartu peran. */
     public const DESCRIPTIONS = [
         'umum' => 'Login & MFA, pasang di HP, pilih cabang, bila ada masalah.',
-        'resepsionis' => 'Pendaftaran pasien, janji temu, antrean, recall.',
-        'dokter' => 'Pemeriksaan, odontogram, rekam medis & tanda tangan.',
-        'perawat' => 'Bantu pemeriksaan, stok, minta beli, terima barang, opname.',
-        'kasir' => 'Tagihan, pembayaran, deposit, paket & cicilan, tutup kasir.',
-        'admin' => 'Akun & akses, master data, persetujuan, pembelian.',
-        'owner' => 'Briefing pagi, laporan, target, jasa & gaji, kas pembelian.',
+        'perawat' => 'Barang masuk, pemakaian, kedaluwarsa, opname, minta beli, terima barang.',
+        'admin' => 'Pengguna, data barang & supplier, persetujuan, pesanan, kas pembelian.',
+        'owner' => 'Pantau stok, laporan, persetujuan, kas pembelian, audit.',
     ];
 
     /** Peran yang sedang dibuka (?peran=kasir); kosong = halaman utama Panduan. */

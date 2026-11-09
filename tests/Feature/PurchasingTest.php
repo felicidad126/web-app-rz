@@ -283,3 +283,22 @@ it('mengimpor barang, kategori, dan supplier dari ekspor aplikasi inventori BHP'
     expect(Supplier::count())->toBe(2)
         ->and(Supplier::where('name', 'PT Dental Sehat')->sole())->contact_person->toBe('Bu Rina')->phone->toBe('0812-0000-0000');
 });
+
+it('laporan kas pembelian bisa diunduh sebagai CSV oleh owner, tidak oleh perawat', function () {
+    Purchasing::deposit($this->branch->id, 500_000, 'Setoran dari owner', $this->owner);
+    Purchasing::expense($this->branch->id, 25_000, 'Ongkos kirim', $this->admin);
+    $this->owner->branches()->sync([$this->branch->id]);
+
+    $query = ['report' => 'kas-pembelian', 'from' => '2026-11-01', 'to' => '2026-11-30', 'format' => 'csv'];
+    $response = $this->actingAs($this->owner)->get(route('reports.export', $query))->assertOk();
+    $csv = $response->streamedContent();
+
+    expect($response->headers->get('Content-Type'))->toContain('text/csv')
+        ->and($csv)->toStartWith("\xEF\xBB\xBF")
+        ->and($csv)->toContain('Tanggal;Cabang;Jenis;Keterangan;Masuk;Keluar;"Dicatat oleh"')
+        ->and($csv)->toContain('"Setoran dari owner";500000')
+        ->and($csv)->toContain('"Ongkos kirim";;25000')
+        ->and($csv)->toContain('Total;;;;500000;25000;');
+
+    $this->actingAs($this->perawat)->get(route('reports.export', $query))->assertForbidden();
+});

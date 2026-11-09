@@ -1,15 +1,15 @@
 ## Perawat
 
-**Membantu pemeriksaan** — perawat bisa mengisi draf rekam medis (tanda vital, anamnesis, odontogram, OHI-S). Yang menandatangani tetap dokter.
+**Barang masuk** — *Stok → Barang* → **Catat penerimaan** saat barang datang tanpa pesanan (no. batch, tanggal kedaluwarsa, harga). Barang dari pesanan dicatat lewat **Terima barang** (lihat di bawah).
 
-**Stok** — menu *Stok*:
-- **Catat penerimaan** saat barang datang (no. batch, tanggal kedaluwarsa, harga pokok).
-- Pemakaian bahan untuk tindakan berjalan otomatis lewat BOM. Pemakaian di luar itu: **Catat pemakaian**.
-- Barang kedaluwarsa/rusak: **Ajukan pemusnahan**. Admin yang menyetujui dan mencetak berita acara.
-- **Opname**: **Mulai opname** → hitung fisik per batch → **Simpan hasil hitung** → **Ajukan untuk disetujui**.
+**Pemakaian** — *Stok → Barang* → **Lainnya → Catat pemakaian**: pilih barang, satuan, dan jumlah, lalu tulis keperluannya. Stok diambil otomatis dari batch dengan ED terdekat.
+
+**Kedaluwarsa & rusak** — filter *Kedaluwarsa ≤ 60 hari* di *Stok → Barang*. Barang yang sudah lewat ED/rusak: **Lainnya → Ajukan pemusnahan**. Admin/owner yang menyetujui dan mencetak berita acara.
+
+**Opname** — **Mulai opname** → hitung fisik per batch → **Simpan hasil hitung** → **Ajukan untuk disetujui**.
 
 **Minta beli** — barang menipis? Di tab *Barang*, tekan **Minta beli** di baris barangnya (atau **Ajukan permintaan** di tab *Permintaan*). Admin/owner menyetujui lalu memesan ke supplier. Barang yang sudah diminta atau sedang dipesan diberi keterangan di kolom *Perlu tindakan*.
 
 **Barang pesanan datang** — tab *Pesanan* → buka pesanannya → **Terima barang**: isi jumlah yang benar-benar datang (boleh sebagian), no. batch, dan ED. Stok bertambah saat itu. Sisa yang belum datang tetap tercatat di pesanan.
 
-**Order lab** — **Buat order lab** dari kunjungan (jenis pekerjaan, warna/shade, lab, janji selesai), lalu perbarui tahapnya.
+**Riwayat stok** — tab *Mutasi & penerimaan* untuk semua barang masuk/keluar; riwayat satu barang ada di *Master barang → Obat & bahan* → buka barangnya → *Kartu stok*.

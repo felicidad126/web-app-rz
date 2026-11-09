@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\LabOrderStatus;
 use App\Enums\PurchaseOrderStatus;
 use App\Enums\PurchaseRequestStatus;
 use App\Enums\StockMovementStatus;
@@ -12,8 +11,6 @@ use App\Filament\Clusters\Stock\Resources\PurchaseOrders\PurchaseOrderResource;
 use App\Filament\Clusters\Stock\Resources\PurchaseRequests\PurchaseRequestResource;
 use App\Filament\Clusters\Stock\Resources\StockMovements\StockMovementResource;
 use App\Filament\Clusters\Stock\Resources\StockOpnames\StockOpnameResource;
-use App\Filament\Resources\LabOrders\LabOrderResource;
-use App\Models\LabOrder;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\StockMovement;
@@ -23,12 +20,12 @@ use App\Support\BranchContext;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-/** Peringatan stok & order lab di dashboard (Planning §5.8: widget admin/perawat). */
+/** Peringatan stok & pembelian di dashboard (edisi inventori). */
 class StockAlertsWidget extends StatsOverviewWidget
 {
     protected static ?int $sort = 3;
 
-    protected ?string $heading = 'Stok & lab';
+    protected ?string $heading = 'Stok';
 
     /** Dua kartu per baris di HP; di layar lebar semua kartu (3–5) dalam satu baris. */
     protected function getColumns(): int|array|null
@@ -85,21 +82,6 @@ class StockAlertsWidget extends StatsOverviewWidget
 
         if (auth()->user()?->can('ViewAny:PurchaseRequest') ?? false) {
             $stats[] = $this->purchasingStat($branchId);
-        }
-
-        if (auth()->user()?->can('ViewAny:LabOrder') ?? false) {
-            $lab = LabOrder::query()->where('branch_id', $branchId)->whereIn('status', [LabOrderStatus::Created, LabOrderStatus::Sent]);
-            $late = (clone $lab)->whereDate('due_at', '<', today())->count();
-            $soon = (clone $lab)->whereBetween('due_at', [today()->toDateString(), today()->addDays(3)->toDateString()])->count();
-
-            $stats[] = Stat::make('Order lab terlambat', $late)
-                ->description(match (true) {
-                    $late > 0 => $late.' lewat jatuh tempo'.($soon > 0 ? ' · '.$soon.' jatuh tempo ≤ 3 hari' : ''),
-                    $soon > 0 => $soon.' jatuh tempo ≤ 3 hari',
-                    default => 'Belum diterima dari lab',
-                })
-                ->color($late > 0 || $soon > 0 ? 'warning' : 'gray')
-                ->url(LabOrderResource::getUrl('index'));
         }
 
         return $stats;

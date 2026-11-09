@@ -15,12 +15,16 @@ Ikon **East Dental** akan muncul di layar utama.
 
 ## Data cabang lain tidak terlihat
 
-Owner dan admin memilih cabang lewat tombol cabang di kanan atas halaman (jadwal, kasir, stok, briefing). Staf lain hanya melihat cabang tempatnya bertugas; cabang diatur admin di *Pengaturan & Akses → Pengguna*.
+Owner dan admin memilih cabang lewat tombol cabang di kanan atas halaman. Staf lain hanya melihat cabang tempatnya bertugas; cabang diatur admin di *Pengaturan & Akses → Pengguna*.
 
-## Salah input pembayaran, bisa dibatalkan?
+## Stok di aplikasi berbeda dengan barang di rak
 
-Tagihan yang sudah terbit tidak bisa diubah. Kasir menekan **Ajukan void** atau **Ajukan refund** di halaman tagihan, lalu owner/admin menyetujui di *Keuangan → Persetujuan void & refund*. Penyetuju tidak boleh orang yang mengajukan.
+Lakukan **opname** (*Stok → Opname → Mulai opname*): hitung fisik per batch, ajukan, lalu disetujui owner/admin. Selisihnya dicatat sebagai koreksi, jadi riwayatnya tetap terlihat.
+
+## Salah catat barang masuk atau pemakaian
+
+Mutasi yang sudah tercatat tidak diubah. Owner/admin membuka mutasinya di *Stok → Mutasi & penerimaan* lalu **Batalkan mutasi** dengan alasan; stok dikembalikan lewat mutasi pembatalan.
 
 ## Apakah bisa dipakai tanpa internet?
 
-Tidak. Demi keamanan data pasien, data tidak disimpan di HP. Tanpa koneksi, yang tampil hanya halaman "offline"; coba lagi setelah internet tersambung.
+Tidak. Demi keamanan, data tidak disimpan di HP. Tanpa koneksi, yang tampil hanya halaman "offline"; coba lagi setelah internet tersambung.

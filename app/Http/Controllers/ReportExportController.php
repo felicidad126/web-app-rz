@@ -10,7 +10,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-/** Unduh laporan sebagai Excel atau PDF dengan filter & batasan izin yang sama dengan halaman Laporan. */
+/** Unduh laporan sebagai Excel, PDF, atau CSV dengan filter & batasan izin yang sama dengan halaman Laporan. */
 class ReportExportController extends Controller
 {
     public function __invoke(Request $request): Response
@@ -38,10 +38,26 @@ class ReportExportController extends Controller
         }
 
         $map = fn (array $row): array => array_map(fn ($value, array $column) => ReportRequest::excel($value, $column['type']), $row, $columns);
+        $headers = array_map(fn (array $c): string => $c['label'].($c['type'] === 'percent' ? ' (%)' : ''), $columns);
+
+        if ($request->string('format')->toString() === 'csv') {
+            // Pemisah titik koma & BOM UTF-8 agar langsung terbaca rapi di Excel berbahasa Indonesia.
+            return response()->streamDownload(function () use ($headers, $rows, $totals, $map): void {
+                $out = fopen('php://output', 'w');
+                fwrite($out, "\xEF\xBB\xBF");
+                fputcsv($out, $headers, ';');
+
+                foreach ([...array_map($map, $rows), ...($totals ? [$map($totals)] : [])] as $row) {
+                    fputcsv($out, array_map(fn ($v) => $v === null ? '' : $v, $row), ';');
+                }
+
+                fclose($out);
+            }, $filename.'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        }
 
         return Spreadsheet::download($filename.'.xlsx', [
             $report::label() => [
-                'headers' => array_map(fn (array $c): string => $c['label'].($c['type'] === 'percent' ? ' (%)' : ''), $columns),
+                'headers' => $headers,
                 'rows' => [...array_map($map, $rows), ...($totals ? [$map($totals)] : [])],
             ],
         ]);

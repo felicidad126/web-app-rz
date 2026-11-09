@@ -1,97 +1,32 @@
 <?php
 
-use App\Console\Commands\BranchReadinessCheck;
-use App\Enums\CommissionBase;
-use App\Enums\CommissionRecognition;
-use App\Enums\CommissionRole;
-use App\Enums\CommissionType;
-use App\Filament\Pages\BranchReadinessPage;
 use App\Filament\Pages\Guide;
-use App\Models\Branch;
-use App\Models\Chair;
-use App\Models\CommissionRule;
-use App\Models\Practitioner;
-use App\Models\PractitionerSchedule;
-use App\Models\Treatment;
-use App\Models\User;
-use App\Services\Clinic\BranchReadiness;
 use App\Support\GuideContent;
 use Livewire\Livewire;
 
-function readinessStaff(Branch $branch, string $role): User
-{
-    $user = User::factory()->withMfa()->create();
-    $user->assignRole($role);
-    $user->branches()->sync([$branch->id]);
-
-    return $user;
-}
-
-it('cabang kosong belum siap dan menyebut butir yang kurang', function () {
-    config()->set('satusehat.enabled', true);
-    $branch = Branch::factory()->create(['code' => 'BRU', 'phone' => null]);
-
-    $checks = collect((new BranchReadiness($branch))->checks())->keyBy('label');
-
-    expect((new BranchReadiness($branch))->ready())->toBeFalse()
-        ->and($checks['Data cabang lengkap & aktif'])->ok->toBeFalse()->detail->toContain('telepon')
-        ->and($checks['Kursi / dental unit']['ok'])->toBeFalse()
-        ->and($checks['Akun Kasir']['ok'])->toBeFalse()
-        ->and($checks['SATUSEHAT: Location cabang']['ok'])->toBeFalse()
-        ->and($checks['Stok awal (opname disetujui)']['level'])->toBe(BranchReadiness::RECOMMENDED);
-
-    $this->artisan(BranchReadinessCheck::class, ['branch' => 'BRU'])->assertFailed();
-    $this->artisan(BranchReadinessCheck::class, ['branch' => 'TIDAKADA'])->assertFailed();
-});
-
-it('cabang dengan staf, kursi, jadwal, SIP, tarif, dan aturan jasa siap dipakai', function () {
-    config()->set('satusehat.enabled', false);
-    $branch = Branch::factory()->create(['code' => 'SIAP']);
-    $chair = Chair::create(['branch_id' => $branch->id, 'name' => 'Kursi 1', 'is_active' => true]);
-
-    $doctorUser = readinessStaff($branch, 'dokter');
-    $doctor = Practitioner::factory()->create(['user_id' => $doctorUser->id]);
-    PractitionerSchedule::create(['practitioner_id' => $doctor->id, 'branch_id' => $branch->id, 'chair_id' => $chair->id, 'day_of_week' => 1, 'start_time' => '09:00', 'end_time' => '15:00', 'is_active' => true]);
-    readinessStaff($branch, 'resepsionis');
-    readinessStaff($branch, 'kasir');
-    Treatment::factory()->create();
-    CommissionRule::create(['name' => 'Umum', 'role' => CommissionRole::Operator, 'type' => CommissionType::Percent, 'percent' => 40,
-        'base' => CommissionBase::Net, 'recognition' => CommissionRecognition::Performed, 'is_active' => true]);
-
-    expect((new BranchReadiness($branch))->ready())->toBeTrue();
-    $this->artisan(BranchReadinessCheck::class, ['branch' => 'SIAP'])->expectsOutputToContain('SIAP')->assertSuccessful();
-
-    // SIP lewat → kembali belum siap.
-    $doctor->update(['sip_expired_at' => now()->subDay()]);
-    expect((new BranchReadiness($branch))->ready())->toBeFalse();
-
-    loginAs('owner');
-    Livewire::test(BranchReadinessPage::class)->assertOk()->assertSee('SIAP')->assertSee('SIP dokter terjadwal masih berlaku');
-});
-
 it('panduan menampilkan bagian umum + peran pengguna; owner melihat semua', function () {
-    $kasir = loginAs('kasir');
-    expect(array_keys(Guide::sectionsFor($kasir)))->toBe(['umum', 'kasir']);
+    $perawat = loginAs('perawat');
+    expect(array_keys(Guide::sectionsFor($perawat)))->toBe(['umum', 'perawat']);
 
     // Halaman utama: judul + cari, kartu peran yang boleh dilihat (peran sendiri ditandai), pertanyaan umum.
     Livewire::test(Guide::class)->assertOk()
         ->assertSee('Butuh bantuan?')->assertSee('Peran Anda')->assertSee('Lihat panduan')
         ->assertSee('Lupa password, bagaimana?')
-        ->assertSee('Tutup kasir') // ada di indeks pencarian
+        ->assertSee('Barang pesanan datang') // ada di indeks pencarian
         ->assertDontSee('Admin klinik</span>', false)
-        ->assertDontSee('Tanda tangani & kunci');
+        ->assertDontSee('Tutup sisa pesanan');
 
     // Halaman peran: daftar topik di kiri, isi di kanan.
-    Livewire::withQueryParams(['peran' => 'kasir'])->test(Guide::class)->assertOk()
-        ->assertSee('Semua panduan')->assertSee('Menerima pembayaran')->assertSee('Tunai dihitung')
-        ->assertSee('href="#tutup-kasir"', false);
+    Livewire::withQueryParams(['peran' => 'perawat'])->test(Guide::class)->assertOk()
+        ->assertSee('Semua panduan')->assertSee('Barang masuk')->assertSee('Terima barang')
+        ->assertSee('href="#opname"', false);
 
     // Peran lain tidak bisa dibuka lewat URL: kembali ke halaman utama.
-    Livewire::withQueryParams(['peran' => 'dokter'])->test(Guide::class)->assertOk()
-        ->assertSee('Butuh bantuan?')->assertDontSee('Tanda tangani & kunci');
+    Livewire::withQueryParams(['peran' => 'admin'])->test(Guide::class)->assertOk()
+        ->assertSee('Butuh bantuan?')->assertDontSee('Tutup sisa pesanan');
 
     $owner = loginAs('owner');
-    expect(array_keys(Guide::sectionsFor($owner)))->toBe(array_keys(Guide::ROLES));
+    expect(array_keys(Guide::sectionsFor($owner)))->toBe(['umum', 'perawat', 'admin', 'owner']);
 
     foreach (array_keys(Guide::ROLES) as $role) {
         expect(resource_path("guides/{$role}.md"))->toBeFile()
@@ -99,7 +34,7 @@ it('panduan menampilkan bagian umum + peran pengguna; owner melihat semua', func
             ->and(Guide::DESCRIPTIONS[$role] ?? null)->not->toBeNull();
     }
 
-    expect(collect(GuideContent::topics('kasir', 'Kasir'))->pluck('title')->all())
-        ->toBe(['Menerima pembayaran', 'Paket & cicilan', 'Salah input', 'Tutup kasir'])
-        ->and(GuideContent::topics('faq'))->toHaveCount(6);
+    expect(collect(GuideContent::topics('perawat', 'Perawat'))->pluck('title')->all())
+        ->toBe(['Barang masuk', 'Pemakaian', 'Kedaluwarsa & rusak', 'Opname', 'Minta beli', 'Barang pesanan datang', 'Riwayat stok'])
+        ->and(GuideContent::topics('faq'))->toHaveCount(7);
 });

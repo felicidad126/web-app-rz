@@ -98,14 +98,14 @@ final class StockActions
             ->icon(Heroicon::OutlinedMinusCircle)
             ->color('gray')
             ->authorize(fn (): bool => auth()->user()?->can('Create:StockMovement') ?? false)
-            ->modalDescription('Untuk bahan di luar daftar bahan tindakan (bahan tindakan terpotong otomatis saat rekam medis ditandatangani). Diambil dari batch dengan ED terdekat.')
+            ->modalDescription('Bahan yang dipakai untuk pasien atau keperluan klinik. Diambil otomatis dari batch dengan ED terdekat.')
             ->modalWidth('4xl')
             ->schema([
                 Repeater::make('lines')->label('Barang')
                     ->table([TableColumn::make('Barang')->width('55%'), TableColumn::make('Satuan')->width('25%'), TableColumn::make('Jumlah')->width('20%')])
                     ->schema([self::itemSelect(), self::unitSelect(), TextInput::make('qty')->label('Jumlah')->numeric()->minValue(0.001)->required()])
                     ->minItems(1)->defaultItems(1)->addActionLabel('Tambah barang'),
-                TextInput::make('notes')->label('Keperluan')->placeholder('Mis. sterilisasi, bahan tambahan pasien RM-000231')->required()->maxLength(255),
+                TextInput::make('notes')->label('Keperluan')->placeholder('Mis. tindakan scaling Unit 1, sterilisasi alat')->required()->maxLength(255),
             ])
             ->action(function (array $data): void {
                 self::run(fn () => StockLedger::issue(self::branchId(), StockMovementType::Usage, array_values($data['lines']), null, $data['notes'], self::user()),
