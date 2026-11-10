@@ -126,6 +126,10 @@ body { font-feature-settings: 'ss04' 1; }
 @media (max-width: 47.99rem) { .klinik-brand-name { font-size: 1rem; } }
 /* Di sidebar (lebar 17rem) nama klinik boleh dua baris. */
 .fi-sidebar-header .klinik-brand-name { font-size: 0.9375rem; line-height: 1.15; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* Sidebar diciutkan: logo gigi di atas tombol buka (resources/views/filament/sidebar-rail-logo.blade.php). */
+.fi-main-sidebar:not(.fi-sidebar-open) .fi-sidebar-header { flex-direction: column; justify-content: center; height: auto; row-gap: 0.5rem; padding-block: 1rem 0.25rem; }
+.klinik-rail-logo { order: -1; display: flex; border-radius: 0.75rem; }
+.klinik-rail-logo img { width: 2.25rem; height: 2.25rem; }
 
 /*
  * Cetak halaman panel (mis. tombol "Cetak" di Briefing pagi, atau Ctrl+P di halaman mana pun):
@@ -304,6 +308,20 @@ body { font-feature-settings: 'ss04' 1; }
 .klinik-tone-warning { background: var(--warning-50); color: var(--warning-700); }
 .klinik-tone-gray { background: var(--gray-100); color: var(--gray-700); }
 .klinik-action-more { display: inline-block; margin-top: 0.75rem; font-size: 0.8125rem; font-weight: 600; color: var(--primary-700); }
+
+/*
+ * Grafik pemakaian & penerimaan: kanvas mengisi kartunya (Chart.js maintainAspectRatio: false di StockFlowChart).
+ * Di desktop (dua kolom) kartu grafik & donat sama tinggi, grafik memanjang mengisi sisa ruang, isi donat di tengah.
+ */
+.fi-wi-chart .fi-wi-chart-frame { position: relative; height: 15rem; }
+.fi-wi-chart .fi-wi-chart-frame > canvas { position: absolute; inset: 0; height: 100% !important; max-height: none !important; }
+@media (min-width: 80rem) {
+  .fi-wi-widget.fi-wi-chart > .fi-section, .fi-wi-widget > .klinik-dash-donut { height: 100%; display: flex; flex-direction: column; }
+  .fi-wi-widget.fi-wi-chart > .fi-section > .fi-section-content-ctn, .fi-wi-chart .fi-section-content,
+  .fi-wi-chart .fi-section-content > div, .fi-wi-chart .fi-wi-chart-image { flex: 1; display: flex; flex-direction: column; }
+  .fi-wi-chart .fi-wi-chart-frame { flex: 1; height: auto; min-height: 16.25rem; }
+  .klinik-dash-donut > .fi-section-content-ctn { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+}
 
 /* HP & tablet (satu kolom): yang perlu ditindaklanjuti dulu, grafik di bawah (seperti artboard HP). */
 @media (max-width: 79.99rem) {

@@ -109,6 +109,8 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => Blade::render('<x-pwa-head /><x-touch-targets /><x-panel-styles />'))
             // Kop klinik saat halaman dicetak (disembunyikan di layar).
             ->renderHook(PanelsRenderHook::CONTENT_START, fn (): View => view('filament.print-header'))
+            // Logo gigi tetap terlihat saat sidebar diciutkan.
+            ->renderHook(PanelsRenderHook::SIDEBAR_LOGO_BEFORE, fn (): View => view('filament.sidebar-rail-logo'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
