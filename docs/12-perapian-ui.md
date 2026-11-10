@@ -8,7 +8,7 @@ Semua halaman panel (79 halaman, 6 peran, desktop & HP) difoto, diaudit per segm
 
 ## 0. Edisi inventori: Konsep UI inventori (9–10 Nov 2026)
 
-Di branch `inventori`, bagian ini menggantikan warna teal, font IBM Plex Sans, dan bilah atas dari §1–§3. Acuan: artifact *Konsep UI inventori* (Dashboard, Stok · Barang, HP, Pilihan font), dari referensi CRM Dashboard + DINEOS yang dipilih klinik. Diterapkan bertahap: tahap 1 tema & tata letak, tahap 2 Dashboard, tahap 3 menu bawah di HP.
+Di branch `inventori`, bagian ini menggantikan warna teal, font IBM Plex Sans, dan bilah atas dari §1–§3. Acuan: artifact *Konsep UI inventori* (Dashboard, Stok · Barang, HP, Pilihan font), dari referensi CRM Dashboard + DINEOS yang dipilih klinik. Diterapkan bertahap: tahap 1 tema & tata letak, tahap 2 Dashboard (rincian di `docs/14` §2), tahap 3 menu bawah di HP.
 
 | Bagian | Aturan |
 | --- | --- |

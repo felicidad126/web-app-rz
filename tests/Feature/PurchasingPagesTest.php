@@ -12,7 +12,8 @@ use App\Filament\Clusters\Stock\Resources\PurchaseOrders\PurchaseOrderResource;
 use App\Filament\Clusters\Stock\Resources\PurchaseRequests\Pages\ListPurchaseRequests;
 use App\Filament\Clusters\Stock\Resources\StockMovements\Pages\ListStockMovements;
 use App\Filament\Clusters\Stock\Resources\StockMovements\Pages\ViewStockMovement;
-use App\Filament\Widgets\StockAlertsWidget;
+use App\Filament\Widgets\ActionItems;
+use App\Filament\Widgets\PurchasingFlow;
 use App\Models\Branch;
 use App\Models\Item;
 use App\Models\PurchaseCashEntry;
@@ -205,7 +206,9 @@ it('widget stok menampilkan permintaan menunggu untuk penyetuju', function () {
     Purchasing::requestItem($this->branch->id, $this->glove->id, 1, $this->box->id, null, $perawat);
 
     purchasingUser('admin');
-    Livewire::test(StockAlertsWidget::class)
-        ->assertSee('Pembelian')
-        ->assertSee('1 permintaan menunggu persetujuan');
+    Livewire::test(PurchasingFlow::class)
+        ->assertSee('Alur pembelian')
+        ->assertSee('Menunggu persetujuan')
+        ->assertSee('Saldo kas pembelian');
+    Livewire::test(ActionItems::class)->assertSee('menunggu persetujuan')->assertSee('Setujui');
 });
