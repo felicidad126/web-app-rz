@@ -161,3 +161,10 @@ it('halaman Dashboard: tombol utama dan kartu kas menyesuaikan peran', function 
         ->assertActionHidden('createRequest');
     Livewire::test(DashboardStats::class)->assertSee('Saldo kas pembelian')->assertSee('Rp 500.000')->assertDontSee('Stok minus');
 });
+
+it('sidebar menampilkan logo yang tetap terlihat saat sidebar diciutkan', function () {
+    $this->actingAs($this->perawat)->get('/')
+        ->assertOk()
+        ->assertSee('klinik-rail-logo', false)
+        ->assertSee('icons/logo.svg', false);
+});
