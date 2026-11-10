@@ -3,12 +3,12 @@
     use App\Filament\Clusters\Stock\Resources\StockMovements\StockMovementResource;
     use App\Services\Stock\StockLedger;
     use App\Support\Money;
-    $card = 'background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; overflow: hidden';
-    $head = 'padding: 12px 16px; font-size: 14px; font-weight: 600; border-bottom: 1px solid #e4e4e7';
-    $th = 'padding: 8px 16px; font-size: 12px; font-weight: 500; color: #52525b; text-align: left; border-bottom: 1px solid #e4e4e7';
-    $td = 'padding: 10px 16px; font-size: 14px; border-top: 1px solid #f4f4f5; vertical-align: baseline';
+    $card = 'background: #fff; border: 1px solid var(--gray-200); border-radius: 12px; overflow: hidden';
+    $head = 'padding: 12px 16px; font-size: 14px; font-weight: 600; border-bottom: 1px solid var(--gray-200)';
+    $th = 'padding: 8px 16px; font-size: 12px; font-weight: 500; color: var(--gray-600); text-align: left; border-bottom: 1px solid var(--gray-200)';
+    $td = 'padding: 10px 16px; font-size: 14px; border-top: 1px solid var(--gray-100); vertical-align: baseline';
     $num = 'text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap';
-    $muted = 'color: #52525b; font-size: 12px';
+    $muted = 'color: var(--gray-600); font-size: 12px';
     $canSeeMovements = StockMovementResource::canViewAny();
     $meta = array_filter([
         'Supplier' => $order->supplier?->name ?? 'Tanpa supplier',
@@ -24,7 +24,7 @@
     ]);
 @endphp
 <style>
-    .po-table .po-sm { color: #52525b; font-size: 12px }
+    .po-table .po-sm { color: var(--gray-600); font-size: 12px }
     @media (min-width: 48rem) { .po-table .po-sm { display: none } }
     @media (max-width: 47.99rem) { .po-table th, .po-table td { padding-inline: 10px !important } }
 </style>
@@ -88,7 +88,7 @@
                 <div style="{{ $td }}; display: flex; justify-content: space-between; gap: 12px">
                     <div>
                         @if ($canSeeMovements)
-                            <a href="{{ StockMovementResource::getUrl('view', ['record' => $receipt]) }}" class="klinik-mono" style="color: #0d6e63; text-decoration: underline">{{ $receipt->number }}</a>
+                            <a href="{{ StockMovementResource::getUrl('view', ['record' => $receipt]) }}" class="klinik-mono" style="color: var(--primary-700); text-decoration: underline">{{ $receipt->number }}</a>
                         @else
                             <span class="klinik-mono">{{ $receipt->number }}</span>
                         @endif

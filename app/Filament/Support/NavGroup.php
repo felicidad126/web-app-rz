@@ -25,7 +25,8 @@ final class NavGroup
 
     public const ORGANIZATION = 'Organisasi';
 
-    public const SETTINGS = 'Pengaturan & Akses';
+    /** Edisi inventori: Cabang, Pengguna, Peran & hak akses, dan Audit log dalam satu kelompok. */
+    public const SETTINGS = 'Organisasi & akses';
 
     public const HELP = 'Bantuan';
 

@@ -7,7 +7,7 @@
 | Hal | Keputusan |
 |---|---|
 | Cara | Branch terpisah permanen `inventori` (dari `main` 9 Nov 2026). |
-| Menu | Gaya aplikasi kita: *Stok* (Barang, Permintaan, Pesanan, Mutasi & penerimaan, Opname, Kas pembelian), *Master barang*, *Organisasi*, *Pengaturan & Akses*, *Laporan*, *Bantuan*. |
+| Menu | Gaya aplikasi kita: *Dashboard*, *Stok* (Barang, Permintaan, Pesanan, Mutasi & penerimaan, Opname, Kas pembelian), *Laporan*, *Master barang*, *Organisasi & akses* (Cabang, Pengguna, Peran & hak akses, Audit log), *Bantuan*. |
 | Server | pwa.helonoia.net diganti menjadi edisi inventori, database direset. |
 | Barang kedaluwarsa | Tetap lewat **Ajukan pemusnahan** + persetujuan owner/admin (bukan langsung dikeluarkan). |
 | Pemangkasan | Menu, halaman, widget, rute, dan izin modul klinik dihapus. Tabel & kode inti (model, service, migrasi) dibiarkan agar perbaikan stok/pembelian dari `main` mudah dipindahkan. |
@@ -20,7 +20,7 @@
 - **Pemakaian bahan** dicatat manual (tidak ada modul tindakan yang memotong stok otomatis).
 - **Jadwal otomatis:** hanya backup & bersih-bersih antrean (tanpa SIP, SATUSEHAT, KPI, ringkasan harian).
 
-Padanan menu aplikasi BHP klinik → edisi ini: Data BHP → *Master barang → Obat & bahan* / *Stok → Barang*; Expired → *Stok → Barang* filter kedaluwarsa + Ajukan pemusnahan; Riwayat stok → *Stok → Mutasi & penerimaan* + kartu stok; Restock → *Catat penerimaan* / *Terima barang*; Pemakaian → *Catat pemakaian*; Permintaan pembelian → *Stok → Permintaan*; Pembelian → *Stok → Pesanan*; Kas → *Stok → Kas pembelian*; Laporan CSV → *Laporan* (Download CSV); Users/Activity log → *Pengaturan & Akses*.
+Padanan menu aplikasi BHP klinik → edisi ini: Data BHP → *Master barang → Obat & bahan* / *Stok → Barang*; Expired → *Stok → Barang* filter kedaluwarsa + Ajukan pemusnahan; Riwayat stok → *Stok → Mutasi & penerimaan* + kartu stok; Restock → *Catat penerimaan* / *Terima barang*; Pemakaian → *Catat pemakaian*; Permintaan pembelian → *Stok → Permintaan*; Pembelian → *Stok → Pesanan*; Kas → *Stok → Kas pembelian*; Laporan CSV → *Laporan* (Download CSV); Users/Activity log → *Organisasi & akses*.
 
 ## 3. Mengganti demo pwa.helonoia.net menjadi edisi inventori (reset database)
 

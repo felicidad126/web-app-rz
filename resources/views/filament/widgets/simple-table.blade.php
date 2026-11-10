@@ -3,11 +3,11 @@
     rows: list<list<array{text, color?, sub?, bold?, mono?}|string>>, footer?: list<cell>, note?, empty?
 --}}
 @php
-    $card = 'background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; overflow: hidden';
-    $th = 'padding: 8px 12px; font-size: 12px; font-weight: 500; color: #52525b; text-align: left; border-bottom: 1px solid #e4e4e7; white-space: nowrap';
-    $td = 'padding: 9px 12px; font-size: 14px; border-top: 1px solid #f4f4f5; vertical-align: top';
+    $card = 'background: #fff; border: 1px solid var(--gray-200); border-radius: 12px; overflow: hidden';
+    $th = 'padding: 8px 12px; font-size: 12px; font-weight: 500; color: var(--gray-600); text-align: left; border-bottom: 1px solid var(--gray-200); white-space: nowrap';
+    $td = 'padding: 9px 12px; font-size: 14px; border-top: 1px solid var(--gray-100); vertical-align: top';
     $num = 'text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap';
-    $colors = ['danger' => '#b91c1c', 'warning' => '#b45309', 'success' => '#047857', 'gray' => '#71717a'];
+    $colors = ['danger' => '#b91c1c', 'warning' => '#b45309', 'success' => '#047857', 'gray' => 'var(--gray-500)'];
     $cell = fn ($c): array => is_array($c) ? $c : ['text' => $c];
     // Di HP tabel digeser ke samping (bukan diperas sampai nama terpotong 3 baris); kolom pertama tetap terlihat.
     $minWidth = count($columns) > 3 ? count($columns) * 110 : 0;
@@ -17,10 +17,10 @@
     <section style="{{ $card }}">
         <div style="padding: 14px 16px">
             <div style="font-weight: 600">{{ $heading }}</div>
-            @if (! empty($description))<div style="font-size: 12px; color: #52525b">{{ $description }}</div>@endif
+            @if (! empty($description))<div style="font-size: 12px; color: var(--gray-600)">{{ $description }}</div>@endif
         </div>
         @if (empty($rows))
-            <div style="padding: 12px 16px 16px; font-size: 14px; color: #71717a">{{ $empty ?? 'Tidak ada data.' }}</div>
+            <div style="padding: 12px 16px 16px; font-size: 14px; color: var(--gray-500)">{{ $empty ?? 'Tidak ada data.' }}</div>
         @else
             <div style="overflow-x: auto">
                 <table style="width: 100%; border-collapse: collapse; min-width: {{ $minWidth }}px">
@@ -36,7 +36,7 @@
                                     @php $c = $cell($raw); @endphp
                                     <td style="{{ $td }}; {{ ($columns[$i]['align'] ?? '') === 'end' ? $num : '' }}; {{ $i === 0 ? $sticky.';' : '' }} {{ isset($c['color']) ? 'color: '.$colors[$c['color']].';' : '' }} {{ ! empty($c['bold']) ? 'font-weight: 600;' : '' }}">
                                         @if (! empty($c['mono']))<span class="klinik-mono">{{ $c['text'] }}</span>@else{{ $c['text'] }}@endif
-                                        @if (! empty($c['sub']))<div style="font-size: 12px; color: #71717a; font-weight: 400">{{ $c['sub'] }}</div>@endif
+                                        @if (! empty($c['sub']))<div style="font-size: 12px; color: var(--gray-500); font-weight: 400">{{ $c['sub'] }}</div>@endif
                                     </td>
                                 @endforeach
                             </tr>
@@ -54,7 +54,7 @@
             </div>
         @endif
         @if (! empty($note))
-            <div style="padding: 10px 16px; font-size: 12px; color: #52525b; border-top: 1px solid #f4f4f5">{{ $note }}</div>
+            <div style="padding: 10px 16px; font-size: 12px; color: var(--gray-600); border-top: 1px solid var(--gray-100)">{{ $note }}</div>
         @endif
     </section>
 </x-filament-widgets::widget>

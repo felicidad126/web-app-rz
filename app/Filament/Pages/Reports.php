@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Clinic\PractitionerOptions;
-use App\Filament\Support\NavGroup;
 use App\Models\User;
 use App\Reports\Report;
 use App\Reports\ReportRegistry;
@@ -35,9 +34,10 @@ class Reports extends Page implements HasSchemas
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;
 
-    protected static string|UnitEnum|null $navigationGroup = NavGroup::REPORTS;
+    // Edisi inventori: Laporan di atas menu tanpa judul kelompok, sesudah Stok.
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $navigationLabel = 'Laporan';
 

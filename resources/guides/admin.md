@@ -1,10 +1,10 @@
 ## Admin klinik
 
-**Akun & akses** — *Pengaturan & Akses → Pengguna*: buat akun staf, pilih peran (owner, admin, perawat) dan cabang. Nonaktifkan akun staf yang keluar (jangan dihapus). **Reset MFA** bila HP staf hilang.
+**Akun & akses** — *Organisasi & akses → Pengguna*: buat akun staf, pilih peran (owner, admin, perawat) dan cabang. Nonaktifkan akun staf yang keluar (jangan dihapus). **Reset MFA** bila HP staf hilang.
 
 **Data barang** — *Master barang → Obat & bahan*: nama, kode, satuan dasar, konversi satuan (mis. 1 box = 50 pcs), stok minimum, kategori. Supplier di *Master barang → Supplier*. Data barang & supplier dari aplikasi inventori lama bisa dimasukkan lewat **Import CSV** di kedua halaman itu.
 
-**Cabang** — *Organisasi → Cabang*: nama, alamat, dan telepon (tercetak di kop berita acara & laporan). Stok, pesanan, dan kas pembelian dicatat per cabang.
+**Cabang** — *Organisasi & akses → Cabang*: nama, alamat, dan telepon (tercetak di kop berita acara & laporan). Stok, pesanan, dan kas pembelian dicatat per cabang.
 
 **Persetujuan (4 mata)** — pemusnahan, koreksi opname, dan permintaan pembelian. Penyetuju tidak boleh orang yang mengajukan.
 

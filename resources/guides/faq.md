@@ -1,10 +1,10 @@
 ## Lupa password, bagaimana?
 
-Minta Admin klinik mengisi password baru di *Pengaturan & Akses → Pengguna*. Setelah email (SMTP) klinik diatur, bisa juga lewat **Lupa password?** di halaman login.
+Minta Admin klinik mengisi password baru di *Organisasi & akses → Pengguna*. Setelah email (SMTP) klinik diatur, bisa juga lewat **Lupa password?** di halaman login.
 
 ## HP untuk kode MFA hilang atau ganti HP
 
-Minta Owner/Admin menekan **Reset MFA** di *Pengaturan & Akses → Pengguna*. Saat login berikutnya, pindai kode QR baru dengan aplikasi authenticator di HP baru. Bila masih menyimpan *recovery code*, kode itu bisa dipakai untuk masuk sekali.
+Minta Owner/Admin menekan **Reset MFA** di *Organisasi & akses → Pengguna*. Saat login berikutnya, pindai kode QR baru dengan aplikasi authenticator di HP baru. Bila masih menyimpan *recovery code*, kode itu bisa dipakai untuk masuk sekali.
 
 ## Cara memasang aplikasi di HP
 
@@ -15,7 +15,7 @@ Ikon **East Dental** akan muncul di layar utama.
 
 ## Data cabang lain tidak terlihat
 
-Owner dan admin memilih cabang lewat tombol cabang di kanan atas halaman. Staf lain hanya melihat cabang tempatnya bertugas; cabang diatur admin di *Pengaturan & Akses → Pengguna*.
+Owner dan admin memilih cabang lewat tombol cabang di kanan atas halaman. Staf lain hanya melihat cabang tempatnya bertugas; cabang diatur admin di *Organisasi & akses → Pengguna*.
 
 ## Stok di aplikasi berbeda dengan barang di rak
 

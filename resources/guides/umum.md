@@ -2,7 +2,7 @@
 
 1. Buka alamat aplikasi klinik di Chrome (Android/PC) atau Safari (iPhone/iPad). Login dengan email dan password.
 2. Saat pertama kali login, atur **MFA**: pindai kode QR dengan Google Authenticator/Authy, lalu simpan *recovery code* di tempat aman.
-3. HP authenticator hilang? Minta Owner/Admin menekan **Reset MFA** di *Pengaturan & Akses → Pengguna*.
+3. HP authenticator hilang? Minta Owner/Admin menekan **Reset MFA** di *Organisasi & akses → Pengguna*.
 4. Jangan berbagi akun. Semua perubahan tercatat atas nama Anda.
 
 ## Pasang di HP/tablet

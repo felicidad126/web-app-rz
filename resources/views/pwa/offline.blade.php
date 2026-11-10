@@ -5,9 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Offline — {{ config('app.name') }}</title>
-    <meta name="theme-color" content="#0d6e63">
+    <meta name="theme-color" content="#6c5dd3">
     <style>
-        :root { color-scheme: light dark; --bg: #f8fafc; --fg: #0f172a; --muted: #475569; --accent: #0d6e63; }
+        :root { color-scheme: light dark; --bg: #f6f6fb; --fg: #11142d; --muted: #55566a; --accent: #6c5dd3; }
         @media (prefers-color-scheme: dark) { :root { --bg: #0f172a; --fg: #f1f5f9; --muted: #94a3b8; } }
         body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
         main { max-width: 26rem; padding: 2rem 1.5rem; text-align: center; }

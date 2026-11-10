@@ -1,26 +1,84 @@
 /*
- * Fondasi UI (mockup v2) di atas tema bawaan Filament. Hanya mengatur tipografi & kepadatan;
- * warna lewat ->colors() di AdminPanelProvider. File statis, jadi tidak perlu build aset.
+ * Konsep UI inventori (disepakati 9–10 Nov 2026) di atas tema bawaan Filament. File statis, tanpa build aset;
+ * warna lewat ->colors() di AdminPanelProvider (ungu = aksi utama & posisi aktif, abu-abu navy untuk sisanya).
  *
- * - Judul halaman 22/600, judul panel 14–16/600, label kolom tabel 12/500 abu-abu.
+ * - Font: Inter untuk teks/menu/tabel (ss04: I, l, 1 dibedakan tanpa nol bergaris), Plus Jakarta Sans untuk
+ *   judul & angka besar, IBM Plex Mono untuk kode. Semua di-host sendiri di public/fonts.
+ * - Bentuk: kartu putih bersudut 24 px dengan bayangan lembut, tombol & tab berbentuk pil, isian bersudut 14 px.
+ * - Sidebar putih berlabel mengambang di kiri (tanpa bilah atas); menu aktif berlatar ungu muda.
  * - Angka rata kanan memakai angka tabular agar mudah dipindai.
  */
+:root {
+  --klinik-font-display: 'Plus Jakarta Sans', var(--font-family, 'Inter'), ui-sans-serif, system-ui, sans-serif;
+  --klinik-radius-card: 1.5rem;
+  --klinik-radius-field: 0.875rem;
+  --klinik-shadow-card: 0 1px 2px rgba(17, 20, 45, .04), 0 12px 32px rgba(17, 20, 45, .05);
+}
+body { font-feature-settings: 'ss04' 1; }
 
-/* Judul halaman */
-.fi-header-heading { font-size: 1.375rem; line-height: 1.875rem; font-weight: 600; letter-spacing: -0.01em; }
-.fi-header-subheading { font-size: 0.875rem; line-height: 1.375rem; }
+/* Judul & angka besar: Plus Jakarta Sans */
+.fi-header-heading, .fi-simple-header-heading, .fi-section-header-heading, .fi-modal-heading,
+.fi-wi-stats-overview-stat-value, .klinik-brand-name, .klinik-guide-hero h1, .klinik-guide-faq h2 { font-family: var(--klinik-font-display); }
+.fi-header-heading { font-size: 2rem; line-height: 2.5rem; font-weight: 800; letter-spacing: -0.02em; }
+@media (max-width: 47.99rem) { .fi-header-heading { font-size: 1.625rem; line-height: 2.125rem; } }
+.fi-header-subheading { font-size: 0.875rem; line-height: 1.375rem; color: var(--gray-500); }
+.fi-section-header-heading { font-weight: 700; }
+.fi-simple-header-heading { font-weight: 800; letter-spacing: -0.02em; }
 
 /* Tabel: label kolom kecil & tenang, angka tabular */
-.fi-ta-header-cell { font-size: 0.75rem; font-weight: 500; color: var(--gray-500); padding-block: 0.625rem; }
-.fi-ta-header-cell .fi-ta-header-cell-sort-btn { font-weight: 500; }
+.fi-ta-header-cell { font-size: 0.75rem; font-weight: 600; color: var(--gray-500); padding-block: 0.75rem; }
+.fi-ta-header-cell .fi-ta-header-cell-sort-btn { font-weight: 600; }
 .fi-ta-table, .fi-in-entry, .fi-wi-stats-overview-stat-value, .fi-wi-table { font-variant-numeric: tabular-nums; }
-.dark .fi-ta-header-cell { color: var(--gray-400); }
 
-/* Kartu statistik: angka tegas tapi tidak berlebihan */
-.fi-wi-stats-overview-stat-value { font-size: 1.75rem; line-height: 2.125rem; font-weight: 600; }
+/* Kartu statistik: angka besar tegas */
+.fi-wi-stats-overview-stat-value { font-size: 1.75rem; line-height: 2.25rem; font-weight: 800; letter-spacing: -0.02em; }
 
-/* Judul grup navigasi lebih kecil, mirip label kolom */
-.fi-sidebar-group-label { font-size: 0.75rem; letter-spacing: 0.02em; }
+/* ---- Kartu, isian, tombol, tab, badge ---- */
+.fi-section:not(.fi-section-not-contained), .fi-ta-ctn, .fi-wi-stats-overview-stat, .fi-simple-main, .fi-fo-wizard {
+  border-radius: var(--klinik-radius-card); box-shadow: var(--klinik-shadow-card);
+}
+/* Halaman login di HP: isi selebar layar, tanpa kartu. */
+@media (max-width: 39.99rem) { .fi-simple-main { border-radius: 0; box-shadow: none; } }
+.fi-modal-window { border-radius: var(--klinik-radius-card); }
+.fi-dropdown-panel, .fi-no-notification { border-radius: 1rem; }
+.fi-input-wrp, .fi-fo-field-wrp .fi-select-input, .fi-fo-repeater-item, .fi-fo-table-repeater { border-radius: var(--klinik-radius-field); }
+.fi-btn { border-radius: 9999px; }
+.fi-badge { border-radius: 9999px; }
+
+/* Tab: wadah pil putih. Sub-menu halaman (mis. Stok) aktif = navy; tab di dalam halaman aktif = ungu muda. */
+.fi-tabs { border-radius: 9999px; padding: 0.375rem; box-shadow: var(--klinik-shadow-card); }
+.fi-tabs-item { border-radius: 9999px; }
+.fi-tabs-item.fi-active { background: var(--primary-50); }
+.fi-tabs-item.fi-active .fi-tabs-item-label, .fi-tabs-item.fi-active .fi-icon { color: var(--primary-700); }
+.fi-page-sub-navigation-tabs .fi-tabs-item.fi-active { background: var(--gray-950); }
+.fi-page-sub-navigation-tabs .fi-tabs-item.fi-active .fi-tabs-item-label,
+.fi-page-sub-navigation-tabs .fi-tabs-item.fi-active .fi-icon { color: #fff; }
+
+/* ---- Sidebar: kartu putih berlabel, setinggi layar di desktop ---- */
+@media (min-width: 64rem) {
+  .fi-main-sidebar {
+    top: 1rem; height: calc(100dvh - 2rem); margin: 1rem 0 1rem 1rem;
+    background: #fff; border-radius: var(--klinik-radius-card); box-shadow: var(--klinik-shadow-card);
+  }
+  .fi-main-ctn { padding-inline-start: 0.5rem; }
+}
+.fi-sidebar-header { padding-inline: 1rem; }
+.fi-sidebar-close-collapse-sidebar-btn { order: 2; margin-inline-start: 0.25rem; }
+.fi-sidebar-nav { padding: 0.5rem 0.75rem 0.75rem; row-gap: 0.75rem; }
+.fi-sidebar-nav-groups { margin-inline: 0; row-gap: 0.875rem; }
+.fi-sidebar-group-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-500); }
+.fi-sidebar-item-btn { min-height: 2.25rem; border-radius: 0.75rem; padding: 0.375rem 0.75rem; column-gap: 0.75rem; }
+.fi-sidebar-group-items { row-gap: 0.125rem; }
+.fi-sidebar-header-controls::after { margin-top: 0.5rem; }
+/* Kelompok Bantuan hanya berisi Panduan: tanpa judul kelompok, dipisah garis tipis (seperti mockup). */
+.fi-sidebar-group[data-group-label="Bantuan"] .fi-sidebar-group-btn { display: none; }
+.fi-sidebar-group[data-group-label="Bantuan"] { border-top: 1px solid var(--gray-100); padding-top: 0.5rem; }
+.fi-sidebar-item-btn:hover { background: var(--gray-50); }
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn { background: var(--primary-50); }
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label { font-weight: 700; }
+.fi-sidebar-header-controls { padding-inline: 0.75rem; }
+.fi-sidebar-header-controls .fi-input-wrp { border-radius: 9999px; background: var(--gray-50); }
+.fi-sidebar-footer { border-top: 1px solid var(--gray-100); padding-top: 0.75rem; }
 
 /* Baris tabel ±44 px di desktop (mouse); layar sentuh tetap longgar untuk jari. */
 @media (pointer: fine) {
@@ -64,8 +122,10 @@
 /* Logo klinik + nama di header panel & halaman login (resources/views/filament/brand-logo.blade.php). */
 .klinik-brand { display: inline-flex; align-items: center; gap: .625rem; height: 100%; }
 .klinik-brand-logo { height: 100%; width: auto; flex: none; }
-.klinik-brand-name { font-size: 1.125rem; font-weight: 600; color: #18181b; white-space: nowrap; line-height: 1.2; }
+.klinik-brand-name { font-size: 1.125rem; font-weight: 800; letter-spacing: -0.01em; color: var(--gray-950); white-space: nowrap; line-height: 1.2; }
 @media (max-width: 47.99rem) { .klinik-brand-name { font-size: 1rem; } }
+/* Di sidebar (lebar 17rem) nama klinik boleh dua baris. */
+.fi-sidebar-header .klinik-brand-name { font-size: 0.9375rem; line-height: 1.15; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
 /*
  * Cetak halaman panel (mis. tombol "Cetak" di Briefing pagi, atau Ctrl+P di halaman mana pun):
@@ -76,14 +136,14 @@
 
 @media print {
     @page { margin: 12mm; }
-    .klinik-print-header { display: flex !important; align-items: center; gap: 12px; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1.5px solid #3f3f46; }
+    .klinik-print-header { display: flex !important; align-items: center; gap: 12px; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1.5px solid var(--gray-700); }
     .klinik-print-header-logo { height: 40px; width: auto; }
     .klinik-print-header-clinic { flex: 1; min-width: 0; }
-    .klinik-print-header-name { font-size: 16px; font-weight: 600; color: #18181b; }
-    .klinik-print-header-branch { font-size: 11px; color: #52525b; }
-    .klinik-print-header-meta { font-size: 10px; color: #52525b; text-align: right; white-space: nowrap; }
+    .klinik-print-header-name { font-size: 16px; font-weight: 600; color: var(--gray-950); }
+    .klinik-print-header-branch { font-size: 11px; color: var(--gray-600); }
+    .klinik-print-header-meta { font-size: 10px; color: var(--gray-600); text-align: right; white-space: nowrap; }
     html, body, .fi-body { background: #fff !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
-    .fi-sidebar, .fi-sidebar-close-overlay, .fi-topbar-ctn, .fi-topbar, .fi-header-actions-ctn, .fi-breadcrumbs,
+    .fi-sidebar, .fi-sidebar-close-overlay, .fi-topbar-ctn, .fi-topbar, .fi-layout-sidebar-toggle-btn-ctn, .fi-header-actions-ctn, .fi-breadcrumbs,
     .fi-page-sub-navigation-tabs, .fi-ta-header-toolbar, .fi-pagination, .fi-ta-actions, .fi-dropdown, .fi-modal,
     .fi-no-notification, .klinik-no-print { display: none !important; }
     .fi-layout, .fi-main-ctn { display: block !important; overflow: visible !important; }
@@ -108,42 +168,42 @@
  * 7 Nov 2026 — judul + cari, kartu per peran, pertanyaan umum; halaman peran dengan daftar topik di kiri.
  */
 .klinik-guide-hero { text-align: center; padding: 8px 0 28px; }
-.klinik-guide-hero h1 { font-size: 2rem; line-height: 1.2; font-weight: 600; margin: 0 0 10px; color: #18181b; }
-.klinik-guide-hero > p { color: #52525b; margin: 0 0 22px; font-size: 1rem; }
+.klinik-guide-hero h1 { font-size: 2rem; line-height: 1.2; font-weight: 600; margin: 0 0 10px; color: var(--gray-950); }
+.klinik-guide-hero > p { color: var(--gray-600); margin: 0 0 22px; font-size: 1rem; }
 .klinik-guide-search { display: flex; gap: 12px; justify-content: center; align-items: flex-start; max-width: 40rem; margin: 0 auto; }
 .klinik-guide-search-box { position: relative; flex: 1; text-align: left; }
-.klinik-guide-search-box input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid #d4d4d8; border-radius: 8px; background: #fff; font-size: 15px; }
-.klinik-guide-search-box input:focus { outline: 2px solid #0d6e63; outline-offset: -1px; border-color: transparent; }
-.klinik-guide-results { position: absolute; z-index: 20; top: 50px; left: 0; right: 0; background: #fff; border: 1px solid #e4e4e7; border-radius: 10px; box-shadow: 0 10px 24px rgba(0,0,0,.08); max-height: 26rem; overflow-y: auto; }
-.klinik-guide-result { display: grid; gap: 2px; padding: 10px 14px; border-top: 1px solid #f4f4f5; }
+.klinik-guide-search-box input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--gray-300); border-radius: 8px; background: #fff; font-size: 15px; }
+.klinik-guide-search-box input:focus { outline: 2px solid var(--primary-600); outline-offset: -1px; border-color: transparent; }
+.klinik-guide-results { position: absolute; z-index: 20; top: 50px; left: 0; right: 0; background: #fff; border: 1px solid var(--gray-200); border-radius: 10px; box-shadow: 0 10px 24px rgba(0,0,0,.08); max-height: 26rem; overflow-y: auto; }
+.klinik-guide-result { display: grid; gap: 2px; padding: 10px 14px; border-top: 1px solid var(--gray-100); }
 .klinik-guide-result:first-child { border-top: 0; }
-.klinik-guide-result:hover, .klinik-guide-result:focus-visible { background: #f4f4f5; }
-.klinik-guide-result-section { font-size: 12px; color: #71717a; }
-.klinik-guide-result-title { font-weight: 600; color: #18181b; }
-.klinik-guide-result-snippet { font-size: 13px; color: #52525b; }
-.klinik-guide-empty { padding: 12px 14px; margin: 0; font-size: 14px; color: #52525b; }
+.klinik-guide-result:hover, .klinik-guide-result:focus-visible { background: var(--gray-100); }
+.klinik-guide-result-section { font-size: 12px; color: var(--gray-500); }
+.klinik-guide-result-title { font-weight: 600; color: var(--gray-950); }
+.klinik-guide-result-snippet { font-size: 13px; color: var(--gray-600); }
+.klinik-guide-empty { padding: 12px 14px; margin: 0; font-size: 14px; color: var(--gray-600); }
 .klinik-guide-cards { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; }
 @media (min-width: 40rem) { .klinik-guide-cards { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 80rem) { .klinik-guide-cards { grid-template-columns: repeat(4, 1fr); } }
-.klinik-guide-card { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 20px; background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; color: inherit; }
-.klinik-guide-card:hover { border-color: #a1a1aa; }
-.klinik-guide-card:focus-visible { outline: 2px solid #0d6e63; outline-offset: 2px; }
-.klinik-guide-card.is-mine { border-color: #0d6e63; }
-.klinik-guide-mine { position: absolute; top: 16px; right: 16px; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #f4f4f5; color: #3f3f46; }
-.klinik-guide-card-icon { width: 44px; height: 44px; border-radius: 10px; background: #effaf8; display: grid; place-items: center; margin-bottom: 8px; }
-.klinik-guide-card-icon svg { width: 22px; height: 22px; fill: none; stroke: #0d6e63; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.klinik-guide-card-title { font-size: 17px; font-weight: 600; color: #18181b; }
-.klinik-guide-card-text { font-size: 14px; line-height: 1.5; color: #52525b; flex: 1; }
-.klinik-guide-card-link { margin-top: 8px; font-size: 14px; font-weight: 500; text-decoration: underline; color: #18181b; }
-.klinik-guide-faq { display: grid; grid-template-columns: 1fr; gap: 12px 32px; padding: 24px; background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; scroll-margin-top: 80px; }
+.klinik-guide-card { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 20px; background: #fff; border: 1px solid var(--gray-200); border-radius: 12px; color: inherit; }
+.klinik-guide-card:hover { border-color: var(--gray-400); }
+.klinik-guide-card:focus-visible { outline: 2px solid var(--primary-600); outline-offset: 2px; }
+.klinik-guide-card.is-mine { border-color: var(--primary-600); }
+.klinik-guide-mine { position: absolute; top: 16px; right: 16px; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--gray-100); color: var(--gray-700); }
+.klinik-guide-card-icon { width: 44px; height: 44px; border-radius: 10px; background: var(--primary-50); display: grid; place-items: center; margin-bottom: 8px; }
+.klinik-guide-card-icon svg { width: 22px; height: 22px; fill: none; stroke: var(--primary-600); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.klinik-guide-card-title { font-size: 17px; font-weight: 600; color: var(--gray-950); }
+.klinik-guide-card-text { font-size: 14px; line-height: 1.5; color: var(--gray-600); flex: 1; }
+.klinik-guide-card-link { margin-top: 8px; font-size: 14px; font-weight: 500; text-decoration: underline; color: var(--gray-950); }
+.klinik-guide-faq { display: grid; grid-template-columns: 1fr; gap: 12px 32px; padding: 24px; background: #fff; border: 1px solid var(--gray-200); border-radius: 12px; scroll-margin-top: 80px; }
 @media (min-width: 64rem) { .klinik-guide-faq { grid-template-columns: 1fr 2fr; } }
-.klinik-guide-faq h2 { font-size: 1.5rem; font-weight: 600; margin: 0 0 8px; color: #18181b; }
-.klinik-guide-faq > div > p { color: #52525b; font-size: 14px; line-height: 1.6; margin: 0; }
-.klinik-guide-q { border-bottom: 1px solid #e4e4e7; scroll-margin-top: 80px; }
-.klinik-guide-q-title { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; text-align: left; font-weight: 600; font-size: 15px; color: #18181b; min-height: 44px; }
-.klinik-guide-q-icon { flex: none; width: 26px; height: 26px; border: 1px solid #d4d4d8; border-radius: 50%; display: grid; place-items: center; font-weight: 400; color: #3f3f46; }
-.klinik-guide-q.is-open .klinik-guide-q-icon { background: #0d6e63; border-color: #0d6e63; color: #fff; }
-.klinik-guide-q-answer { padding: 0 40px 14px 0; color: #52525b; }
+.klinik-guide-faq h2 { font-size: 1.5rem; font-weight: 600; margin: 0 0 8px; color: var(--gray-950); }
+.klinik-guide-faq > div > p { color: var(--gray-600); font-size: 14px; line-height: 1.6; margin: 0; }
+.klinik-guide-q { border-bottom: 1px solid var(--gray-200); scroll-margin-top: 80px; }
+.klinik-guide-q-title { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; text-align: left; font-weight: 600; font-size: 15px; color: var(--gray-950); min-height: 44px; }
+.klinik-guide-q-icon { flex: none; width: 26px; height: 26px; border: 1px solid var(--gray-300); border-radius: 50%; display: grid; place-items: center; font-weight: 400; color: var(--gray-700); }
+.klinik-guide-q.is-open .klinik-guide-q-icon { background: var(--primary-600); border-color: var(--primary-600); color: #fff; }
+.klinik-guide-q-answer { padding: 0 40px 14px 0; color: var(--gray-600); }
 .klinik-guide-prose { font-size: 15px; line-height: 1.6; }
 .klinik-guide-prose p, .klinik-guide-prose ul, .klinik-guide-prose ol { margin: 0 0 10px; }
 .klinik-guide-prose ul { list-style: disc; padding-left: 22px; }
@@ -154,12 +214,12 @@
 @media (min-width: 64rem) { .klinik-guide-role { grid-template-columns: 15rem minmax(0, 54rem); } }
 .klinik-guide-toc { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
 @media (min-width: 64rem) { .klinik-guide-toc { position: sticky; top: 5rem; } }
-.klinik-guide-toc a { padding: 7px 10px; border-radius: 8px; color: #3f3f46; }
-.klinik-guide-toc a:hover { background: #f4f4f5; }
-.klinik-guide-toc .klinik-guide-back { color: #0d6e63; font-weight: 500; margin-bottom: 8px; }
-.klinik-guide-toc-label { font-size: 12px; color: #71717a; padding: 0 10px 4px; }
-.klinik-guide-article { background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; padding: 8px 24px; }
-.klinik-guide-topic { padding: 16px 0; border-top: 1px solid #f4f4f5; scroll-margin-top: 80px; }
+.klinik-guide-toc a { padding: 7px 10px; border-radius: 8px; color: var(--gray-700); }
+.klinik-guide-toc a:hover { background: var(--gray-100); }
+.klinik-guide-toc .klinik-guide-back { color: var(--primary-600); font-weight: 500; margin-bottom: 8px; }
+.klinik-guide-toc-label { font-size: 12px; color: var(--gray-500); padding: 0 10px 4px; }
+.klinik-guide-article { background: #fff; border: 1px solid var(--gray-200); border-radius: 12px; padding: 8px 24px; }
+.klinik-guide-topic { padding: 16px 0; border-top: 1px solid var(--gray-100); scroll-margin-top: 80px; }
 .klinik-guide-topic:first-child { border-top: 0; }
-.klinik-guide-topic h2 { font-size: 17px; font-weight: 600; margin: 0 0 8px; color: #18181b; }
+.klinik-guide-topic h2 { font-size: 17px; font-weight: 600; margin: 0 0 8px; color: var(--gray-950); }
 .klinik-guide-search .fi-btn { height: 44px; padding-inline: 20px; }

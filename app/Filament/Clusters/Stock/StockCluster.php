@@ -2,7 +2,6 @@
 
 namespace App\Filament\Clusters\Stock;
 
-use App\Filament\Support\NavGroup;
 use BackedEnum;
 use Filament\Clusters\Cluster;
 use Filament\Pages\Enums\SubNavigationPosition;
@@ -14,7 +13,8 @@ class StockCluster extends Cluster
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArchiveBox;
 
-    protected static string|UnitEnum|null $navigationGroup = NavGroup::OPERATIONS;
+    // Edisi inventori: Stok di atas menu tanpa judul kelompok (Konsep UI, 10 Nov 2026).
+    protected static string|UnitEnum|null $navigationGroup = null;
 
     protected static ?int $navigationSort = 1;
 
