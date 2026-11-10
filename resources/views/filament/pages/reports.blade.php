@@ -1,9 +1,9 @@
 @php
     use App\Reports\ReportRequest;
     $report = $this->report();
-    $card = 'background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; overflow: hidden';
-    $th = 'padding: 8px 12px; font-size: 12px; font-weight: 500; color: #52525b; text-align: left; border-bottom: 1px solid #e4e4e7; white-space: nowrap';
-    $td = 'padding: 8px 12px; font-size: 13px; border-top: 1px solid #f4f4f5';
+    $card = 'background: #fff; border: 1px solid var(--gray-200); border-radius: 12px; overflow: hidden';
+    $th = 'padding: 8px 12px; font-size: 12px; font-weight: 500; color: var(--gray-600); text-align: left; border-bottom: 1px solid var(--gray-200); white-space: nowrap';
+    $td = 'padding: 8px 12px; font-size: 13px; border-top: 1px solid var(--gray-100)';
     $num = 'text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap';
     // Kolom pertama (nama kelompok) tetap terlihat saat tabel digulir ke samping di HP.
     $sticky = 'position: sticky; left: 0; z-index: 1; background: #fff; min-width: 140px';
@@ -16,7 +16,7 @@
         <section style="{{ $card }}">
             <div style="padding: 14px 16px">
                 <div style="font-weight: 600">{{ $report::label() }}</div>
-                <div style="font-size: 12px; color: #52525b">{{ $report::description() }}</div>
+                <div style="font-size: 12px; color: var(--gray-600)">{{ $report::description() }}</div>
             </div>
             <div style="overflow-x: auto">
                 <table style="width: 100%; border-collapse: collapse">
@@ -33,7 +33,7 @@
                                 @endforeach
                             </tr>
                         @empty
-                            <tr><td colspan="{{ count($columns) }}" style="{{ $td }}; color: #71717a">Tidak ada data untuk filter ini.</td></tr>
+                            <tr><td colspan="{{ count($columns) }}" style="{{ $td }}; color: var(--gray-500)">Tidak ada data untuk filter ini.</td></tr>
                         @endforelse
                     </tbody>
                     @if ($totals && $rows !== [])

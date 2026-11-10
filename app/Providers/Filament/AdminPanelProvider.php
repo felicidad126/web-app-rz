@@ -13,6 +13,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -30,10 +31,22 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
 {
-    /** Teal klinik; shade 600 = #0D6E63 (tombol utama), 700 = #0A5A51 (hover). */
-    private const TEAL = [
-        50 => '#effaf8', 100 => '#d6f1ec', 200 => '#ade2d9', 300 => '#7ccbbe', 400 => '#3fae9e', 500 => '#168a7b',
-        600 => '#0d6e63', 700 => '#0a5a51', 800 => '#0b4842', 900 => '#0b3b36', 950 => '#04221f',
+    /**
+     * Ungu (Konsep UI inventori, disepakati 9 Nov 2026): 600 = #6C5DD3 tombol utama (teks putih 5,07:1),
+     * 700 = #5B4BC4 hover & teks menu aktif, 50 = #F1EFFF sorotan menu aktif.
+     */
+    private const VIOLET = [
+        50 => '#f1efff', 100 => '#e4e0ff', 200 => '#ccc5fb', 300 => '#ada2f5', 400 => '#8f80ea', 500 => '#7b6cde',
+        600 => '#6c5dd3', 700 => '#5b4bc4', 800 => '#4a3ca3', 900 => '#3d3384', 950 => '#251f52',
+    ];
+
+    /**
+     * Abu-abu kebiruan (navy): 50 = #F6F6FB latar halaman, 500 = #6B6C80 teks sekunder (AA di putih & latar),
+     * 950 = #11142D teks utama. Ditulis manual karena Color::hex() hanya mengambil rona.
+     */
+    private const NAVY_GRAY = [
+        50 => '#f6f6fb', 100 => '#eeeef5', 200 => '#e3e3ec', 300 => '#cdcedb', 400 => '#8a8ca2', 500 => '#6b6c80',
+        600 => '#55566a', 700 => '#3f4157', 800 => '#2a2d47', 900 => '#1b1e3a', 950 => '#11142d',
     ];
 
     public function panel(Panel $panel): Panel
@@ -59,17 +72,24 @@ class AdminPanelProvider extends PanelProvider
             ], isRequired: true)
             ->databaseNotifications()
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
-            // Fondasi UI mockup v2: teal #0D6E63 hanya untuk aksi utama & posisi aktif, abu-abu zinc untuk sisanya.
-            // Palet teal ditulis manual: Color::hex() hanya mengambil hue sehingga tombol jadi toska terang.
+            // Konsep UI inventori: ungu hanya untuk aksi utama & posisi aktif, abu-abu navy untuk sisanya.
             ->colors([
-                'primary' => self::TEAL,
-                'gray' => Color::Zinc,
+                'primary' => self::VIOLET,
+                'gray' => self::NAVY_GRAY,
                 'violet' => Color::Violet,
             ])
-            // Font di-host sendiri (public/fonts/plex): tanpa CDN pihak ketiga, ikut tersimpan oleh service worker.
-            ->font('IBM Plex Sans', url: asset('fonts/plex/plex.css'), provider: LocalFontProvider::class)
+            // Font di-host sendiri (public/fonts): tanpa CDN pihak ketiga, ikut tersimpan oleh service worker.
+            // Inter untuk teks/menu/tabel; Plus Jakarta Sans untuk judul & angka besar (klinik.css); Plex Mono untuk kode.
+            ->font('Inter', url: asset('fonts/inter/inter.css'), provider: LocalFontProvider::class)
             ->monoFont('IBM Plex Mono', url: asset('fonts/plex/plex.css'), provider: LocalFontProvider::class)
-            ->navigationGroups(NavGroup::ordered())
+            // Kelompok menu selalu terbuka (tanpa tombol buka/tutup), seperti mockup.
+            ->navigationGroups(array_map(
+                fn (string $label): NavigationGroup => NavigationGroup::make($label)->collapsible(false),
+                NavGroup::ordered(),
+            ))
+            // Tanpa bilah atas: logo, cari, notifikasi, dan menu pengguna ada di sidebar (disepakati 10 Nov 2026).
+            ->topbar(false)
+            ->sidebarWidth('17rem')
             ->sidebarCollapsibleOnDesktop()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

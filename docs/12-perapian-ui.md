@@ -6,6 +6,23 @@ Semua halaman panel (79 halaman, 6 peran, desktop & HP) difoto, diaudit per segm
 
 ---
 
+## 0. Edisi inventori: Konsep UI inventori (9–10 Nov 2026)
+
+Di branch `inventori`, bagian ini menggantikan warna teal, font IBM Plex Sans, dan bilah atas dari §1–§3. Acuan: artifact *Konsep UI inventori* (Dashboard, Stok · Barang, HP, Pilihan font), dari referensi CRM Dashboard + DINEOS yang dipilih klinik. Diterapkan bertahap: tahap 1 tema & tata letak, tahap 2 Dashboard, tahap 3 menu bawah di HP.
+
+| Bagian | Aturan |
+| --- | --- |
+| Warna utama | Ungu `#6C5DD3` (primary 600, teks putih 5,07:1) hanya untuk tombol utama & posisi aktif; 700 `#5B4BC4` untuk hover & teks menu aktif; 50 `#F1EFFF` sorotan menu/tab aktif. |
+| Abu-abu | Navy: 50 `#F6F6FB` latar halaman, 500 `#6B6C80` teks sekunder (AA di putih & latar), 950 `#11142D` teks utama & sub-menu aktif. Palet ditulis manual di `AdminPanelProvider` (`VIOLET`, `NAVY_GRAY`). |
+| Warna status | Tetap: kuning perlu tindakan, hijau selesai, merah lewat ED & gagal. Warna status tidak dipakai untuk hiasan. |
+| Font | Inter (teks, menu, tabel, form; `ss04` agar I/l/1 berbeda tanpa nol bergaris), Plus Jakarta Sans (judul halaman, judul kartu, angka besar), IBM Plex Mono (kode). Di-host di `public/fonts/{inter,jakarta,plex}` dengan lisensi OFL; dipangkas ke huruf Latin. Hasil riset & pengukuran: artboard *Pilihan font*. |
+| Tata letak | Tanpa bilah atas (`->topbar(false)`): logo + tombol ciutkan, kotak Cari, menu, notifikasi, dan menu pengguna ada di sidebar putih (kartu mengambang setinggi layar di desktop). Menu atas tanpa judul kelompok: Dashboard, Stok, Laporan; lalu *Master barang*, *Organisasi & akses*, *Bantuan*. Kelompok selalu terbuka. |
+| Bentuk | Kartu putih bersudut 24 px + bayangan lembut (`--klinik-shadow-card`), isian bersudut 14 px, tombol/tab/badge berbentuk pil. Sub-menu halaman (mis. Stok) aktif = pil navy; tab di dalam halaman aktif = pil ungu muda. |
+
+Semua aturan ada di `public/css/klinik.css` (bagian atas) dan `AdminPanelProvider`. §1–§3 di bawah tetap berlaku untuk hal yang tidak disebut di sini (uang rata kanan, kode mono, kolom sekunder disembunyikan di HP, dst.).
+
+---
+
 ## 1. Prinsip (dari mockup)
 
 1. **Konteks pasien selalu terlihat.** Di layar klinis & kasir, banner pasien (nama, No. RM, alergi, penjamin, saldo terutang) ada di posisi yang sama.

@@ -5,10 +5,10 @@
     @endphp
     {{-- Chip tampilan (mockup Stok): yang aktif gelap, bukan teal — teal hanya untuk aksi utama "Catat penerimaan". --}}
     <style>
-        .stock-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid #d4d4d8; border-radius: 6px; background: #fff; color: #3f3f46; font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer }
-        .stock-chip:hover { background: #f4f4f5 }
-        .stock-chip:focus-visible { outline: 2px solid #0d6e63; outline-offset: 2px }
-        .stock-chip[aria-pressed="true"] { border-color: #18181b; background: #18181b; color: #fff }
+        .stock-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--gray-300); border-radius: 6px; background: #fff; color: var(--gray-700); font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer }
+        .stock-chip:hover { background: var(--gray-100) }
+        .stock-chip:focus-visible { outline: 2px solid var(--primary-600); outline-offset: 2px }
+        .stock-chip[aria-pressed="true"] { border-color: var(--gray-950); background: var(--gray-950); color: #fff }
         .stock-chip-count { font-variant-numeric: tabular-nums; opacity: .75 }
         @media (pointer: coarse) { .stock-chip { height: 44px; padding: 0 14px } }
     </style>

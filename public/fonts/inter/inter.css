@@ -1,0 +1,3 @@
+/* Inter (SIL OFL 1.1, lihat OFL.txt): font teks, menu, tabel, form. Variabel berat 400–800, dipangkas ke huruf Latin.
+   Di-host sendiri agar tidak memanggil CDN dan tetap tampil di PWA. */
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:400 800;src:url('inter-var.woff2') format('woff2')}

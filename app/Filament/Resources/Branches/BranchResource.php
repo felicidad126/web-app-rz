@@ -27,9 +27,9 @@ class BranchResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
 
-    protected static string|UnitEnum|null $navigationGroup = NavGroup::ORGANIZATION;
+    protected static string|UnitEnum|null $navigationGroup = NavGroup::SETTINGS;
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 0;
 
     protected static ?string $modelLabel = 'cabang';
 
