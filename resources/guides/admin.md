@@ -6,7 +6,7 @@
 
 **Cabang** — *Organisasi & akses → Cabang*: nama, alamat, dan telepon (tercetak di kop berita acara & laporan). Stok, pesanan, dan kas pembelian dicatat per cabang.
 
-**Persetujuan (4 mata)** — pemusnahan, koreksi opname, dan permintaan pembelian. Penyetuju tidak boleh orang yang mengajukan.
+**Persetujuan (4 mata)** — pemusnahan, koreksi opname, dan permintaan pembelian. Penyetuju tidak boleh orang yang mengajukan. Yang menunggu tampil di *Dashboard* (tombol **Tinjau persetujuan** dan daftar **Perlu tindakan**).
 
 **Pembelian barang** — menu *Stok*:
 - *Permintaan*: **Setujui** atau **Tolak** permintaan perawat. Centang yang sudah disetujui → **Buat pesanan**.

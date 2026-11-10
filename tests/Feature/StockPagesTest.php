@@ -14,7 +14,8 @@ use App\Filament\Clusters\Stock\Resources\StockOpnames\Pages\ViewStockOpname;
 use App\Filament\Resources\Items\Pages\EditItem;
 use App\Filament\Resources\Items\RelationManagers\BatchesRelationManager;
 use App\Filament\Resources\Items\RelationManagers\StockCardRelationManager;
-use App\Filament\Widgets\StockAlertsWidget;
+use App\Filament\Widgets\ActionItems;
+use App\Filament\Widgets\DashboardStats;
 use App\Models\Branch;
 use App\Models\Item;
 use App\Models\ItemBatch;
@@ -201,13 +202,16 @@ it('widget stok menampilkan peringatan minimum dan kedaluwarsa', function () {
         ['item_id' => $this->lido->id, 'unit_id' => $this->ampul->id, 'qty' => 10, 'unit_price' => 9_800, 'batch_number' => 'LD-1', 'expired_at' => '12/2026'],
     ], null, null, null, null, $perawat);
 
-    Livewire::test(StockAlertsWidget::class)
+    Livewire::test(DashboardStats::class)
         ->assertOk()
         ->assertSee('Di bawah minimum')
-        ->assertSee('Kedaluwarsa ≤ 60 hari');
+        ->assertSee('Kedaluwarsa ≤ 60 hari')
+        ->assertSee('Stok minus')
+        ->assertDontSee('Saldo kas pembelian');
+    Livewire::test(ActionItems::class)->assertOk()->assertSee('Lidokain 2%')->assertSee('ED 56 hari');
 
     noStockUser();
-    expect(StockAlertsWidget::canView())->toBeFalse();
+    expect(DashboardStats::canView())->toBeFalse()->and(ActionItems::canView())->toBeFalse();
 });
 
 it('admin membatalkan penerimaan yang salah input; penerimaan yang sudah terpakai ditolak', function () {
