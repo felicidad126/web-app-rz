@@ -111,6 +111,8 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(PanelsRenderHook::CONTENT_START, fn (): View => view('filament.print-header'))
             // Logo gigi tetap terlihat saat sidebar diciutkan.
             ->renderHook(PanelsRenderHook::SIDEBAR_LOGO_BEFORE, fn (): View => view('filament.sidebar-rail-logo'))
+            // Menu bawah di HP & tablet tegak (Konsep UI tahap 3).
+            ->renderHook(PanelsRenderHook::LAYOUT_END, fn (): View => view('filament.bottom-nav'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
