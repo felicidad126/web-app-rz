@@ -11,6 +11,10 @@
 - **iPhone/iPad (Safari):** tombol Bagikan → *Tambah ke Layar Utama*.
 - Aplikasi tetap butuh internet. Tanpa koneksi, yang tampil hanya halaman "offline".
 
+## Menu di HP
+
+Di HP dan tablet (posisi tegak) ada menu di bagian bawah layar: **Dashboard**, **Stok**, tombol ungu di tengah, lalu **Laporan** (owner/admin) atau **Permintaan** (perawat), dan **Menu** untuk membuka daftar menu lengkap (master barang, pengguna, panduan, notifikasi, akun). Tombol ungu di tengah adalah **+ Minta beli**; bagi owner, tombol ini **Persetujuan** dengan angka jumlah yang menunggu. Menu bawah disembunyikan sebentar saat Anda mengetik.
+
 ## Cabang
 
 Jika bertugas di lebih dari satu cabang, pilih cabang lewat tombol cabang di kanan atas halaman (stok, permintaan, pesanan, kas pembelian). Data yang tampil mengikuti cabang yang dipilih.

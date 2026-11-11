@@ -8,7 +8,7 @@
 
 **Opname** — **Mulai opname** → hitung fisik per batch → **Simpan hasil hitung** → **Ajukan untuk disetujui**.
 
-**Minta beli** — barang menipis? Tekan **Minta beli** di *Dashboard*, atau di baris barangnya di tab *Barang* (atau **Ajukan permintaan** di tab *Permintaan*). Daftar **Perlu tindakan** di *Dashboard* menunjukkan barang di bawah minimum, ED dekat, dan pesanan yang belum datang. Admin/owner menyetujui lalu memesan ke supplier. Barang yang sudah diminta atau sedang dipesan diberi keterangan di kolom *Perlu tindakan*.
+**Minta beli** — barang menipis? Tekan **Minta beli** di *Dashboard* (di HP: tombol ungu **+ Minta beli** di tengah menu bawah), atau di baris barangnya di tab *Barang* (atau **Ajukan permintaan** di tab *Permintaan*). Daftar **Perlu tindakan** di *Dashboard* menunjukkan barang di bawah minimum, ED dekat, dan pesanan yang belum datang. Admin/owner menyetujui lalu memesan ke supplier. Barang yang sudah diminta atau sedang dipesan diberi keterangan di kolom *Perlu tindakan*.
 
 **Barang pesanan datang** — tab *Pesanan* → buka pesanannya → **Terima barang**: isi jumlah yang benar-benar datang (boleh sebagian), no. batch, dan ED. Stok bertambah saat itu. Sisa yang belum datang tetap tercatat di pesanan.
 
